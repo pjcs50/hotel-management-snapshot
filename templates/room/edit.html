@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Room {{ room.number }} - Horizon Hotel{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="h4 mb-0">Edit Room {{ room.number }}</h2>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{{ url_for('room.edit_room', room_id=room.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        
+                        <div class="mb-3">
+                            <label for="number" class="form-label">Room Number <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="number" name="number" required 
+                                   value="{{ room.number }}" maxlength="10">
+                            <div class="form-text">Unique identifier for the room.</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="room_type_id" class="form-label">Room Type <span class="text-danger">*</span></label>
+                            <select class="form-select" id="room_type_id" name="room_type_id" required>
+                                <option value="">-- Select Room Type --</option>
+                                {% for room_type in room_types %}
+                                <option value="{{ room_type.id }}" {% if room_type.id == room.room_type_id %}selected{% endif %}>
+                                    {{ room_type.name }} - ${{ room_type.base_rate }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">Determines room features and base rate.</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="status" class="form-label">Status <span class="text-danger">*</span></label>
+                            <select class="form-select" id="status" name="status" required>
+                                {% for status in room_statuses %}
+                                <option value="{{ status }}" {% if status == room.status %}selected{% endif %}>{{ status }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">Current room availability status.</div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{{ url_for('room.view_room', room_id=room.id) }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Back to Room
+                            </a>
+                            <div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-save"></i> Update Room
+                                </button>
+                                <button type="button" class="btn btn-danger ms-2" data-bs-toggle="modal" data-bs-target="#deleteRoomModal">
+                                    <i class="bi bi-trash"></i> Delete
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Room Modal -->
+<div class="modal fade" id="deleteRoomModal" tabindex="-1" aria-labelledby="deleteRoomModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteRoomModalLabel">Confirm Deletion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete Room <strong>{{ room.number }}</strong>?</p>
+                <p class="text-danger"><strong>This action cannot be undone.</strong></p>
+                {% if room.bookings %}
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i> This room has existing bookings. You cannot delete it.
+                </div>
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form action="{{ url_for('room.delete_room', room_id=room.id) }}" method="post">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-danger" {% if room.bookings %}disabled{% endif %}>
+                        Delete Room
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

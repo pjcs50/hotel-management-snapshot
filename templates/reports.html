@@ -1,0 +1,653 @@
+{% extends "base.html" %}
+
+{% block title %}Reports{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Hotel Reports</h1>
+        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+    
+    <!-- Admin Navigation Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <a href="{{ url_for('admin.dashboard') }}" class="text-decoration-none">
+                <div class="card bg-secondary text-white h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-speedometer2 display-4"></i>
+                        <h5 class="mt-2">Dashboard</h5>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-3 mb-3">
+            <a href="{{ url_for('admin.guests') }}" class="text-decoration-none">
+                <div class="card bg-secondary text-white h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-person-vcard display-4"></i>
+                        <h5 class="mt-2">Guests</h5>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-3 mb-3">
+            <a href="{{ url_for('admin.reservations') }}" class="text-decoration-none">
+                <div class="card bg-secondary text-white h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-calendar-check display-4"></i>
+                        <h5 class="mt-2">Reservations</h5>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-3 mb-3">
+            <a href="{{ url_for('admin.reports') }}" class="text-decoration-none">
+                <div class="card bg-warning text-dark h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-graph-up display-4"></i>
+                        <h5 class="mt-2">Reports</h5>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    {% if error %}
+    <div class="alert alert-danger">
+        {{ error }}
+    </div>
+    {% else %}
+    <!-- Date Range Filter -->
+    <div class="card mb-4 shadow">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="bi bi-calendar-range me-2"></i>Report Period</h5>
+        </div>
+        <div class="card-body">
+            <form method="get" action="{{ url_for('admin.reports') }}">
+                <div class="row align-items-end">
+                    <div class="col-md-5">
+                        <label for="year-month" class="form-label fw-bold">Select Year/Month</label>
+                        <select name="year-month" id="year-month" class="form-select form-select-lg">
+                            {% for year, month in years_months %}
+                            <option value="{{ year }}-{{ month }}" {% if year == selected_year and month == selected_month %}selected{% endif %}>
+                                {{ month_names[month-1] }} {{ year }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2 mt-md-0 mt-3">
+                        <button type="submit" class="btn btn-primary btn-lg w-100">
+                            <i class="bi bi-search me-2"></i>View
+                        </button>
+                    </div>
+                    <div class="col-md-5 mt-md-0 mt-3">
+                        <div class="btn-group w-100" role="group">
+                            <a href="{{ url_for('admin.export_report', year=selected_year, month=selected_month, format='csv') }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-filetype-csv me-1"></i> CSV
+                            </a>
+                            <a href="{{ url_for('admin.export_report', year=selected_year, month=selected_month, format='excel') }}" class="btn btn-outline-success">
+                                <i class="bi bi-file-earmark-excel me-1"></i> Excel
+                            </a>
+                            <a href="{{ url_for('admin.export_report', year=selected_year, month=selected_month, format='pdf') }}" class="btn btn-outline-danger">
+                                <i class="bi bi-file-earmark-pdf me-1"></i> PDF
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Only show dependency notice if PDF export has been attempted -->
+    {% for message in get_flashed_messages() %}
+      {% if 'PDF export requires' in message %}
+      <div class="alert alert-warning d-flex align-items-center">
+        <i class="bi bi-exclamation-triangle-fill fs-4 me-2"></i>
+        <div>{{ message }}</div>
+      </div>
+      {% endif %}
+    {% endfor %}
+    
+    <div class="row">
+        <!-- Revenue Summary -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100 shadow border-0">
+                <div class="card-header bg-success text-white py-3">
+                    <h5 class="mb-0"><i class="bi bi-cash-stack me-2"></i>Revenue Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <table class="table table-striped table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Metric</th>
+                                        <th class="text-end">Value</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><i class="bi bi-currency-dollar me-1"></i>Total Revenue</td>
+                                        <td class="text-end fw-bold">${{ report_data.revenue_summary.total_revenue|round(2) }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><i class="bi bi-house me-1"></i>Room Revenue</td>
+                                        <td class="text-end fw-bold">${{ report_data.revenue_summary.room_revenue|round(2) }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="chart-container" style="position: relative; height:200px; width:100%">
+                                <canvas id="revenueChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Booking Summary -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100 shadow border-0">
+                <div class="card-header bg-primary text-white py-3">
+                    <h5 class="mb-0"><i class="bi bi-calendar-check me-2"></i>Booking Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <table class="table table-striped table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Metric</th>
+                                        <th class="text-end">Value</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><i class="bi bi-calendar2 me-1"></i>Total Bookings</td>
+                                        <td class="text-end fw-bold">{{ report_data.booking_summary.total_bookings }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><i class="bi bi-calendar2-plus me-1"></i>New Bookings</td>
+                                        <td class="text-end fw-bold">{{ report_data.booking_summary.new_bookings }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><i class="bi bi-calendar2-x me-1"></i>Cancelled</td>
+                                        <td class="text-end fw-bold">{{ report_data.booking_summary.cancelled_bookings }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><i class="bi bi-calendar2-check me-1"></i>Completed</td>
+                                        <td class="text-end fw-bold">{{ report_data.booking_summary.completed_stays }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="chart-container" style="position: relative; height:200px; width:100%">
+                                <canvas id="bookingStatusChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Occupancy Summary -->
+        <div class="col-12 mb-4">
+            <div class="card shadow border-0">
+                <div class="card-header bg-info text-white py-3">
+                    <h5 class="mb-0"><i class="bi bi-graph-up me-2"></i>Daily Occupancy Rates</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <table class="table table-striped table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Metric</th>
+                                        <th class="text-end">Value</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><i class="bi bi-percent me-1"></i>Average Occupancy</td>
+                                        <td class="text-end fw-bold">{{ report_data.occupancy_summary.average_occupancy_rate|round(2) }}%</td>
+                                    </tr>
+                                    <tr>
+                                        <td><i class="bi bi-calendar-date me-1"></i>Peak Date</td>
+                                        <td class="text-end fw-bold">{{ report_data.occupancy_summary.peak_occupancy_date }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><i class="bi bi-bar-chart-line me-1"></i>Peak Rate</td>
+                                        <td class="text-end fw-bold">{{ report_data.occupancy_summary.peak_occupancy_rate|round(2) }}%</td>
+                                    </tr>
+                                    <tr>
+                                        <td><i class="bi bi-calendar2-week me-1"></i>Total Room Nights</td>
+                                        <td class="text-end fw-bold">{{ report_data.occupancy_summary.total_room_nights }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="chart-container" style="position: relative; height:250px; width:100%">
+                                <canvas id="dailyOccupancyChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Room Type Revenue -->
+    <div class="card mb-4 shadow border-0">
+        <div class="card-header bg-warning text-dark py-3">
+            <h5 class="mb-0"><i class="bi bi-pie-chart me-2"></i>Room Type Revenue</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-5">
+                    <table class="table table-striped table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Room Type</th>
+                                <th class="text-end">Revenue</th>
+                                <th class="text-end">Percentage</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for room_type, data in report_data.room_type_revenue.items() %}
+                            <tr>
+                                <td>{{ room_type }}</td>
+                                <td class="text-end">${{ data.revenue|round(2) }}</td>
+                                <td class="text-end">{{ data.percentage|round(2) }}%</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="col-md-7">
+                    <div class="chart-container" style="position: relative; height:300px; width:100%">
+                        <canvas id="roomTypeRevenueChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Data initialization from server -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize default empty data objects in case of error
+        let dailyOccupancyData = {};
+        let bookingSummary = {total_bookings: 0, new_bookings: 0, cancelled_bookings: 0, completed_stays: 0};
+        let roomTypeData = {};
+        let revenueSummary = {total_revenue: 0, room_revenue: 0};
+        
+        // TEMPLATE-IF-START: This line is replaced by the template engine
+        {% if not error %}
+        // Load data from server into JavaScript variables (processed by Flask/Jinja2)
+        dailyOccupancyData = JSON.parse('{{ report_data.daily_occupancy|tojson|safe }}');
+        bookingSummary = {{ report_data.booking_summary|tojson|safe }};
+        roomTypeData = {{ report_data.room_type_revenue|tojson|safe }};
+        revenueSummary = {{ report_data.revenue_summary|tojson|safe }};
+        {% endif %}
+        // TEMPLATE-IF-END
+        
+        if (document.getElementById('dailyOccupancyChart')) {
+            // Common chart options
+            Chart.defaults.font.family = "'Poppins', 'Helvetica', 'Arial', sans-serif";
+            Chart.defaults.font.size = 12;
+            Chart.defaults.color = '#666';
+            
+            // Function to get vibrant colors
+            function getColors(count) {
+                const baseColors = [
+                    'rgba(75, 192, 192, 0.7)',
+                    'rgba(54, 162, 235, 0.7)',
+                    'rgba(255, 99, 132, 0.7)',
+                    'rgba(255, 159, 64, 0.7)',
+                    'rgba(153, 102, 255, 0.7)',
+                    'rgba(255, 205, 86, 0.7)',
+                    'rgba(201, 203, 207, 0.7)',
+                    'rgba(87, 190, 148, 0.7)'
+                ];
+                
+                // Return the required number of colors, repeating if needed
+                const result = [];
+                for (let i = 0; i < count; i++) {
+                    result.push(baseColors[i % baseColors.length]);
+                }
+                return result;
+            }
+            
+            // Only create charts if we have valid data (check for Object.keys length)
+            if (Object.keys(dailyOccupancyData).length > 0) {
+                // Daily Occupancy Chart
+                const dailyOccupancyCtx = document.getElementById('dailyOccupancyChart').getContext('2d');
+                const occupancyDates = Object.keys(dailyOccupancyData).map(date => {
+                    const parts = date.split('-');
+                    return parts[1] + '/' + parts[2]; // MM/DD format
+                });
+                
+                new Chart(dailyOccupancyCtx, {
+                    type: 'line',
+                    data: {
+                        labels: occupancyDates,
+                        datasets: [{
+                            label: 'Occupancy Rate (%)',
+                            data: Object.values(dailyOccupancyData),
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                            borderWidth: 3,
+                            tension: 0.4,
+                            fill: true,
+                            pointBackgroundColor: 'rgba(54, 162, 235, 1)',
+                            pointRadius: 4,
+                            pointHoverRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top'
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                titleFont: {
+                                    size: 14,
+                                    weight: 'bold'
+                                },
+                                bodyFont: {
+                                    size: 13
+                                },
+                                padding: 10,
+                                cornerRadius: 4,
+                                displayColors: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100,
+                                ticks: {
+                                    callback: function(value) {
+                                        return value + '%';
+                                    }
+                                },
+                                title: {
+                                    display: true,
+                                    text: 'Occupancy (%)',
+                                    font: {
+                                        weight: 'bold'
+                                    }
+                                },
+                                grid: {
+                                    color: 'rgba(0, 0, 0, 0.05)'
+                                }
+                            },
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Date (MM/DD)',
+                                    font: {
+                                        weight: 'bold'
+                                    }
+                                },
+                                grid: {
+                                    display: false
+                                }
+                            }
+                        }
+                    }
+                });
+                
+                // Booking Status Chart
+                const bookingStatusCtx = document.getElementById('bookingStatusChart').getContext('2d');
+                
+                new Chart(bookingStatusCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Completed', 'New', 'Cancelled'],
+                        datasets: [{
+                            data: [
+                                bookingSummary.completed_stays,
+                                bookingSummary.new_bookings,
+                                bookingSummary.cancelled_bookings
+                            ],
+                            backgroundColor: [
+                                'rgba(75, 192, 192, 0.8)',
+                                'rgba(54, 162, 235, 0.8)',
+                                'rgba(255, 99, 132, 0.8)'
+                            ],
+                            borderColor: [
+                                'rgba(75, 192, 192, 1)',
+                                'rgba(54, 162, 235, 1)',
+                                'rgba(255, 99, 132, 1)'
+                            ],
+                            borderWidth: 2,
+                            hoverOffset: 10
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '65%',
+                        plugins: {
+                            legend: {
+                                position: 'right',
+                                labels: {
+                                    boxWidth: 12,
+                                    padding: 15
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                padding: 10,
+                                cornerRadius: 4,
+                                displayColors: true
+                            }
+                        }
+                    }
+                });
+                
+                // Room Type Revenue Chart
+                const roomTypeRevenueCtx = document.getElementById('roomTypeRevenueChart').getContext('2d');
+                const roomTypes = Object.keys(roomTypeData);
+                const roomTypeRevenues = roomTypes.map(type => roomTypeData[type].revenue);
+                const roomTypePercentages = roomTypes.map(type => roomTypeData[type].percentage);
+                const roomTypeColors = getColors(roomTypes.length);
+                
+                new Chart(roomTypeRevenueCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: roomTypes,
+                        datasets: [
+                            {
+                                label: 'Revenue ($)',
+                                data: roomTypeRevenues,
+                                backgroundColor: roomTypeColors,
+                                borderColor: roomTypeColors.map(color => color.replace('0.7', '1')),
+                                borderWidth: 1,
+                                borderRadius: 5,
+                                barPercentage: 0.7
+                            },
+                            {
+                                type: 'line',
+                                label: 'Percentage (%)',
+                                data: roomTypePercentages,
+                                yAxisID: 'percentage',
+                                borderColor: 'rgba(153, 102, 255, 1)',
+                                borderWidth: 2,
+                                pointBackgroundColor: 'rgba(153, 102, 255, 1)',
+                                tension: 0.4,
+                                fill: false
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top'
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                padding: 10,
+                                cornerRadius: 4,
+                                callbacks: {
+                                    label: function(context) {
+                                        const dataset = context.dataset;
+                                        const value = context.raw;
+                                        const label = context.dataset.label || '';
+                                        if (dataset.yAxisID === 'percentage') {
+                                            return `${label}: ${value.toFixed(2)}%`;
+                                        }
+                                        return `${label}: $${value.toFixed(2)}`;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Revenue ($)',
+                                    font: {
+                                        weight: 'bold'
+                                    }
+                                },
+                                ticks: {
+                                    callback: function(value) {
+                                        return '$' + value;
+                                    }
+                                },
+                                grid: {
+                                    color: 'rgba(0, 0, 0, 0.05)'
+                                }
+                            },
+                            percentage: {
+                                position: 'right',
+                                beginAtZero: true,
+                                max: 100,
+                                title: {
+                                    display: true,
+                                    text: 'Percentage (%)',
+                                    font: {
+                                        weight: 'bold'
+                                    }
+                                },
+                                ticks: {
+                                    callback: function(value) {
+                                        return value + '%';
+                                    }
+                                },
+                                grid: {
+                                    display: false
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    display: false
+                                }
+                            }
+                        }
+                    }
+                });
+                
+                // Revenue Chart
+                const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+                
+                new Chart(revenueCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Total Revenue', 'Room Revenue'],
+                        datasets: [{
+                            label: 'Revenue ($)',
+                            data: [revenueSummary.total_revenue, revenueSummary.room_revenue],
+                            backgroundColor: [
+                                'rgba(50, 205, 50, 0.8)',
+                                'rgba(100, 149, 237, 0.8)'
+                            ],
+                            borderColor: [
+                                'rgba(50, 205, 50, 1)',
+                                'rgba(100, 149, 237, 1)'
+                            ],
+                            borderWidth: 2,
+                            borderRadius: 8,
+                            barPercentage: 0.5
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        indexAxis: 'y',
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                padding: 10,
+                                cornerRadius: 4,
+                                callbacks: {
+                                    label: function(context) {
+                                        return `Revenue: $${context.raw.toFixed(2)}`;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return '$' + value;
+                                    }
+                                },
+                                grid: {
+                                    color: 'rgba(0, 0, 0, 0.05)'
+                                }
+                            },
+                            y: {
+                                grid: {
+                                    display: false
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+        
+        // Handle year-month selection
+        const yearMonthSelect = document.getElementById('year-month');
+        if (yearMonthSelect) {
+            yearMonthSelect.addEventListener('change', function() {
+                const [year, month] = this.value.split('-');
+                const currentUrl = new URL(window.location.href);
+                currentUrl.searchParams.set('year', year);
+                currentUrl.searchParams.set('month', month);
+                window.location.href = currentUrl.toString();
+            });
+        }
+    });
+</script>
+{% endblock %} 

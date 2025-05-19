@@ -1,0 +1,450 @@
+{% extends "dashboard_base.html" %}
+
+{% block dashboard_title %}Customer Dashboard{% endblock %}
+{% block dashboard_heading %}Customer Dashboard{% endblock %}
+
+{% block dashboard_navigation %}
+<div class="row mb-4 g-3">
+    <div class="col-md-4 col-sm-6">
+        <a href="{{ url_for('customer.dashboard') }}" class="text-decoration-none">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body text-center">
+                    <i class="bi bi-speedometer2 text-primary fs-1"></i>
+                    <h6 class="mt-2">Dashboard</h6>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-4 col-sm-6">
+        <a href="{{ url_for('customer.bookings') }}" class="text-decoration-none">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body text-center">
+                    <i class="bi bi-calendar-check text-success fs-1"></i>
+                    <h6 class="mt-2">Bookings</h6>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-4 col-sm-6">
+        <a href="{{ url_for('customer.profile') }}" class="text-decoration-none">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body text-center">
+                    <i class="bi bi-person-circle text-info fs-1"></i>
+                    <h6 class="mt-2">My Profile</h6>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block metrics_summary %}
+<div class="col-md-4 mb-3">
+    <div class="card border-0 shadow-sm h-100 dashboard-card">
+        <div class="card-body">
+            <div class="d-flex align-items-center mb-2">
+                <div class="rounded-circle bg-primary-subtle p-2 me-3">
+                    <i class="bi bi-person-check text-primary fs-4"></i>
+                </div>
+                <h6 class="card-title mb-0">Profile Status</h6>
+            </div>
+            <div class="text-center mt-3">
+                <h4 class="mb-0">{{ metrics.profile_status }}</h4>
+                <a href="{{ url_for('customer.profile') }}" class="btn btn-sm btn-outline-primary mt-3">View Details</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="col-md-4 mb-3">
+    <div class="card border-0 shadow-sm h-100 dashboard-card">
+        <div class="card-body">
+            <div class="d-flex align-items-center mb-2">
+                <div class="rounded-circle bg-success-subtle p-2 me-3">
+                    <i class="bi bi-calendar-check text-success fs-4"></i>
+                </div>
+                <h6 class="card-title mb-0">Total Bookings</h6>
+            </div>
+            <div class="text-center mt-3">
+                <h2 class="mb-0">{{ metrics.booking_count }}</h2>
+                <a href="{{ url_for('customer.bookings') }}" class="btn btn-sm btn-outline-success mt-3">View All</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="col-md-4 mb-3">
+    <div class="card border-0 shadow-sm h-100 dashboard-card">
+        <div class="card-body">
+            <div class="d-flex align-items-center mb-2">
+                <div class="rounded-circle bg-warning-subtle p-2 me-3">
+                    <i class="bi bi-award text-warning fs-4"></i>
+                </div>
+                <h6 class="card-title mb-0">Loyalty Status</h6>
+            </div>
+            <div class="text-center mt-3">
+                <h6 class="mb-1">{{ metrics.loyalty_tier }}</h6>
+                <h4 class="mb-0">{{ metrics.loyalty_points }} <small class="text-muted">pts</small></h4>
+                <a href="{{ url_for('customer.loyalty_history') }}" class="btn btn-sm btn-outline-warning mt-3">View History</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="col-md-12 mb-3">
+    <div class="card border-0 shadow-sm h-100 dashboard-card">
+        <div class="card-body">
+            <div class="d-flex align-items-center mb-3">
+                <div class="rounded-circle bg-info-subtle p-2 me-3">
+                    <i class="bi bi-building text-info fs-4"></i>
+                </div>
+                <h6 class="card-title mb-0">Current Stay</h6>
+            </div>
+            
+            {% if metrics.active_booking %}
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="bi bi-door-closed text-secondary me-2"></i>
+                        <span><strong>Room:</strong> {{ metrics.active_booking.room_number }}</span>
+                    </div>
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="bi bi-calendar-plus text-secondary me-2"></i>
+                        <span><strong>Check-in:</strong> {{ metrics.active_booking.check_in_date }}</span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="bi bi-house text-secondary me-2"></i>
+                        <span><strong>Type:</strong> {{ metrics.active_booking.room_type }}</span>
+                    </div>
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="bi bi-calendar-minus text-secondary me-2"></i>
+                        <span><strong>Check-out:</strong> {{ metrics.active_booking.check_out_date }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="text-center mt-3">
+                <span class="badge bg-info">{{ metrics.active_booking.nights }} Night{{ 's' if metrics.active_booking.nights != 1 }}</span>
+            </div>
+            {% else %}
+            <div class="text-center py-4">
+                <p class="mb-3">No active bookings</p>
+                <a href="{{ url_for('customer.new_booking') }}" class="btn btn-primary">Book Now</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block dashboard_content %}
+{% if metrics.upcoming_bookings %}
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Upcoming Reservations</h5>
+        <button class="btn btn-sm btn-outline-primary" id="toggleUpcomingView">Toggle View</button>
+    </div>
+    <div class="card-body">
+        <div id="upcomingTable">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Room</th>
+                            <th>Type</th>
+                            <th>Check-in</th>
+                            <th>Check-out</th>
+                            <th>Nights</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for booking in metrics.upcoming_bookings %}
+                        <tr>
+                            <td>{{ booking.room_number }}</td>
+                            <td>{{ booking.room_type }}</td>
+                            <td>{{ booking.check_in_date }}</td>
+                            <td>{{ booking.check_out_date }}</td>
+                            <td>{{ booking.nights }}</td>
+                            <td><span class="badge bg-info">{{ booking.status }}</span></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div id="upcomingChart" style="height: 300px; display: none;">
+            <canvas id="upcomingBookingsCanvas"></canvas>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if metrics.past_bookings %}
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Booking History</h5>
+        <button class="btn btn-sm btn-outline-secondary" id="toggleHistoryView">Toggle View</button>
+    </div>
+    <div class="card-body">
+        <div id="historyTable">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Room</th>
+                            <th>Type</th>
+                            <th>Check-in</th>
+                            <th>Check-out</th>
+                            <th>Nights</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for booking in metrics.past_bookings %}
+                        <tr>
+                            <td>{{ booking.room_number }}</td>
+                            <td>{{ booking.room_type }}</td>
+                            <td>{{ booking.check_in_date }}</td>
+                            <td>{{ booking.check_out_date }}</td>
+                            <td>{{ booking.nights }}</td>
+                            <td>
+                                <span class="badge {% if booking.status == 'Checked Out' %}bg-success{% elif booking.status == 'Cancelled' %}bg-danger{% else %}bg-warning{% endif %}">
+                                    {{ booking.status }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div id="historyChart" style="height: 300px; display: none;">
+            <canvas id="bookingHistoryCanvas"></canvas>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block quick_links %}
+<a href="{{ url_for('customer.profile') }}" class="list-group-item list-group-item-action border-0 rounded mb-2 d-flex align-items-center">
+    <div class="rounded-circle bg-primary-subtle p-2 me-3">
+        <i class="bi bi-person-gear text-primary"></i>
+    </div>
+    <span>Edit Profile</span>
+</a>
+<a href="{{ url_for('customer.feedback') }}" class="list-group-item list-group-item-action border-0 rounded mb-2 d-flex align-items-center">
+    <div class="rounded-circle bg-warning-subtle p-2 me-3">
+        <i class="bi bi-star text-warning"></i>
+    </div>
+    <span>Leave Feedback</span>
+</a>
+<a href="{{ url_for('customer.help_page') }}" class="list-group-item list-group-item-action border-0 rounded mb-2 d-flex align-items-center">
+    <div class="rounded-circle bg-info-subtle p-2 me-3">
+        <i class="bi bi-question-circle text-info"></i>
+    </div>
+    <span>Help & FAQs</span>
+</a>
+{% endblock %}
+
+{% block additional_info %}
+<div class="col-md-6">
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-bottom">
+            <h5 class="mb-0">Welcome, {{ metrics.customer_name }}</h5>
+        </div>
+        <div class="card-body">
+            <p class="card-text">Thank you for choosing Horizon Hotel. We hope you enjoy your stay!</p>
+            <h6 class="mb-2"><i class="bi bi-info-circle me-2 text-primary"></i>Available Services:</h6>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="bi bi-telephone text-secondary me-2"></i>
+                        <span>24/7 Room Service</span>
+                    </div>
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="bi bi-person-badge text-secondary me-2"></i>
+                        <span>Concierge Assistance</span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="bi bi-wifi text-secondary me-2"></i>
+                        <span>Free Wi-Fi</span>
+                    </div>
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="bi bi-water text-secondary me-2"></i>
+                        <span>Spa & Pool Access</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block dashboard_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add animations to dashboard metric cards
+    const metricCards = document.querySelectorAll('.dashboard-card');
+    metricCards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-5px)';
+            this.style.boxShadow = '0 6px 12px rgba(0, 0, 0, 0.15)';
+            this.style.transition = 'all 0.3s ease';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+            this.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
+        });
+    });
+
+    // Toggle upcoming bookings view
+    const toggleUpcomingBtn = document.getElementById('toggleUpcomingView');
+    if (toggleUpcomingBtn) {
+        toggleUpcomingBtn.addEventListener('click', function() {
+            const tableDiv = document.getElementById('upcomingTable');
+            const chartDiv = document.getElementById('upcomingChart');
+            
+            if (tableDiv.style.display === 'none') {
+                tableDiv.style.display = 'block';
+                chartDiv.style.display = 'none';
+                toggleUpcomingBtn.textContent = 'Chart View';
+            } else {
+                tableDiv.style.display = 'none';
+                chartDiv.style.display = 'block';
+                toggleUpcomingBtn.textContent = 'Table View';
+                
+                // Initialize chart if not already done
+                if (!window.upcomingBookingsChart) {
+                    initUpcomingBookingsChart();
+                }
+            }
+        });
+    }
+    
+    // Toggle booking history view
+    const toggleHistoryBtn = document.getElementById('toggleHistoryView');
+    if (toggleHistoryBtn) {
+        toggleHistoryBtn.addEventListener('click', function() {
+            const tableDiv = document.getElementById('historyTable');
+            const chartDiv = document.getElementById('historyChart');
+            
+            if (tableDiv.style.display === 'none') {
+                tableDiv.style.display = 'block';
+                chartDiv.style.display = 'none';
+                toggleHistoryBtn.textContent = 'Chart View';
+            } else {
+                tableDiv.style.display = 'none';
+                chartDiv.style.display = 'block';
+                toggleHistoryBtn.textContent = 'Table View';
+                
+                // Initialize chart if not already done
+                if (!window.bookingHistoryChart) {
+                    initBookingHistoryChart();
+                }
+            }
+        });
+    }
+    
+    // Initialize upcoming bookings chart
+    function initUpcomingBookingsChart() {
+        const ctx = document.getElementById('upcomingBookingsCanvas');
+        if (!ctx) return;
+        
+        // Create booking data for chart
+        const bookingData = [];
+        {% for booking in metrics.upcoming_bookings %}
+        bookingData.push({
+            roomNumber: '{{ booking.room_number }}',
+            roomType: '{{ booking.room_type }}',
+            checkIn: '{{ booking.check_in_date }}',
+            checkOut: '{{ booking.check_out_date }}',
+            nights: {{ booking.nights }}
+        });
+        {% endfor %}
+        
+        const labels = bookingData.map(b => b.roomNumber + ' (' + b.roomType + ')');
+        const data = bookingData.map(b => b.nights);
+        
+        window.upcomingBookingsChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Nights',
+                    data: data,
+                    backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                },
+                animation: {
+                    duration: 1000,
+                    easing: 'easeOutQuart'
+                }
+            }
+        });
+    }
+    
+    // Initialize booking history chart
+    function initBookingHistoryChart() {
+        const ctx = document.getElementById('bookingHistoryCanvas');
+        if (!ctx) return;
+        
+        // Prepare data
+        const statusCounts = {
+            'Checked Out': 0,
+            'Cancelled': 0,
+            'No Show': 0
+        };
+        
+        {% for booking in metrics.past_bookings %}
+        if(statusCounts['{{ booking.status }}'] !== undefined) {
+            statusCounts['{{ booking.status }}']++;
+        }
+        {% endfor %}
+        
+        // Create the chart
+        window.bookingHistoryChart = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: Object.keys(statusCounts),
+                datasets: [{
+                    data: Object.values(statusCounts),
+                    backgroundColor: [
+                        'rgba(75, 192, 192, 0.7)',   // Checked Out - Green
+                        'rgba(255, 99, 132, 0.7)',   // Cancelled - Red
+                        'rgba(255, 205, 86, 0.7)'    // No Show - Yellow
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: {
+                    animateRotate: true,
+                    animateScale: true
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %} 

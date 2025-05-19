@@ -1,0 +1,309 @@
+{% extends 'manager/manager_base.html' %}
+
+{% block title %}Analytics Dashboard{% endblock %}
+
+{% block manager_content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">Analytics Dashboard</h1>
+        <div class="filter-controls">
+            <form class="d-flex" id="yearFilter">
+                <div class="me-2">
+                    <select class="form-select" id="yearSelect" name="year">
+                        {% for y in range(year-2, year+3) %}
+                            <option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="me-2">
+                    <select class="form-select" id="monthSelect" name="month">
+                        <option value="">All Months</option>
+                        {% for m in range(1, 13) %}
+                            <option value="{{ m }}" {% if m == month %}selected{% endif %}>{{ m }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">Apply</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Occupancy Chart -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Monthly Occupancy Rate ({{ year }})</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="occupancyChart" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Revenue and Top Customers -->
+    <div class="row mb-4">
+        <div class="col-md-7">
+            <div class="card h-100">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Revenue by Room Type</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="revenueChart" height="250"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-5">
+            <div class="card h-100">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Top Customers</h5>
+                </div>
+                <div class="card-body overflow-auto" style="max-height: 350px;">
+                    <div id="topCustomersContainer">
+                        <div class="text-center py-5">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Booking Sources and Forecast -->
+    <div class="row">
+        <div class="col-md-5">
+            <div class="card h-100">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Booking Source Distribution</h5>
+                </div>
+                <div class="card-body d-flex justify-content-center">
+                    <div style="max-width: 300px;">
+                        <canvas id="bookingSourcesChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-7">
+            <div class="card h-100">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Booking Forecast (Next 30 Days)</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="forecastChart" height="250"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Colors
+        const colors = {
+            blue: {
+                bg: 'rgba(54, 162, 235, 0.2)',
+                border: 'rgba(54, 162, 235, 1)'
+            },
+            green: {
+                bg: 'rgba(75, 192, 192, 0.2)',
+                border: 'rgba(75, 192, 192, 1)'
+            },
+            yellow: {
+                bg: 'rgba(255, 206, 86, 0.2)',
+                border: 'rgba(255, 206, 86, 1)'
+            }
+        };
+
+        // Chart instances
+        let occupancyChart, revenueChart, bookingSourcesChart, forecastChart;
+
+        // Year and month filters
+        const currentYear = {{ year }};
+        const currentMonth = {{ month or 'null' }};
+
+        // Form submission
+        document.getElementById('yearFilter').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const yearVal = document.getElementById('yearSelect').value;
+            const monthVal = document.getElementById('monthSelect').value;
+            
+            let url = `{{ url_for('manager.analytics') }}?year=${yearVal}`;
+            if (monthVal) {
+                url += `&month=${monthVal}`;
+            }
+            
+            window.location.href = url;
+        });
+
+        // Load Occupancy Chart
+        fetch(`{{ url_for('manager.analytics_data') }}?chart=occupancy&year=${currentYear}`)
+            .then(response => response.json())
+            .then(data => {
+                const ctx = document.getElementById('occupancyChart').getContext('2d');
+                occupancyChart = new Chart(ctx, {
+                    type: 'line',
+                    data: data,
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'top'
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return `${context.dataset.label}: ${context.raw}%`;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100
+                            }
+                        }
+                    }
+                });
+            })
+            .catch(error => console.error('Error loading occupancy chart:', error));
+
+        // Load Revenue Chart
+        let revenueUrl = `{{ url_for('manager.analytics_data') }}?chart=revenue&year=${currentYear}`;
+        if (currentMonth) {
+            revenueUrl += `&month=${currentMonth}`;
+        }
+        
+        fetch(revenueUrl)
+            .then(response => response.json())
+            .then(data => {
+                const ctx = document.getElementById('revenueChart').getContext('2d');
+                revenueChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: data,
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'top'
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return `${context.dataset.label}: $${context.raw.toFixed(2)}`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            })
+            .catch(error => console.error('Error loading revenue chart:', error));
+
+        // Load Top Customers
+        fetch(`{{ url_for('manager.analytics_data') }}?chart=top_customers&limit=5`)
+            .then(response => response.json())
+            .then(data => {
+                const container = document.getElementById('topCustomersContainer');
+                
+                if (data.length === 0) {
+                    container.innerHTML = '<div class="text-center py-3 text-muted">No customer data available</div>';
+                    return;
+                }
+                
+                let html = '<div class="list-group list-group-flush">';
+                
+                data.forEach((customer, index) => {
+                    html += `
+                        <div class="list-group-item p-3">
+                            <div class="d-flex w-100 justify-content-between mb-1">
+                                <h6 class="mb-1">${customer.username}</h6>
+                                <span class="badge bg-success">$${customer.total_spend.toFixed(2)}</span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <small class="text-muted">${customer.email}</small>
+                                <small class="text-muted">${customer.booking_count} bookings</small>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+                container.innerHTML = html;
+            })
+            .catch(error => {
+                console.error('Error loading top customers:', error);
+                document.getElementById('topCustomersContainer').innerHTML = 
+                    '<div class="text-center py-3 text-danger">Error loading customer data</div>';
+            });
+
+        // Load Booking Sources Chart
+        fetch(`{{ url_for('manager.analytics_data') }}?chart=booking_sources`)
+            .then(response => response.json())
+            .then(data => {
+                const ctx = document.getElementById('bookingSourcesChart').getContext('2d');
+                bookingSourcesChart = new Chart(ctx, {
+                    type: 'pie',
+                    data: data,
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const value = context.raw;
+                                        const label = context.label;
+                                        return `${label}: ${value}%`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            })
+            .catch(error => console.error('Error loading booking sources chart:', error));
+
+        // Load Forecast Chart
+        fetch(`{{ url_for('manager.analytics_data') }}?chart=forecast&days=30`)
+            .then(response => response.json())
+            .then(data => {
+                // Format dates to be more readable
+                data.labels = data.labels.map(date => {
+                    const d = new Date(date);
+                    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                });
+                
+                const ctx = document.getElementById('forecastChart').getContext('2d');
+                forecastChart = new Chart(ctx, {
+                    type: 'line',
+                    data: data,
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'top'
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    precision: 0
+                                }
+                            }
+                        }
+                    }
+                });
+            })
+            .catch(error => console.error('Error loading forecast chart:', error));
+    });
+</script>
+{% endblock %} 

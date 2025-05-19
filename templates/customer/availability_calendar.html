@@ -1,0 +1,201 @@
+{% extends 'base.html' %}
+
+{% block title %}Room Availability Calendar - Horizon Hotel{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h1 class="display-6 mb-3">Room Availability Calendar</h1>
+            
+            <div class="card shadow mb-4">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h2 class="h4 mb-0">Check Availability</h2>
+                        <a href="{{ url_for('customer.new_booking') }}" class="btn btn-light btn-sm">
+                            <i class="bi bi-plus-circle"></i> Make a Reservation
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <form method="get" action="{{ url_for('customer.availability_calendar') }}" class="row g-3 mb-4">
+                        <div class="col-md-3">
+                            <label for="start_date" class="form-label">Start Date</label>
+                            <input type="date" class="form-control" id="start_date" name="start_date" 
+                                   value="{{ start_date.strftime('%Y-%m-%d') }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="end_date" class="form-label">End Date</label>
+                            <input type="date" class="form-control" id="end_date" name="end_date" 
+                                   value="{{ end_date.strftime('%Y-%m-%d') }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="room_type_id" class="form-label">Room Type</label>
+                            <select class="form-select" id="room_type_id" name="room_type_id">
+                                <option value="">All Room Types</option>
+                                {% for room_type in room_types %}
+                                <option value="{{ room_type.id }}" {% if selected_room_type_id == room_type.id %}selected{% endif %}>
+                                    {{ room_type.name }} (${{ room_type.base_rate }}/night)
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-search"></i> Update View
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="table-responsive">
+                        <table class="table table-bordered availability-calendar">
+                            <thead>
+                                <tr class="bg-light">
+                                    <th>Room Type</th>
+                                    {% for date in availability_data['dates'] %}
+                                    <th class="text-center">
+                                        <div class="small">{{ date }}</div>
+                                        <div>{{ datetime.strptime(date, '%Y-%m-%d').strftime('%a') }}</div>
+                                    </th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for room_type in availability_data['room_types'] %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ room_type['name'] }}</strong>
+                                        <div class="small text-muted">${{ room_type['base_rate'] }}/night</div>
+                                    </td>
+                                    
+                                    {% for date in availability_data['dates'] %}
+                                    {% set availability = availability_data['availability'][room_type['id']|string][date] %}
+                                    <td class="text-center position-relative 
+                                        {% if availability['available'] == 0 %}
+                                            bg-danger bg-opacity-10
+                                        {% elif availability['available'] < availability['total'] * 0.2 %}
+                                            bg-warning bg-opacity-10
+                                        {% else %}
+                                            bg-success bg-opacity-10
+                                        {% endif %}
+                                    ">
+                                        <span class="d-block">{{ availability['available'] }}</span>
+                                        <small class="text-muted">of {{ availability['total'] }}</small>
+                                        
+                                        {% if availability['available'] > 0 %}
+                                        <a href="{{ url_for('customer.new_booking', check_in_date=date, room_type_id=room_type['id']) }}" 
+                                           class="stretched-link" title="Book this room type">
+                                           <span class="d-none">Book</span>
+                                        </a>
+                                        {% endif %}
+                                    </td>
+                                    {% endfor %}
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <div class="card">
+                                <div class="card-body p-2">
+                                    <div class="d-flex align-items-center justify-content-center small">
+                                        <div class="me-3">
+                                            <span class="badge rounded-pill bg-success bg-opacity-25">&nbsp;</span>
+                                            <span class="ms-1">Good Availability</span>
+                                        </div>
+                                        <div class="me-3">
+                                            <span class="badge rounded-pill bg-warning bg-opacity-25">&nbsp;</span>
+                                            <span class="ms-1">Limited Availability</span>
+                                        </div>
+                                        <div>
+                                            <span class="badge rounded-pill bg-danger bg-opacity-25">&nbsp;</span>
+                                            <span class="ms-1">Fully Booked</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Room Type Information -->
+            <div class="card shadow">
+                <div class="card-header bg-info text-white">
+                    <h3 class="h5 mb-0">Room Types</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for room_type in room_types %}
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100">
+                                <div class="card-header bg-light">
+                                    <h4 class="h6 mb-0">{{ room_type.name }}</h4>
+                                </div>
+                                <div class="card-body">
+                                    <p class="card-text"><strong>Rate:</strong> ${{ room_type.base_rate }}/night</p>
+                                    <p class="card-text"><strong>Capacity:</strong> {{ room_type.capacity }} person(s)</p>
+                                    <p class="card-text small">{{ room_type.description }}</p>
+                                    <p class="card-text small"><strong>Amenities:</strong><br>{{ room_type.amenities }}</p>
+                                </div>
+                                <div class="card-footer bg-white">
+                                    <a href="{{ url_for('customer.new_booking') }}" class="btn btn-primary btn-sm w-100">
+                                        <i class="bi bi-calendar-plus"></i> Reserve Now
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Make cells clickable for better UX
+        const availabilityCells = document.querySelectorAll('td.position-relative');
+        availabilityCells.forEach(cell => {
+            cell.addEventListener('mouseenter', function() {
+                this.classList.add('hover-highlight');
+            });
+            cell.addEventListener('mouseleave', function() {
+                this.classList.remove('hover-highlight');
+            });
+        });
+        
+        // Add event handlers for date inputs
+        const startDate = document.getElementById('start_date');
+        const endDate = document.getElementById('end_date');
+        
+        startDate.addEventListener('change', function() {
+            // Ensure end date is not before start date
+            if (endDate.value && endDate.value < this.value) {
+                endDate.value = this.value;
+            }
+        });
+        
+        endDate.addEventListener('change', function() {
+            // Ensure start date is not after end date
+            if (startDate.value && this.value < startDate.value) {
+                startDate.value = this.value;
+            }
+        });
+    });
+</script>
+<style>
+    .availability-calendar th, .availability-calendar td {
+        min-width: 100px;
+    }
+    .hover-highlight {
+        box-shadow: inset 0 0 0 2px #0d6efd;
+    }
+</style>
+{% endblock %}
+
+{% endblock %} 

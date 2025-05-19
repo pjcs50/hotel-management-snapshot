@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block title %}My Notifications - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-3">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('customer.dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">My Notifications</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-10 offset-md-1">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h1 class="h3">My Notifications</h1>
+                {% if unread_count > 0 %}
+                    <form method="POST" action="{{ url_for('customer.mark_all_customer_notifications_read') }}" class="d-inline">
+                        {{ csrf_token() }} <!-- If using CSRF protection global to forms -->
+                        <button type="submit" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-check2-all"></i> Mark all as Read
+                        </button>
+                    </form>
+                {% endif %}
+            </div>
+
+            {% if notifications %}
+                <div class="list-group shadow-sm">
+                    {% for notification in notifications %}
+                        <a href="{{ notification.link_url if notification.link_url else '#' }}" 
+                           class="list-group-item list-group-item-action {{ 'list-group-item-light' if notification.is_read else 'list-group-item-warning' }}">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">{{ notification.type.replace('_', ' ').title() if notification.type else 'Notification' }}</h5>
+                                <small class="text-muted">{{ notification.created_at | timesince }} ago</small>
+                            </div>
+                            <p class="mb-1">{{ notification.message }}</p>
+                            <div class="d-flex justify-content-end">
+                                {% if not notification.is_read %}
+                                <form method="POST" action="{{ url_for('customer.mark_one_notification_read', notification_id=notification.id) }}" class="ms-2">
+                                    {{ csrf_token() }} <!-- If using CSRF protection global to forms -->
+                                    <button type="submit" class="btn btn-sm btn-link p-0 text-primary">
+                                        <small>Mark as Read</small>
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </a>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="bi bi-bell-slash-fill me-2"></i>
+                    You have no notifications at the moment.
+                </div>
+            {% endif %}
+
+            <div class="mt-4 text-center">
+                 <a href="{{ url_for('customer.dashboard') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+{# Add any specific JS for notifications page if needed #}
+{% endblock %}
+
+{# Jinja filter for time since - to be defined in app setup #}
+{# Example: app.jinja_env.filters['timesince'] = timesince_filter #} 

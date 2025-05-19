@@ -1,0 +1,770 @@
+{% extends "dashboard_base.html" %}
+
+{% block dashboard_title %}Manager Dashboard{% endblock %}
+{% block dashboard_heading %}Manager Dashboard{% endblock %}
+
+{% block metrics_summary %}
+    <div class="row">
+        <div class="col-lg-3 col-md-6 mb-4">
+            <a href="{{ url_for('manager.dashboard') }}" class="text-decoration-none">
+                <div class="card text-white bg-primary h-100 dashboard-card">
+                    <div class="card-header">Room Occupancy Rate</div>
+                    <div class="card-body">
+                        <h2 class="display-4 text-center">{{ metrics.occupancy_rate | default('N/A') }}%</h2>
+                    </div>
+                    <div class="card-footer text-center">
+                        <small>{{ metrics.room_status.get('Occupied', 0) }} out of {{ metrics.total_rooms | default('N/A') }} rooms</small>
+                    </div>
+                </div>
+            </a>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-4">
+            <a href="{{ url_for('manager.reports', report_type='revenue') }}" class="text-decoration-none">
+                <div class="card text-white bg-success h-100 dashboard-card">
+                    <div class="card-header">Avg. Daily Rate (ADR)</div>
+                    <div class="card-body">
+                        <h2 class="display-4 text-center">${{ "%.2f" | format(metrics.adr if metrics.adr is not none else 0.0) }}</h2>
+                    </div>
+                    <div class="card-footer text-center">
+                        <small>Last 30 Days</small>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-4">
+            <a href="{{ url_for('manager.reports', report_type='revenue') }}" class="text-decoration-none">
+                <div class="card text-white bg-info h-100 dashboard-card">
+                    <div class="card-header">RevPAR</div>
+                    <div class="card-body">
+                        <h2 class="display-4 text-center">${{ "%.2f" | format(metrics.revpar if metrics.revpar is not none else 0.0) }}</h2>
+                    </div>
+                    <div class="card-footer text-center">
+                        <small>Last 30 Days</small>
+                    </div>
+                </div>
+            </a>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-4">
+            <a href="{{ url_for('manager.staff') }}" class="text-decoration-none">
+                <div class="card text-white bg-warning h-100 dashboard-card">
+                    <div class="card-header">Total Customers</div>
+                    <div class="card-body">
+                        <h2 class="display-4 text-center">{{ metrics.customer_count | default('N/A') }}</h2>
+                    </div>
+                     <div class="card-footer text-center">
+                        <small>All Time</small>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+{% endblock %}
+    
+{% block dashboard_content %}
+    <!-- New Alerts Section -->
+    {% if metrics.alerts %}
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h3 class="h5">Action Required</h3>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for alert in metrics.alerts %}
+                        <a href="{{ alert.action_url }}" class="list-group-item list-group-item-action">
+                            {% if alert.level == 'warning' %}
+                            <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                            {% elif alert.level == 'danger' %}
+                            <i class="fas fa-exclamation-circle text-danger me-2"></i>
+                            {% elif alert.level == 'info' %}
+                            <i class="fas fa-info-circle text-info me-2"></i>
+                            {% else %}
+                            <i class="fas fa-bell me-2"></i>
+                            {% endif %}
+                            {{ alert.message }}
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+                    <h3 class="h5 mb-0">Room Status Breakdown</h3>
+                    <button class="btn btn-sm btn-light" id="toggleRoomStatusView">Toggle View</button>
+                </div>
+                <div class="card-body">
+                    <div id="roomStatusTable">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Status</th>
+                                        <th>Count</th>
+                                        <th>Percentage</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for status, count in metrics.room_status.items() %}
+                                    <tr>
+                                        <td>{{ status }}</td>
+                                        <td>{{ count }}</td>
+                                        <td>{{ (count / metrics.total_rooms * 100) | round(1) }}%</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div id="roomStatusChart" style="height: 300px; display: none;">
+                        <canvas id="roomStatusCanvas"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h3 class="h5">Staff Overview</h3>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Role</th>
+                                    <th>Count</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for role, count in metrics.staff_counts.items() %}
+                                <tr>
+                                    <td>{{ role | title }}</td>
+                                    <td>{{ count }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Booking Forecast Section (New) -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="h5">7-Day Booking Forecast</h3>
+                </div>
+                <div class="card-body">
+                    <div style="height: 300px;">
+                        <canvas id="forecastCanvas"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h3 class="h5">Historical Occupancy (Last 14 Days)</h3>
+                </div>
+                <div class="card-body">
+                    <div style="height: 300px;">
+                        <canvas id="occupancyTrendCanvas"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<!-- Staff Performance Section -->
+<div class="card mb-4">
+    <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+        <h3 class="h5 mb-0">Top Staff Performers (This Month)</h3>
+        <button class="btn btn-sm btn-light" id="togglePerformanceView">Toggle View</button>
+    </div>
+    <div class="card-body">
+        {% if metrics.top_performers %}
+        <div id="performanceTable">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Staff Member</th>
+                            <th>Role</th>
+                            <th>Tasks Completed</th>
+                            <th>Efficiency Score</th>
+                            <th>Rating</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for staff in metrics.top_performers %}
+                        <tr>
+                            <td>{{ staff.username }}</td>
+                            <td>{{ staff.role | title }}</td>
+                            <td>{{ staff.tasks_completed }}</td>
+                            <td>{{ staff.efficiency_score | round(1) }}%</td>
+                            <td>
+                                <div class="star-rating">
+                                    {% for i in range(5) %}
+                                        {% if i < staff.customer_rating | int %}
+                                            <i class="fas fa-star text-warning"></i>
+                                        {% elif (i < staff.customer_rating) and (i + 1 > staff.customer_rating) %}
+                                            <i class="fas fa-star-half-alt text-warning"></i>
+                                        {% else %}
+                                            <i class="far fa-star text-warning"></i>
+                                        {% endif %}
+                                    {% endfor %}
+                                    <small class="text-muted ml-1">({{ staff.customer_rating | round(1) }})</small>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div id="performanceChart" style="height: 300px; display: none;">
+            <canvas id="performanceCanvas"></canvas>
+        </div>
+        {% else %}
+        <p class="text-center">No performance data available for this month.</p>
+        {% endif %}
+    </div>
+</div>
+    
+    <!-- Maintenance and Housekeeping Status (New) -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h3 class="h5">Maintenance Status</h3>
+                </div>
+                <div class="card-body">
+                    {% if metrics.maintenance_status %}
+                    <div style="height: 200px;">
+                        <canvas id="maintenanceStatusCanvas"></canvas>
+                    </div>
+                    {% else %}
+                    <p class="text-center">No maintenance data available.</p>
+                    {% endif %}
+                </div>
+                <div class="card-footer">
+                    <a href="{{ url_for('manager.maintenance') }}" class="btn btn-sm btn-outline-secondary">View Details</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h3 class="h5">Housekeeping Status</h3>
+                </div>
+                <div class="card-body">
+                    {% if metrics.housekeeping_status %}
+                    <div style="height: 200px;">
+                        <canvas id="housekeepingStatusCanvas"></canvas>
+                    </div>
+                    {% else %}
+                    <p class="text-center">No housekeeping data available.</p>
+                    {% endif %}
+                </div>
+                <div class="card-footer">
+                    <a href="{{ url_for('manager.housekeeping') }}" class="btn btn-sm btn-outline-secondary">View Details</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card mb-4">
+        <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+            <h3 class="h5 mb-0">Revenue By Room Type (This Month)</h3>
+            <button class="btn btn-sm btn-light" id="toggleRevenueView">Toggle View</button>
+        </div>
+        <div class="card-body">
+            {% if metrics.room_type_revenue %}
+            <div id="revenueTable">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Room Type</th>
+                                <th>Revenue</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for room_type, revenue in metrics.room_type_revenue.items() %}
+                            <tr>
+                                <td>{{ room_type }}</td>
+                                <td>${{ revenue | round(2) }}</td>
+                            </tr>
+                            {% endfor %}
+                            <tr class="table-active">
+                                <td><strong>Total</strong></td>
+                                <td><strong>${{ metrics.room_type_revenue.values() | sum | round(2) }}</strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div id="revenueChart" style="height: 300px; display: none;">
+                <canvas id="revenueCanvas"></canvas>
+            </div>
+            {% else %}
+            <p class="text-center">No revenue data available for this month.</p>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}
+
+{% block quick_links %}
+                        <a href="{{ url_for('manager.reports') }}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-chart-bar me-2"></i> Generate Reports
+                        </a>
+                        <a href="{{ url_for('manager.staff') }}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-users-cog me-2"></i> Manage Staff
+                        </a>
+                        <a href="{{ url_for('manager.staff_requests') }}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-user-plus me-2"></i> Staff Requests
+                        </a>
+                        <a href="{{ url_for('manager.pricing') }}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-dollar-sign me-2"></i> Room Pricing
+                        </a>
+{% endblock %}
+
+{% block dashboard_js %}
+<script>
+    // Initialize charts when document is ready
+    document.addEventListener('DOMContentLoaded', function() {
+        // Room status chart
+        {% if metrics.room_status %}
+        initRoomStatusChart('roomStatusCanvas', {{ metrics.room_status|tojson }});
+        {% endif %}
+
+        // Historical occupancy trend chart
+        {% if metrics.historical_occupancy %}
+        initOccupancyChart('occupancyTrendCanvas', {{ metrics.historical_occupancy|tojson }});
+        {% endif %}
+        
+        // Initialize booking forecast chart (new)
+        {% if metrics.booking_forecast %}
+        initForecastChart('forecastCanvas', {{ metrics.booking_forecast|tojson }});
+        {% endif %}
+        
+        // Initialize maintenance status chart (new)
+        {% if metrics.maintenance_status %}
+        initStatusPieChart('maintenanceStatusCanvas', {{ metrics.maintenance_status|tojson }}, 'Maintenance Requests');
+        {% endif %}
+        
+        // Initialize housekeeping status chart (new)
+        {% if metrics.housekeeping_status %}
+        initStatusPieChart('housekeepingStatusCanvas', {{ metrics.housekeeping_status|tojson }}, 'Housekeeping Tasks');
+        {% endif %}
+        
+        // Revenue by room type chart
+        {% if metrics.room_type_revenue %}
+        initRevenueChart('revenueCanvas', {{ metrics.room_type_revenue|tojson }});
+        {% endif %}
+        
+        // Toggle views
+        $('#toggleRoomStatusView').click(function() {
+            $('#roomStatusTable').toggle();
+            $('#roomStatusChart').toggle();
+        });
+        
+        $('#toggleRevenueView').click(function() {
+            $('#revenueTable').toggle();
+            $('#revenueChart').toggle();
+        });
+        
+        $('#togglePerformanceView').click(function() {
+            $('#performanceTable').toggle();
+            $('#performanceChart').toggle();
+            
+            if ($('#performanceChart').is(':visible') && !window.performanceChartInitialized) {
+                initPerformanceChart();
+                window.performanceChartInitialized = true;
+            }
+        });
+    });
+    
+    function initRoomStatusChart(canvasId, statusData) {
+        const ctx = document.getElementById(canvasId).getContext('2d');
+        const labels = Object.keys(statusData);
+        const data = Object.values(statusData);
+        
+        new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: [
+                        'rgba(75, 192, 192, 0.6)',
+                        'rgba(255, 99, 132, 0.6)',
+                        'rgba(255, 206, 86, 0.6)',
+                        'rgba(54, 162, 235, 0.6)',
+                        'rgba(153, 102, 255, 0.6)'
+                    ],
+                    borderColor: [
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(153, 102, 255, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'right'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.raw || 0;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = Math.round((value / total) * 100);
+                                return `${label}: ${value} (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    function initOccupancyChart(canvasId, occupancyData) {
+        const ctx = document.getElementById(canvasId).getContext('2d');
+        const dates = Object.keys(occupancyData);
+        const rates = Object.values(occupancyData);
+        
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: dates,
+                datasets: [{
+                    label: 'Occupancy Rate (%)',
+                    data: rates,
+                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 2,
+                    tension: 0.3
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        title: {
+                            display: true,
+                            text: 'Occupancy Rate (%)'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Date'
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    function initRevenueChart(canvasId, revenueData) {
+        const ctx = document.getElementById(canvasId).getContext('2d');
+        const roomTypes = Object.keys(revenueData);
+        const revenues = Object.values(revenueData);
+        
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: roomTypes,
+                datasets: [{
+                    label: 'Revenue ($)',
+                    data: revenues,
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.6)',
+                        'rgba(54, 162, 235, 0.6)',
+                        'rgba(255, 206, 86, 0.6)',
+                        'rgba(75, 192, 192, 0.6)',
+                        'rgba(153, 102, 255, 0.6)'
+                    ],
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `Revenue: $${context.raw.toFixed(2)}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Revenue ($)'
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    // New chart initialization functions
+    
+    function initForecastChart(canvasId, forecastData) {
+        const ctx = document.getElementById(canvasId).getContext('2d');
+        const dates = Object.keys(forecastData);
+        const bookings = Object.values(forecastData);
+        
+        // Format dates to be more readable (e.g., "Jun 15" instead of "2023-06-15")
+        const formattedDates = dates.map(date => {
+            const d = new Date(date);
+            const options = { month: 'short', day: 'numeric' };
+            return d.toLocaleDateString('en-US', options);
+        });
+        
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: formattedDates,
+                datasets: [{
+                    label: 'New Check-ins',
+                    data: bookings,
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 2,
+                    tension: 0.2,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Number of Check-ins'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Date'
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    function initStatusPieChart(canvasId, statusData, title) {
+        const ctx = document.getElementById(canvasId).getContext('2d');
+        const labels = Object.keys(statusData);
+        const data = Object.values(statusData);
+        
+        // Define colors based on status
+        const backgroundColors = [];
+        const borderColors = [];
+        
+        labels.forEach(label => {
+            if (label.includes('pending')) {
+                backgroundColors.push('rgba(255, 206, 86, 0.6)');
+                borderColors.push('rgba(255, 206, 86, 1)');
+            } else if (label.includes('progress') || label.includes('assigned')) {
+                backgroundColors.push('rgba(54, 162, 235, 0.6)');
+                borderColors.push('rgba(54, 162, 235, 1)');
+            } else if (label.includes('complete') || label.includes('resolved')) {
+                backgroundColors.push('rgba(75, 192, 192, 0.6)');
+                borderColors.push('rgba(75, 192, 192, 1)');
+            } else {
+                backgroundColors.push('rgba(153, 102, 255, 0.6)');
+                borderColors.push('rgba(153, 102, 255, 1)');
+            }
+        });
+        
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels.map(l => l.replace('_', ' ').charAt(0).toUpperCase() + l.replace('_', ' ').slice(1)),
+                datasets: [{
+                    data: data,
+                    backgroundColor: backgroundColors,
+                    borderColor: borderColors,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'right'
+                    },
+                    title: {
+                        display: true,
+                        text: title
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.raw || 0;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = Math.round((value / total) * 100);
+                                return `${label}: ${value} (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    function initPerformanceChart() {
+        // This function would be called when the performance tab is toggled to chart view
+        // Get data from the table and format it for the chart
+        const ctx = document.getElementById('performanceCanvas').getContext('2d');
+        const performers = [];
+        const efficiencyScores = [];
+        const taskCounts = [];
+        const ratings = [];
+        
+        // Extract data from the table
+        $('#performanceTable table tbody tr').each(function() {
+            const cells = $(this).find('td');
+            performers.push(cells.eq(0).text());
+            taskCounts.push(parseInt(cells.eq(2).text(), 10));
+            efficiencyScores.push(parseFloat(cells.eq(3).text()));
+            // Extract rating from the last cell - the number in parentheses
+            const ratingText = cells.eq(4).text();
+            const ratingMatch = ratingText.match(/\(([0-9.]+)\)/);
+            if (ratingMatch) {
+                ratings.push(parseFloat(ratingMatch[1]));
+            } else {
+                ratings.push(0);
+            }
+        });
+        
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: performers,
+                datasets: [
+                    {
+                        label: 'Tasks Completed',
+                        data: taskCounts,
+                        backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1,
+                        yAxisID: 'y-axis-1'
+                    },
+                    {
+                        label: 'Efficiency Score (%)',
+                        data: efficiencyScores,
+                        backgroundColor: 'rgba(255, 206, 86, 0.5)',
+                        borderColor: 'rgba(255, 206, 86, 1)',
+                        borderWidth: 1,
+                        yAxisID: 'y-axis-2'
+                    },
+                    {
+                        label: 'Customer Rating (0-5)',
+                        data: ratings,
+                        backgroundColor: 'rgba(75, 192, 192, 0.5)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1,
+                        yAxisID: 'y-axis-3'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    'y-axis-1': {
+                        type: 'linear',
+                        position: 'left',
+                        title: {
+                            display: true,
+                            text: 'Tasks'
+                        },
+                        beginAtZero: true
+                    },
+                    'y-axis-2': {
+                        type: 'linear',
+                        position: 'right',
+                        title: {
+                            display: true,
+                            text: 'Efficiency (%)'
+                        },
+                        beginAtZero: true,
+                        max: 100,
+                        grid: {
+                            drawOnChartArea: false
+                        }
+                    },
+                    'y-axis-3': {
+                        type: 'linear',
+                        position: 'right',
+                        title: {
+                            display: true,
+                            text: 'Rating'
+                        },
+                        beginAtZero: true,
+                        max: 5,
+                        grid: {
+                            drawOnChartArea: false
+                        }
+                    }
+                }
+            }
+        });
+    }
+</script>
+{% endblock %} 

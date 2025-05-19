@@ -1,0 +1,26 @@
+# Video Demonstration Links
+
+## Phase 1: Foundation & Authentication
+- User Registration Flow: [Link to be added]
+- Staff Approval Workflow: [Link to be added]
+- Role-Based Access Control: [Link to be added]
+
+## Phase 2: Core Functionality
+- Room Management: [Link to be added]
+- Booking Creation: [Link to be added]
+- Dashboard Overview: [Link to be added]
+
+## Phase 3: Operations Workflows
+- Check-in/Check-out Process: [Link to be added]
+- Housekeeping Integration: [Link to be added]
+- Billing and Payments: [Link to be added]
+
+## Phase 4: Advanced Features
+- Reporting: [Link to be added]
+- Loyalty Program: [Link to be added]
+- Seasonal Pricing: [Link to be added]
+
+## Phase 5 & 6: Refinement and Final Demo
+- Complete System Walkthrough: [Link to be added]
+- Edge Case Handling: [Link to be added]
+- Performance Demonstration: [Link to be added] 

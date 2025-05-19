@@ -1,0 +1,208 @@
+{% extends "dashboard_base.html" %}
+
+{% block dashboard_title %}Room History - {{ room.number }}{% endblock %}
+{% block dashboard_heading %}Room History - {{ room.number }}{% endblock %}
+
+{% block dashboard_navigation %}
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <a href="{{ url_for('receptionist.dashboard') }}" class="text-decoration-none">
+            <div class="card bg-secondary text-white h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-speedometer2 display-4"></i>
+                    <h5 class="mt-2">Dashboard</h5>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3 mb-3">
+        <a href="{{ url_for('receptionist.bookings') }}" class="text-decoration-none">
+            <div class="card bg-success text-white h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-calendar-check display-4"></i>
+                    <h5 class="mt-2">Bookings</h5>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3 mb-3">
+        <a href="{{ url_for('receptionist.guest_list') }}" class="text-decoration-none">
+            <div class="card bg-info text-white h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-people display-4"></i>
+                    <h5 class="mt-2">Guests</h5>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3 mb-3">
+        <a href="{{ url_for('receptionist.room_inventory') }}" class="text-decoration-none">
+            <div class="card bg-primary text-white h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-house-door display-4"></i>
+                    <h5 class="mt-2">Room Inventory</h5>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">Room Details</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-4">Room Number</dt>
+                    <dd class="col-sm-8">{{ room.number }}</dd>
+                    
+                    <dt class="col-sm-4">Type</dt>
+                    <dd class="col-sm-8">{{ room.room_type.name }}</dd>
+                    
+                    <dt class="col-sm-4">Current Status</dt>
+                    <dd class="col-sm-8">
+                        <span class="badge 
+                            {% if room.status == 'Available' %}bg-success
+                            {% elif room.status == 'Occupied' %}bg-danger
+                            {% elif room.status == 'Needs Cleaning' %}bg-warning
+                            {% elif room.status == 'Booked' %}bg-info
+                            {% elif room.status == 'Under Maintenance' %}bg-dark
+                            {% else %}bg-secondary{% endif %}">
+                            {{ room.status }}
+                        </span>
+                    </dd>
+                    
+                    <dt class="col-sm-4">Base Rate</dt>
+                    <dd class="col-sm-8">${{ room.room_type.base_rate }}</dd>
+                    
+                    <dt class="col-sm-4">Last Cleaned</dt>
+                    <dd class="col-sm-8">
+                        {% if room.last_cleaned %}
+                        {{ room.last_cleaned.strftime('%Y-%m-%d %H:%M') }}
+                        {% else %}
+                        <span class="text-muted">Not recorded</span>
+                        {% endif %}
+                    </dd>
+                </dl>
+                
+                <div class="d-grid gap-2 mt-3">
+                    <a href="{{ url_for('receptionist.room_inventory') }}" class="btn btn-primary">Back to Inventory</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <ul class="nav nav-tabs" id="roomHistoryTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="status-tab" data-bs-toggle="tab" data-bs-target="#status" type="button" role="tab" aria-controls="status" aria-selected="true">Status History</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="bookings-tab" data-bs-toggle="tab" data-bs-target="#bookings" type="button" role="tab" aria-controls="bookings" aria-selected="false">Booking History</button>
+                </li>
+            </ul>
+            
+            <div class="tab-content p-3" id="roomHistoryTabContent">
+                <div class="tab-pane fade show active" id="status" role="tabpanel" aria-labelledby="status-tab">
+                    {% if logs %}
+                    <div class="table-responsive">
+                        <table class="table table-striped table-bordered">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Date/Time</th>
+                                    <th>Status Change</th>
+                                    <th>Changed By</th>
+                                    <th>Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for log in logs %}
+                                <tr>
+                                    <td>{{ log.change_time.strftime('%Y-%m-%d %H:%M') }}</td>
+                                    <td>
+                                        <span class="badge {% if log.old_status == 'Available' %}bg-success{% elif log.old_status == 'Occupied' %}bg-danger{% elif log.old_status == 'Needs Cleaning' %}bg-warning{% else %}bg-secondary{% endif %}">
+                                            {{ log.old_status or 'N/A' }}
+                                        </span>
+                                        <i class="bi bi-arrow-right"></i>
+                                        <span class="badge {% if log.new_status == 'Available' %}bg-success{% elif log.new_status == 'Occupied' %}bg-danger{% elif log.new_status == 'Needs Cleaning' %}bg-warning{% else %}bg-secondary{% endif %}">
+                                            {{ log.new_status }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if log.user %}
+                                        {{ log.user.username }}
+                                        {% else %}
+                                        <span class="text-muted">System</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ log.notes or '' }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-center my-3">No status change history available for this room.</p>
+                    {% endif %}
+                </div>
+                
+                <div class="tab-pane fade" id="bookings" role="tabpanel" aria-labelledby="bookings-tab">
+                    {% if bookings %}
+                    <div class="table-responsive">
+                        <table class="table table-striped table-bordered">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Booking ID</th>
+                                    <th>Guest</th>
+                                    <th>Dates</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for booking in bookings %}
+                                <tr>
+                                    <td>{{ booking.id }}</td>
+                                    <td>
+                                        {{ booking.customer.name }}
+                                        <br>
+                                        <small class="text-muted">{{ booking.customer.phone or 'No phone' }}</small>
+                                    </td>
+                                    <td>
+                                        {{ booking.check_in_date.strftime('%Y-%m-%d') }} to
+                                        {{ booking.check_out_date.strftime('%Y-%m-%d') }}
+                                        <br>
+                                        <small class="text-muted">{{ booking.nights }} night(s)</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge 
+                                            {% if booking.status == 'Reserved' %}bg-info
+                                            {% elif booking.status == 'Checked In' %}bg-success
+                                            {% elif booking.status == 'Checked Out' %}bg-secondary
+                                            {% elif booking.status == 'Cancelled' %}bg-danger
+                                            {% else %}bg-warning{% endif %}">
+                                            {{ booking.status }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('receptionist.view_booking', booking_id=booking.id) }}" class="btn btn-sm btn-primary">View</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-center my-3">No booking history available for this room.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

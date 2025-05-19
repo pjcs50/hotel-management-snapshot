@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+
+{% block title %}Role Management{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Role Management</h1>
+        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="h5 mb-0">Role Distribution</h2>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Role</th>
+                                    <th>Count</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for role, count in role_stats.items() %}
+                                <tr>
+                                    <td>
+                                        <span class="badge bg-{{ 'success' if role in ['admin', 'manager', 'receptionist', 'housekeeping'] else 'secondary' }}">
+                                            {{ role | title }}
+                                        </span>
+                                    </td>
+                                    <td>{{ count }}</td>
+                                    <td>
+                                        <a href="{{ url_for('admin.users', role=role) }}" class="btn btn-sm btn-info">
+                                            View Users
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header bg-info text-white">
+                    <h2 class="h5 mb-0">Role Permissions</h2>
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        <div class="list-group-item">
+                            <h5 class="mb-1">Admin</h5>
+                            <p class="mb-1">Full system access. Can manage all users, settings, and data.</p>
+                        </div>
+                        <div class="list-group-item">
+                            <h5 class="mb-1">Manager</h5>
+                            <p class="mb-1">Can view all bookings, manage rates, and view reports.</p>
+                        </div>
+                        <div class="list-group-item">
+                            <h5 class="mb-1">Receptionist</h5>
+                            <p class="mb-1">Can create and manage bookings, and handle check-ins/check-outs.</p>
+                        </div>
+                        <div class="list-group-item">
+                            <h5 class="mb-1">Housekeeping</h5>
+                            <p class="mb-1">Can update room status and view cleaning schedules.</p>
+                        </div>
+                        <div class="list-group-item">
+                            <h5 class="mb-1">Customer</h5>
+                            <p class="mb-1">Can make and manage their own bookings.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+            <h2 class="h5 mb-0">Pending Role Requests</h2>
+            <span class="badge bg-dark">{{ pending_requests|length }} requests</span>
+        </div>
+        <div class="card-body">
+            {% if pending_requests %}
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Current Role</th>
+                            <th>Requested Role</th>
+                            <th>Requested Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for request in pending_requests %}
+                        <tr>
+                            <td>{{ request.user.username }}</td>
+                            <td>{{ request.user.email }}</td>
+                            <td>
+                                <span class="badge bg-secondary">
+                                    {{ request.user.role | title }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge bg-info">
+                                    {{ request.role_requested | title }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if hasattr(request, 'created_at') %}
+                                    {{ request.created_at.strftime('%Y-%m-%d') }}
+                                {% else %}
+                                    Unknown
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="{{ url_for('admin.approve_role', user_id=request.user_id) }}" 
+                                       class="btn btn-sm btn-success">Approve</a>
+                                    <a href="{{ url_for('admin.deny_role', user_id=request.user_id) }}" 
+                                       class="btn btn-sm btn-danger">Deny</a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                No pending role requests at this time.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

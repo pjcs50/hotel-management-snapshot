@@ -1,0 +1,605 @@
+{% extends "dashboard_base.html" %}
+
+{% block dashboard_title %}Receptionist Dashboard{% endblock %}
+{% block dashboard_heading %}Receptionist Dashboard{% endblock %}
+
+{% block dashboard_navigation %}
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <a href="{{ url_for('receptionist.dashboard') }}" class="text-decoration-none">
+            <div class="card bg-primary text-white h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-speedometer2 display-4"></i>
+                    <h5 class="mt-2">Dashboard</h5>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3 mb-3">
+        <a href="{{ url_for('receptionist.bookings') }}" class="text-decoration-none">
+            <div class="card bg-success text-white h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-calendar-check display-4"></i>
+                    <h5 class="mt-2">Bookings</h5>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3 mb-3">
+        <a href="{{ url_for('receptionist.guest_list') }}" class="text-decoration-none">
+            <div class="card bg-info text-white h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-people display-4"></i>
+                    <h5 class="mt-2">Guests</h5>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3 mb-3">
+        <a href="{{ url_for('receptionist.room_availability') }}" class="text-decoration-none">
+            <div class="card bg-warning text-dark h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-house-door display-4"></i>
+                    <h5 class="mt-2">Availability</h5>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+{% endblock %}
+    
+{% block metrics_summary %}
+        <div class="col-md-4">
+            <a href="{{ url_for('receptionist.check_in') }}" class="text-decoration-none">
+                <div class="card text-white bg-primary h-100 dashboard-card">
+                    <div class="card-header">Today's Check-ins</div>
+                    <div class="card-body">
+                        <h2 class="display-4 text-center">{{ metrics.todays_checkins }}</h2>
+                    </div>
+                    <div class="card-footer d-flex justify-content-center">
+                        <small>Manage Check-ins</small>
+                    </div>
+                </div>
+            </a>
+        </div>
+        
+        <div class="col-md-4">
+            <a href="{{ url_for('receptionist.check_out') }}" class="text-decoration-none">
+                <div class="card text-white bg-success h-100 dashboard-card">
+                    <div class="card-header">Today's Check-outs</div>
+                    <div class="card-body">
+                        <h2 class="display-4 text-center">{{ metrics.todays_checkouts }}</h2>
+                    </div>
+                    <div class="card-footer d-flex justify-content-center">
+                        <small>Manage Check-outs</small>
+                    </div>
+                </div>
+            </a>
+        </div>
+        
+        <div class="col-md-4">
+            <a href="{{ url_for('receptionist.bookings') }}" class="text-decoration-none">
+                <div class="card text-white bg-info h-100 dashboard-card">
+                    <div class="card-header">Tomorrow's Check-ins</div>
+                    <div class="card-body">
+                        <h2 class="display-4 text-center">{{ metrics.tomorrows_checkins }}</h2>
+                    </div>
+                    <div class="card-footer d-flex justify-content-center">
+                        <small>View Bookings</small>
+                    </div>
+                </div>
+            </a>
+        </div>
+{% endblock %}
+    
+{% block dashboard_content %}
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+                    <h3 class="h5 mb-0">Room Status</h3>
+                    <button class="btn btn-sm btn-light" id="toggleRoomStatusView">Toggle View</button>
+                </div>
+                <div class="card-body">
+                    <div id="roomStatusTable">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="card text-white bg-success mb-3">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title">Available</h5>
+                                        <h3>{{ metrics.available_rooms }}</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card text-white bg-danger mb-3">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title">Occupied</h5>
+                                        <h3>{{ metrics.occupied_rooms }}</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card text-white bg-warning mb-3">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title">Cleaning</h5>
+                                        <h3>{{ metrics.cleaning_rooms }}</h3>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="roomStatusChart" style="height: 250px; display: none;">
+                        <canvas id="roomStatusCanvas"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card h-100">
+                <ul class="nav nav-tabs" id="checkInOutTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="checkin-tab" data-bs-toggle="tab" data-bs-target="#checkin" type="button" role="tab" aria-controls="checkin" aria-selected="true">Today's Check-ins</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="checkout-tab" data-bs-toggle="tab" data-bs-target="#checkout" type="button" role="tab" aria-controls="checkout" aria-selected="false">Today's Check-outs</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="inhouse-tab" data-bs-toggle="tab" data-bs-target="#inhouse" type="button" role="tab" aria-controls="inhouse" aria-selected="false">In-House Guests</button>
+                    </li>
+                </ul>
+                <div class="tab-content p-3" id="checkInOutTabContent" style="max-height: 380px; overflow-y: auto;">
+                    <div class="tab-pane fade show active" id="checkin" role="tabpanel" aria-labelledby="checkin-tab">
+                        {% if metrics.todays_checkin_list %}
+                        <div class="table-responsive">
+                            <table class="table table-sm table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Guest</th>
+                                        <th>Room</th>
+                                        <th>Notes</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for booking in metrics.todays_checkin_list %}
+                                    <tr class="{% if booking.is_vip %}table-warning{% endif %}">
+                                        <td>
+                                            {{ booking.customer_name }}
+                                            {% if booking.is_vip %}<span class="badge bg-warning text-dark">VIP</span>{% endif %}
+                                            <br>
+                                            <small class="text-muted">{{ booking.customer_phone }}</small>
+                                        </td>
+                                        <td>
+                                            {{ booking.room_number }} ({{ booking.room_type }})<br>
+                                            <small class="text-muted">{{ booking.nights }} night(s)</small>
+                                        </td>
+                                        <td>
+                                            {% if booking.special_requests %}
+                                            <small><strong>Special Requests:</strong> 
+                                            {% for request in booking.special_requests %}
+                                                {{ request }}{% if not loop.last %}, {% endif %}
+                                            {% endfor %}
+                                            </small>
+                                            {% endif %}
+                                            
+                                            {% if booking.notes %}
+                                            <br><small><strong>Notes:</strong> {{ booking.notes }}</small>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="{{ url_for('receptionist.check_in_guest', booking_id=booking.id) }}" class="btn btn-primary">Check In</a>
+                                                <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    <span class="visually-hidden">Toggle Dropdown</span>
+                                                </button>
+                                                <ul class="dropdown-menu">
+                                                    <li><a class="dropdown-item" href="{{ url_for('receptionist.view_booking', booking_id=booking.id) }}">View Details</a></li>
+                                                    <li><a class="dropdown-item" href="{{ url_for('receptionist.view_guest', customer_id=booking.customer_id) }}">Guest Profile</a></li>
+                                                </ul>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <p class="text-center my-3">No check-ins scheduled for today.</p>
+                        {% endif %}
+                    </div>
+                    <div class="tab-pane fade" id="checkout" role="tabpanel" aria-labelledby="checkout-tab">
+                        {% if metrics.todays_checkout_list %}
+                        <div class="table-responsive">
+                            <table class="table table-sm table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Guest</th>
+                                        <th>Room</th>
+                                        <th>Balance</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for booking in metrics.todays_checkout_list %}
+                                    <tr>
+                                        <td>
+                                            {{ booking.customer_name }}<br>
+                                            <small class="text-muted">{{ booking.customer_phone }}</small>
+                                        </td>
+                                        <td>
+                                            {{ booking.room_number }} ({{ booking.room_type }})<br>
+                                            <small class="text-muted">{{ booking.nights }} night(s)</small>
+                                            {% if booking.late_hours > 0 %}
+                                            <span class="badge bg-info">Late checkout +{{ booking.late_hours }}h</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if booking.payment_status == 'Fully Paid' %}
+                                            <span class="badge bg-success">{{ booking.payment_status }}</span>
+                                            {% elif booking.balance_due > 0 %}
+                                            <span class="badge bg-danger">${{ booking.balance_due }}</span><br>
+                                            <small class="text-muted">{{ booking.payment_status }}</small>
+                                            {% else %}
+                                            <span class="badge bg-secondary">{{ booking.payment_status }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="{{ url_for('receptionist.check_out_guest', booking_id=booking.id) }}" class="btn btn-success">Check Out</a>
+                                                <button type="button" class="btn btn-success dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    <span class="visually-hidden">Toggle Dropdown</span>
+                                                </button>
+                                                <ul class="dropdown-menu">
+                                                    <li><a class="dropdown-item" href="{{ url_for('receptionist.view_folio', booking_id=booking.id) }}">View Folio</a></li>
+                                                    <li><a class="dropdown-item" href="{{ url_for('receptionist.view_booking', booking_id=booking.id) }}">View Details</a></li>
+                                                    <li><a class="dropdown-item" href="{{ url_for('receptionist.process_payment', booking_id=booking.id) }}">Process Payment</a></li>
+                                                </ul>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <p class="text-center my-3">No check-outs scheduled for today.</p>
+                        {% endif %}
+                    </div>
+                    <div class="tab-pane fade" id="inhouse" role="tabpanel" aria-labelledby="inhouse-tab">
+                        {% if metrics.in_house_guests %}
+                        <div class="table-responsive">
+                            <table class="table table-sm table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Guest</th>
+                                        <th>Room</th>
+                                        <th>Stay Info</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for guest in metrics.in_house_guests %}
+                                    <tr class="{% if guest.is_vip %}table-warning{% endif %}">
+                                        <td>
+                                            {{ guest.customer_name }}
+                                            {% if guest.is_vip %}<span class="badge bg-warning text-dark">VIP</span>{% endif %}
+                                        </td>
+                                        <td>{{ guest.room_number }} ({{ guest.room_type }})</td>
+                                        <td>
+                                            <small>Check-out: {{ guest.check_out_date }}</small><br>
+                                            <small class="text-muted">{{ guest.nights_remaining }} night(s) remaining</small>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <button type="button" class="btn btn-info dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    Actions
+                                                </button>
+                                                <ul class="dropdown-menu">
+                                                    <li><a class="dropdown-item" href="{{ url_for('receptionist.view_booking', booking_id=guest.id) }}">View Details</a></li>
+                                                    <li><a class="dropdown-item" href="{{ url_for('receptionist.view_folio', booking_id=guest.id) }}">View Folio</a></li>
+                                                    <li><a class="dropdown-item" href="{{ url_for('receptionist.post_charge', booking_id=guest.id) }}">Post Charge</a></li>
+                                                    <li><a class="dropdown-item" href="{{ url_for('receptionist.process_payment', booking_id=guest.id) }}">Process Payment</a></li>
+                                                </ul>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <p class="text-center my-3">No guests currently checked in.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Room Status Overview -->
+    <div class="card mb-4">
+        <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+            <h3 class="h5 mb-0">Room Status Overview</h3>
+            <span class="badge bg-light text-dark">Occupancy: {{ metrics.occupancy_rate }}%</span>
+        </div>
+        <div class="card-body">
+            <div class="row mb-3">
+                <div class="col-md-3">
+                    <div class="card text-white bg-success mb-3">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Available</h5>
+                            <h2>{{ metrics.available_rooms }}</h2>
+                            <p class="small">of {{ metrics.total_rooms }} total rooms</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-white bg-danger mb-3">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Occupied</h5>
+                            <h2>{{ metrics.occupied_rooms }}</h2>
+                            <p class="small">{{ metrics.occupancy_rate }}% occupancy</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-white bg-warning mb-3">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Cleaning</h5>
+                            <h2>{{ metrics.cleaning_rooms }}</h2>
+                            <p class="small">awaiting housekeeping</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-white bg-info mb-3">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Arrivals Today</h5>
+                            <h2>{{ metrics.todays_checkins }}</h2>
+                            <p class="small">{{ metrics.todays_checkouts }} departures</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Room Type Status -->
+            <h5 class="mb-3">Status by Room Type</h5>
+            <div class="table-responsive">
+                <table class="table table-striped table-bordered">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Room Type</th>
+                            <th>Total</th>
+                            <th>Available</th>
+                            <th>Occupied</th>
+                            <th>Cleaning</th>
+                            <th>Occupancy %</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for room_type_id, stats in metrics.room_type_status.items() %}
+                        <tr>
+                            <td>{{ stats.name }}</td>
+                            <td>{{ stats.total_rooms }}</td>
+                            <td>
+                                <span class="badge {% if stats.available_rooms > 0 %}bg-success{% else %}bg-danger{% endif %}">
+                                    {{ stats.available_rooms }}
+                                </span>
+                            </td>
+                            <td>{{ stats.occupied_rooms }}</td>
+                            <td>{{ stats.cleaning_rooms }}</td>
+                            <td>
+                                <div class="progress">
+                                    <div class="progress-bar {% if stats.occupancy_rate > 80 %}bg-danger{% elif stats.occupancy_rate > 60 %}bg-warning{% else %}bg-success{% endif %}" 
+                                        role="progressbar" 
+                                        style="width: {{ stats.occupancy_rate }}%;" 
+                                        aria-valuenow="{{ stats.occupancy_rate }}" 
+                                        aria-valuemin="0" 
+                                        aria-valuemax="100">{{ stats.occupancy_rate }}%</div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="text-center mt-3">
+                <a href="{{ url_for('receptionist.room_inventory') }}" class="btn btn-primary">View Full Room Inventory</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card mb-4">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <h3 class="h5 mb-0">Recent Bookings</h3>
+        <button class="btn btn-sm btn-light" id="toggleRecentBookingsView">Toggle View</button>
+        </div>
+        <div class="card-body">
+        <div id="recentBookingsTable">
+            {% if metrics.recent_bookings %}
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Guest</th>
+                            <th>Room</th>
+                            <th>Check-in</th>
+                            <th>Check-out</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for booking in metrics.recent_bookings %}
+                        <tr>
+                            <td>{{ booking.id }}</td>
+                            <td>{{ booking.customer_name }}</td>
+                            <td>{{ booking.room_number }}</td>
+                            <td>{{ booking.check_in_date }}</td>
+                            <td>{{ booking.check_out_date }}</td>
+                            <td>{{ booking.status }}</td>
+                            <td>
+                                <a href="{{ url_for('receptionist.view_booking', booking_id=booking.id) }}" class="btn btn-sm btn-info">View</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-center">No recent bookings available.</p>
+            {% endif %}
+        </div>
+        <div id="recentBookingsChart" style="height: 300px; display: none;">
+            <canvas id="bookingStatusCanvas"></canvas>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block quick_links %}
+                        <a href="{{ url_for('receptionist.new_booking') }}" class="list-group-item list-group-item-action">
+                            <i class="bi bi-calendar-plus me-2"></i> New Booking
+                        </a>
+                        <a href="{{ url_for('receptionist.search_guest') }}" class="list-group-item list-group-item-action">
+                            <i class="bi bi-search me-2"></i> Search Guest
+                        </a>
+                        <a href="{{ url_for('receptionist.room_availability') }}" class="list-group-item list-group-item-action">
+                            <i class="bi bi-house-door me-2"></i> Room Availability
+                        </a>
+                        <a href="{{ url_for('receptionist.guest_list') }}" class="list-group-item list-group-item-action">
+                            <i class="bi bi-people me-2"></i> Guest List
+                        </a>
+{% endblock %}
+
+{% block dashboard_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+    // Add animations to dashboard metric cards
+    const metricCards = document.querySelectorAll('.dashboard-card');
+    metricCards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-5px)';
+            this.style.boxShadow = '0 6px 12px rgba(0, 0, 0, 0.15)';
+            this.style.transition = 'all 0.3s ease';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+            this.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
+        });
+    });
+    
+    // Toggle room status view
+        const toggleRoomStatusBtn = document.getElementById('toggleRoomStatusView');
+        if (toggleRoomStatusBtn) {
+            toggleRoomStatusBtn.addEventListener('click', function() {
+            const tableDiv = document.getElementById('roomStatusTable');
+            const chartDiv = document.getElementById('roomStatusChart');
+            
+            if (tableDiv.style.display === 'none') {
+                tableDiv.style.display = 'block';
+                chartDiv.style.display = 'none';
+                toggleRoomStatusBtn.textContent = 'Chart View';
+            } else {
+                tableDiv.style.display = 'none';
+                chartDiv.style.display = 'block';
+                toggleRoomStatusBtn.textContent = 'Table View';
+                
+                // Initialize chart if not already done
+                if (!window.roomStatusChart) {
+                    initRoomStatusChart();
+                }
+            }
+        });
+    }
+    
+    // Toggle recent bookings view
+    const toggleRecentBookingsBtn = document.getElementById('toggleRecentBookingsView');
+    if (toggleRecentBookingsBtn) {
+        toggleRecentBookingsBtn.addEventListener('click', function() {
+            const tableDiv = document.getElementById('recentBookingsTable');
+            const chartDiv = document.getElementById('recentBookingsChart');
+            
+            if (tableDiv.style.display === 'none') {
+                tableDiv.style.display = 'block';
+                chartDiv.style.display = 'none';
+                toggleRecentBookingsBtn.textContent = 'Chart View';
+                } else {
+                tableDiv.style.display = 'none';
+                chartDiv.style.display = 'block';
+                toggleRecentBookingsBtn.textContent = 'Table View';
+                
+                // Initialize chart if not already done
+                if (!window.bookingStatusChart) {
+                    initBookingStatusChart();
+                }
+            }
+        });
+    }
+    
+    // Initialize room status chart
+    function initRoomStatusChart() {
+        const roomStatusData = {
+            'Available': {{ metrics.available_rooms if metrics.available_rooms is defined else 0 }},
+            'Occupied': {{ metrics.occupied_rooms if metrics.occupied_rooms is defined else 0 }},
+            'Cleaning': {{ metrics.cleaning_rooms if metrics.cleaning_rooms is defined else 0 }}
+        };
+        
+        // Initialize chart using the function from dashboard-charts.js
+        initRoomStatusChart('roomStatusCanvas', roomStatusData);
+    }
+    
+    // Initialize booking status chart
+    function initBookingStatusChart() {
+        const ctx = document.getElementById('bookingStatusCanvas');
+        if (!ctx) return;
+        
+        // Count bookings by status
+        const statusCounts = {};
+        {% if metrics.recent_bookings %}
+            {% for booking in metrics.recent_bookings %}
+                statusCounts['{{ booking.status }}'] = (statusCounts['{{ booking.status }}'] || 0) + 1;
+            {% endfor %}
+        {% endif %}
+        
+        const labels = Object.keys(statusCounts);
+        const data = Object.values(statusCounts);
+        
+        // Create color array based on status
+        const backgroundColor = labels.map(status => {
+            if (status === 'Reserved') return 'rgba(255, 205, 86, 0.7)'; // Yellow
+            if (status === 'Checked In') return 'rgba(54, 162, 235, 0.7)'; // Blue
+            if (status === 'Checked Out') return 'rgba(75, 192, 192, 0.7)'; // Green
+            if (status === 'Cancelled') return 'rgba(255, 99, 132, 0.7)'; // Red
+            return 'rgba(153, 102, 255, 0.7)'; // Purple (default)
+        });
+        
+        window.bookingStatusChart = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: backgroundColor,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: {
+                    animateRotate: true,
+                    animateScale: true,
+                    duration: 1000
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %} 

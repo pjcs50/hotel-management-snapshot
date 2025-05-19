@@ -1,0 +1,251 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Horizon Hotel{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="display-6"><i class="bi bi-speedometer2"></i> Dashboard</h1>
+        <p class="text-muted">Welcome to Horizon Hotel Management System.</p>
+    </div>
+    <div class="col-auto">
+        <div class="text-end">
+            <div class="fs-6">Today: <strong>{{ today_date }}</strong></div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card-counter bg-primary text-white">
+            <i class="bi bi-door-open"></i>
+            <div class="ms-2">
+                <div class="count-numbers">{{ stats.rooms_available|default(0) }}</div>
+                <div class="count-name">Available Rooms</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card-counter bg-success text-white">
+            <i class="bi bi-calendar-check"></i>
+            <div class="ms-2">
+                <div class="count-numbers">{{ stats.today_checkins|default(0) }}</div>
+                <div class="count-name">Check-ins Today</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card-counter bg-warning text-dark">
+            <i class="bi bi-calendar-x"></i>
+            <div class="ms-2">
+                <div class="count-numbers">{{ stats.today_checkouts|default(0) }}</div>
+                <div class="count-name">Check-outs Today</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card-counter bg-info text-white">
+            <i class="bi bi-people"></i>
+            <div class="ms-2">
+                <div class="count-numbers">{{ stats.guests_in_house|default(0) }}</div>
+                <div class="count-name">Guests in House</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-lg-6">
+        <div class="card dashboard-card h-100">
+            <div class="card-header bg-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0"><i class="bi bi-calendar-event"></i> Today's Arrivals</h5>
+                    <a href="#" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                {% if arrivals|default([])|length > 0 %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Guest</th>
+                                <th>Room</th>
+                                <th>Arrival Time</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for arrival in arrivals|default([]) %}
+                            <tr>
+                                <td>{{ arrival.guest_name|default('Guest Name') }}</td>
+                                <td>{{ arrival.room_number|default('101') }}</td>
+                                <td>{{ arrival.arrival_time|default('2:00 PM') }}</td>
+                                <td>
+                                    <span class="badge bg-primary">{{ arrival.status|default('Confirmed') }}</span>
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-success" data-bs-toggle="tooltip" title="Check In">
+                                        <i class="bi bi-box-arrow-in-right"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            
+                            {% if not arrivals|default([]) %}
+                            <tr>
+                                <td colspan="5" class="text-center py-3">No arrivals scheduled for today.</td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-calendar-x fs-1 text-muted"></i>
+                    <p class="mt-2 text-muted">No arrivals scheduled for today</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6">
+        <div class="card dashboard-card h-100">
+            <div class="card-header bg-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0"><i class="bi bi-box-arrow-right"></i> Today's Departures</h5>
+                    <a href="#" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                {% if departures|default([])|length > 0 %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Guest</th>
+                                <th>Room</th>
+                                <th>Checkout Time</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for departure in departures|default([]) %}
+                            <tr>
+                                <td>{{ departure.guest_name|default('Guest Name') }}</td>
+                                <td>{{ departure.room_number|default('101') }}</td>
+                                <td>{{ departure.checkout_time|default('11:00 AM') }}</td>
+                                <td>
+                                    <span class="badge bg-warning text-dark">{{ departure.status|default('Pending') }}</span>
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-warning" data-bs-toggle="tooltip" title="Check Out">
+                                        <i class="bi bi-box-arrow-right"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            
+                            {% if not departures|default([]) %}
+                            <tr>
+                                <td colspan="5" class="text-center py-3">No departures scheduled for today.</td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-calendar-x fs-1 text-muted"></i>
+                    <p class="mt-2 text-muted">No departures scheduled for today</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card dashboard-card">
+            <div class="card-header bg-white">
+                <h5 class="card-title mb-0"><i class="bi bi-calendar3"></i> Availability Overview</h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center py-5">
+                    <div class="text-muted">
+                        <i class="bi bi-calendar-week fs-1"></i>
+                        <p class="mt-2">Calendar will be displayed here</p>
+                        <p class="small">Using FullCalendar component</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card dashboard-card mb-4">
+            <div class="card-header bg-white">
+                <h5 class="card-title mb-0"><i class="bi bi-graph-up"></i> Occupancy Rate</h5>
+            </div>
+            <div class="card-body text-center">
+                <div class="display-4 fw-bold text-primary">{{ stats.occupancy_rate|default('75%') }}</div>
+                <p class="text-muted">Current Occupancy</p>
+                
+                <hr class="my-4">
+                
+                <div class="row">
+                    <div class="col-6 border-end">
+                        <h6>This Week</h6>
+                        <div class="fs-5 fw-bold">{{ stats.weekly_occupancy|default('82%') }}</div>
+                    </div>
+                    <div class="col-6">
+                        <h6>This Month</h6>
+                        <div class="fs-5 fw-bold">{{ stats.monthly_occupancy|default('78%') }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card dashboard-card">
+            <div class="card-header bg-white">
+                <h5 class="card-title mb-0"><i class="bi bi-bell"></i> Recent Notifications</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for notification in notifications|default([]) %}
+                    <a href="#" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ notification.title|default('Notification Title') }}</h6>
+                            <small>{{ notification.time|default('3h ago') }}</small>
+                        </div>
+                        <p class="mb-1 text-muted small">{{ notification.message|default('Notification message details') }}</p>
+                    </a>
+                    {% endfor %}
+                    
+                    {% if not notifications|default([]) %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-bell-slash fs-1 text-muted"></i>
+                        <p class="mt-2 text-muted">No new notifications</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- This would be where we include FullCalendar JS if it's needed -->
+<!-- For now we'll just show a placeholder -->
+<script>
+    // Placeholder for dashboard charts and calendar initialization
+</script>
+{% endblock %} 

@@ -1,0 +1,277 @@
+{% extends 'manager/manager_base.html' %}
+
+{% block title %}Waitlist Management{% endblock %}
+
+{% block manager_content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">Waitlist Management</h1>
+        <form action="{{ url_for('manager.process_waitlist_cancellations') }}" method="POST" class="d-inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-sync-alt me-1"></i> Process Cancellations
+            </button>
+        </form>
+    </div>
+
+    <!-- Status filter tabs -->
+    <ul class="nav nav-tabs mb-4">
+        <li class="nav-item">
+            <a class="nav-link {% if not status_filter %}active{% endif %}" href="{{ url_for('manager.waitlist') }}">
+                All Entries
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if status_filter == 'waiting' %}active{% endif %}" href="{{ url_for('manager.waitlist', status='waiting') }}">
+                Waiting
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if status_filter == 'promoted' %}active{% endif %}" href="{{ url_for('manager.waitlist', status='promoted') }}">
+                Promoted
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if status_filter == 'expired' %}active{% endif %}" href="{{ url_for('manager.waitlist', status='expired') }}">
+                Expired
+            </a>
+        </li>
+    </ul>
+
+    <!-- Waitlist counts by room type -->
+    {% if room_type_counts %}
+    <div class="row mb-4">
+        {% for room_type, count in room_type_counts.items() %}
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <h5 class="card-title">{{ room_type }}</h5>
+                    <p class="card-text">
+                        <span class="h2">{{ count }}</span>
+                        <span class="text-muted">waiting</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="card">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">
+                Waitlist Entries 
+                {% if status_filter %}
+                <span class="badge bg-secondary">{{ status_filter }}</span>
+                {% endif %}
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Customer</th>
+                            <th>Room Type</th>
+                            <th>Dates</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if entries %}
+                            {% for entry in entries %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-container me-2">
+                                                <span class="avatar avatar-sm bg-primary">
+                                                    {{ entry.customer.username[0]|upper }}
+                                                </span>
+                                            </div>
+                                            <div>
+                                                <div class="fw-semibold">{{ entry.customer.username }}</div>
+                                                <div class="small text-muted">{{ entry.customer.email }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ entry.room_type.name }}</td>
+                                    <td>{{ entry.requested_date_start.strftime('%b %d, %Y') }} - {{ entry.requested_date_end.strftime('%b %d, %Y') }}</td>
+                                    <td>
+                                        {% if entry.status == 'waiting' %}
+                                            <span class="badge bg-warning text-dark">Waiting</span>
+                                        {% elif entry.status == 'promoted' %}
+                                            <span class="badge bg-success">Promoted</span>
+                                        {% elif entry.status == 'expired' %}
+                                            <span class="badge bg-secondary">Expired</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ entry.created_at.strftime('%b %d, %Y') }}</td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{{ url_for('manager.view_waitlist_entry', entry_id=entry.id) }}" class="btn btn-outline-primary">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            {% if entry.status == 'waiting' %}
+                                            <button type="button" class="btn btn-outline-success" 
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#promoteModal{{ entry.id }}">
+                                                <i class="fas fa-arrow-up"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-outline-danger" 
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#expireModal{{ entry.id }}">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                            {% endif %}
+                                        </div>
+
+                                        <!-- Promote Modal -->
+                                        {% if entry.status == 'waiting' %}
+                                        <div class="modal fade" id="promoteModal{{ entry.id }}" tabindex="-1" aria-hidden="true">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title">Promote Waitlist Entry</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <p>Are you sure you want to promote <strong>{{ entry.customer.username }}</strong> from the waitlist?</p>
+                                                        <p class="mb-0"><strong>Room Type:</strong> {{ entry.room_type.name }}</p>
+                                                        <p class="mb-0"><strong>Dates:</strong> {{ entry.requested_date_start.strftime('%b %d, %Y') }} - {{ entry.requested_date_end.strftime('%b %d, %Y') }}</p>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                        <form action="{{ url_for('manager.promote_waitlist_entry', entry_id=entry.id) }}" method="POST">
+                                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                                                            <button type="submit" class="btn btn-success">Promote to Booking</button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Expire Modal -->
+                                        <div class="modal fade" id="expireModal{{ entry.id }}" tabindex="-1" aria-hidden="true">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title">Expire Waitlist Entry</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <form action="{{ url_for('manager.expire_waitlist_entry', entry_id=entry.id) }}" method="POST" id="expireForm{{ entry.id }}">
+                                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                                                            <p>Are you sure you want to expire this waitlist entry?</p>
+                                                            <div class="mb-3">
+                                                                <label for="reason{{ entry.id }}" class="form-label">Reason (optional)</label>
+                                                                <textarea class="form-control" id="reason{{ entry.id }}" name="reason" rows="2"></textarea>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                        <button type="submit" form="expireForm{{ entry.id }}" class="btn btn-danger">Expire Entry</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center py-4">
+                                    <div class="text-muted">
+                                        <i class="fas fa-info-circle me-2"></i> No waitlist entries found
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        {% if pagination.pages > 1 %}
+        <div class="card-footer">
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center mb-0">
+                    {% if pagination.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('manager.waitlist', page=pagination.prev_num, status=status_filter) }}">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link"><i class="fas fa-chevron-left"></i></span>
+                    </li>
+                    {% endif %}
+
+                    {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                        {% if page_num %}
+                            {% if page_num == pagination.page %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ page_num }}</span>
+                            </li>
+                            {% else %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('manager.waitlist', page=page_num, status=status_filter) }}">{{ page_num }}</a>
+                            </li>
+                            {% endif %}
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">...</span>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if pagination.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('manager.waitlist', page=pagination.next_num, status=status_filter) }}">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link"><i class="fas fa-chevron-right"></i></span>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="card mt-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">About Waitlist Management</h5>
+        </div>
+        <div class="card-body">
+            <p>The waitlist system allows you to manage customers waiting for unavailable rooms:</p>
+            <ul>
+                <li><strong>Process Cancellations</strong>: Automatically find matching waitlist entries when rooms become available</li>
+                <li><strong>Promote to Booking</strong>: Convert a waitlist entry into an actual booking</li>
+                <li><strong>Expire</strong>: Remove entries that are no longer valid or needed</li>
+            </ul>
+            <p class="mb-0 text-muted">When a room becomes available, the system automatically notifies the longest-waiting customer for that room type.</p>
+        </div>
+    </div>
+</div>
+
+<style>
+    .avatar {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        color: white;
+        font-weight: 500;
+    }
+</style>
+{% endblock %} 

@@ -1,0 +1,377 @@
+{% extends 'base.html' %}
+
+{% block title %}Room Availability Management - Horizon Hotel{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h1 class="display-6">Room Availability Management</h1>
+                <div>
+                    <a href="{{ url_for('receptionist.bookings') }}" class="btn btn-outline-primary me-2">
+                        <i class="bi bi-list-ul"></i> Manage Bookings
+                    </a>
+                    <a href="#" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newBookingModal">
+                        <i class="bi bi-plus-circle"></i> New Booking
+                    </a>
+                </div>
+            </div>
+            
+            <div class="card shadow mb-4">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h2 class="h4 mb-0">Availability Calendar</h2>
+                        <div>
+                            <button class="btn btn-light btn-sm me-2" id="printCalendar">
+                                <i class="bi bi-printer"></i> Print
+                            </button>
+                            <button class="btn btn-light btn-sm" id="exportCsv">
+                                <i class="bi bi-download"></i> Export
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <form method="get" action="{{ url_for('receptionist.availability_calendar') }}" class="row g-3 mb-4">
+                        <div class="col-md-2">
+                            <label for="start_date" class="form-label">Start Date</label>
+                            <input type="date" class="form-control" id="start_date" name="start_date" 
+                                   value="{{ start_date.strftime('%Y-%m-%d') }}">
+                        </div>
+                        <div class="col-md-2">
+                            <label for="end_date" class="form-label">End Date</label>
+                            <input type="date" class="form-control" id="end_date" name="end_date" 
+                                   value="{{ end_date.strftime('%Y-%m-%d') }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="room_type_id" class="form-label">Room Type</label>
+                            <select class="form-select" id="room_type_id" name="room_type_id">
+                                <option value="">All Room Types</option>
+                                {% for room_type in room_types %}
+                                <option value="{{ room_type.id }}" {% if selected_room_type_id == room_type.id %}selected{% endif %}>
+                                    {{ room_type.name }} (${{ room_type.base_rate }}/night)
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-search"></i> Update View
+                            </button>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="button" class="btn btn-outline-secondary w-100" id="quickRangeToggle">
+                                <i class="bi bi-calendar3"></i> Quick Ranges
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <div class="collapse mb-3" id="quickRangeCollapse">
+                        <div class="card card-body">
+                            <div class="d-flex flex-wrap gap-2">
+                                <button class="btn btn-sm btn-outline-secondary quick-range" data-days="7">Next 7 Days</button>
+                                <button class="btn btn-sm btn-outline-secondary quick-range" data-days="14">Next 14 Days</button>
+                                <button class="btn btn-sm btn-outline-secondary quick-range" data-days="30">Next 30 Days</button>
+                                <button class="btn btn-sm btn-outline-secondary quick-range" data-days="60">Next 60 Days</button>
+                                <button class="btn btn-sm btn-outline-secondary quick-range" data-days="90">Next 90 Days</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-bordered availability-calendar">
+                            <thead>
+                                <tr class="bg-light">
+                                    <th>Room Type</th>
+                                    {% for date in availability_data['dates'] %}
+                                    <th class="text-center date-column {% if date == today_str %}today{% endif %}">
+                                        <div class="small">{{ date }}</div>
+                                        <div>{{ datetime.strptime(date, '%Y-%m-%d').strftime('%a') }}</div>
+                                    </th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for room_type in availability_data['room_types'] %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ room_type['name'] }}</strong>
+                                        <div class="small text-muted">${{ room_type['base_rate'] }}/night</div>
+                                        <div class="small text-muted">{{ room_type['capacity'] }} person(s)</div>
+                                    </td>
+                                    
+                                    {% for date in availability_data['dates'] %}
+                                    {% set availability = availability_data['availability'][room_type['id']|string][date] %}
+                                    <td class="text-center position-relative 
+                                        {% if date == today_str %}today-column{% endif %}
+                                        {% if availability['available'] == 0 %}
+                                            bg-danger bg-opacity-10
+                                        {% elif availability['available'] < availability['total'] * 0.2 %}
+                                            bg-warning bg-opacity-10
+                                        {% else %}
+                                            bg-success bg-opacity-10
+                                        {% endif %}
+                                    ">
+                                        <span class="d-block fw-bold">{{ availability['available'] }}</span>
+                                        <small class="text-muted">of {{ availability['total'] }}</small>
+                                        
+                                        <button class="btn btn-sm btn-link p-0 position-absolute top-0 end-0 m-1 calendar-info-btn"
+                                                data-bs-toggle="modal" data-bs-target="#roomDetailsModal"
+                                                data-room-type-id="{{ room_type['id'] }}"
+                                                data-date="{{ date }}"
+                                                data-room-type-name="{{ room_type['name'] }}">
+                                            <i class="bi bi-info-circle-fill"></i>
+                                        </button>
+                                    </td>
+                                    {% endfor %}
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <div class="card">
+                                <div class="card-body p-2">
+                                    <div class="d-flex align-items-center justify-content-center small">
+                                        <div class="me-3">
+                                            <span class="badge rounded-pill bg-success bg-opacity-25">&nbsp;</span>
+                                            <span class="ms-1">Good Availability</span>
+                                        </div>
+                                        <div class="me-3">
+                                            <span class="badge rounded-pill bg-warning bg-opacity-25">&nbsp;</span>
+                                            <span class="ms-1">Limited Availability (< 20%)</span>
+                                        </div>
+                                        <div>
+                                            <span class="badge rounded-pill bg-danger bg-opacity-25">&nbsp;</span>
+                                            <span class="ms-1">Fully Booked</span>
+                                        </div>
+                                        <div class="ms-4 border-start ps-3">
+                                            <i class="bi bi-calendar-check text-primary"></i>
+                                            <span class="ms-1">Today's Date</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Room Statistics -->
+            <div class="card shadow">
+                <div class="card-header bg-info text-white">
+                    <h3 class="h5 mb-0">Room Occupancy Statistics</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="card mb-3">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">Total Rooms</h5>
+                                    <p class="display-4">{{ availability_data['room_stats']['total_rooms'] }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card mb-3">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">Available Today</h5>
+                                    <p class="display-4">{{ availability_data['room_stats']['available_today'] }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card mb-3">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">Occupied Today</h5>
+                                    <p class="display-4">{{ availability_data['room_stats']['occupied_today'] }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card mb-3">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">Overall Occupancy</h5>
+                                    <p class="display-4">{{ availability_data['room_stats']['occupancy_rate'] }}%</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Room Details Modal -->
+<div class="modal fade" id="roomDetailsModal" tabindex="-1" aria-labelledby="roomDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="roomDetailsModalLabel">Room Details</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Loading room details...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <a href="#" class="btn btn-primary" id="createBookingBtn">
+                    <i class="bi bi-plus-circle"></i> Create Booking
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- New Booking Modal -->
+<div class="modal fade" id="newBookingModal" tabindex="-1" aria-labelledby="newBookingModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="newBookingModalLabel">Create New Booking</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-center">
+                    <i class="bi bi-exclamation-circle text-warning"></i>
+                    New booking functionality will be implemented soon.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Today's date for highlighting
+        const today = new Date().toISOString().split('T')[0];
+        
+        // Toggle quick range options
+        const quickRangeToggle = document.getElementById('quickRangeToggle');
+        const quickRangeCollapse = document.getElementById('quickRangeCollapse');
+        
+        quickRangeToggle.addEventListener('click', function() {
+            const bsCollapse = new bootstrap.Collapse(quickRangeCollapse);
+            bsCollapse.toggle();
+        });
+        
+        // Quick range selection
+        const quickRangeButtons = document.querySelectorAll('.quick-range');
+        quickRangeButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const days = parseInt(this.getAttribute('data-days'));
+                const startDateInput = document.getElementById('start_date');
+                const endDateInput = document.getElementById('end_date');
+                
+                // Set start date to today
+                const startDate = new Date();
+                startDateInput.value = startDate.toISOString().split('T')[0];
+                
+                // Set end date to today + days
+                const endDate = new Date();
+                endDate.setDate(endDate.getDate() + days);
+                endDateInput.value = endDate.toISOString().split('T')[0];
+                
+                // Submit the form
+                this.closest('form').submit();
+            });
+        });
+        
+        // Room details modal
+        const roomDetailsModal = document.getElementById('roomDetailsModal');
+        const calendarInfoButtons = document.querySelectorAll('.calendar-info-btn');
+        const createBookingBtn = document.getElementById('createBookingBtn');
+        
+        roomDetailsModal.addEventListener('show.bs.modal', function(event) {
+            const button = event.relatedTarget;
+            const roomTypeId = button.getAttribute('data-room-type-id');
+            const date = button.getAttribute('data-date');
+            const roomTypeName = button.getAttribute('data-room-type-name');
+            
+            // Set modal title
+            const modalTitle = this.querySelector('.modal-title');
+            modalTitle.textContent = `${roomTypeName} - ${date}`;
+            
+            // Set create booking button URL
+            createBookingBtn.href = `/receptionist/bookings/new?room_type_id=${roomTypeId}&check_in_date=${date}`;
+            
+            // Load room details into modal (placeholder - would need an API endpoint)
+            const modalBody = this.querySelector('.modal-body');
+            modalBody.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div><p class="mt-2">Loading room details...</p></div>';
+            
+            // Simulate loading details (would be an API call in production)
+            setTimeout(() => {
+                modalBody.innerHTML = `
+                    <div class="alert alert-info">
+                        This would display detailed information about available rooms for ${roomTypeName} on ${date},
+                        including room numbers, status, and booking options.
+                    </div>
+                    <p>In the completed implementation, this modal would show:</p>
+                    <ul>
+                        <li>List of specific available rooms of this type</li>
+                        <li>Current status of each room</li>
+                        <li>Option to create booking for specific room</li>
+                        <li>Option to view existing bookings for this date</li>
+                    </ul>
+                `;
+            }, 1000);
+        });
+        
+        // Print calendar functionality
+        const printCalendarBtn = document.getElementById('printCalendar');
+        printCalendarBtn.addEventListener('click', function() {
+            window.print();
+        });
+        
+        // Export CSV functionality (placeholder)
+        const exportCsvBtn = document.getElementById('exportCsv');
+        exportCsvBtn.addEventListener('click', function() {
+            alert('This functionality will be implemented in a future update.');
+        });
+    });
+</script>
+<style>
+    .availability-calendar th, .availability-calendar td {
+        min-width: 100px;
+    }
+    .today, .today-column {
+        background-color: rgba(13, 110, 253, 0.05);
+        border-left: 2px solid #0d6efd !important;
+        border-right: 2px solid #0d6efd !important;
+    }
+    .calendar-info-btn {
+        opacity: 0.5;
+    }
+    .calendar-info-btn:hover {
+        opacity: 1;
+    }
+    
+    @media print {
+        .no-print {
+            display: none !important;
+        }
+        .card {
+            border: none !important;
+        }
+        .card-header {
+            background-color: #f8f9fa !important;
+            color: #000 !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% endblock %} 

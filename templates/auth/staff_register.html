@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block title %}Staff Registration - Horizon Hotel{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-secondary text-white text-center">
+                    <h4 class="mb-0">Staff Registration</h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> Staff accounts require approval from a manager before activation.
+                    </div>
+                    
+                    <form method="POST" action="{{ url_for('auth.staff_register') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Username</label>
+                            <input type="text" class="form-control" id="username" name="username" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="role_requested" class="form-label">Role</label>
+                            <select class="form-select" id="role_requested" name="role_requested" required>
+                                <option value="" selected disabled>Select a role</option>
+                                {% for role in roles %}
+                                <option value="{{ role }}">{{ role|title }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="password" name="password" required>
+                            <small class="form-text text-muted">Password must be at least 8 characters</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="confirm_password" class="form-label">Confirm Password</label>
+                            <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-secondary">Register</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer text-center">
+                    <p class="mb-0">Already have an account? <a href="{{ url_for('auth.login') }}" class="text-decoration-none">Login</a></p>
+                    <hr>
+                    <p class="mb-0">Are you a guest?</p>
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-outline-primary mt-2">Guest Registration</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

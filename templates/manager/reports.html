@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}Manager Reports{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">{{ title|default('Manager Reports') }}</h1>
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('manager.dashboard') }}">Dashboard</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Reports</li>
+        </ol>
+    </nav>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h3 class="h5 mb-0">Report Results</h3>
+        </div>
+        <div class="card-body">
+            {% if report_data %}
+                <p>Report data would be displayed here.</p>
+                {# Example: <pre>{{ report_data|tojson(indent=2) }}</pre> #}
+            {% elif error %}
+                <div class="alert alert-danger">
+                    {{ error }}
+                </div>
+            {% else %}
+                <p>No report data available or report type not recognized.</p>
+            {% endif %}
+        </div>
+    </div>
+    <a href="{{ url_for('manager.dashboard') }}" class="btn btn-secondary mb-4">
+        <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+    </a>
+</div>
+{% endblock %} 

@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+{% from '_form_macros.html' import render_field %} <!-- Assuming this exists -->
+
+{% block title %}Edit Booking - #{{ booking.confirmation_code or booking.id }} - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-3">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('customer.dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('customer.bookings') }}">My Bookings</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('customer.booking_details', booking_id=booking.id) }}">Booking #{{ booking.confirmation_code or booking.id }}</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Edit</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-8 offset-md-2">
+            <h1 class="display-6 mb-3">Edit Booking <small class="text-muted">#{{ booking.confirmation_code or booking.id }}</small></h1>
+            
+            <div class="card shadow">
+                <div class="card-header bg-warning text-dark">
+                    <h2 class="h4 mb-0">Modify Your Reservation</h2>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{{ url_for('customer.edit_booking', booking_id=booking.id) }}" id="editBookingForm">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        {{ form.customer_id() }} {# Assumes it's set correctly by obj=booking #}
+                        {{ form.status(type="hidden") }} {# Status is not editable by customer here #}
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                {{ render_field(form.check_in_date, label_visible=true, class="form-control", type="date") }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ render_field(form.check_out_date, label_visible=true, class="form-control", type="date") }}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-8">
+                                {{ render_field(form.room_id, label_visible=true, class="form-select", id="room_id_select") }}
+                                {% if not form.room_id.choices and request.method == 'POST' and request.form.get('action') == 'update_options' %}
+                                    <div class="alert alert-warning mt-2">
+                                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                        No rooms available for the new dates/criteria.
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                {{ render_field(form.num_guests, label_visible=true, class="form-control", type="number", min=1, max=10) }}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                             {{ render_field(form.special_requests, label_visible=true, class="form-control", rows="3", placeholder=form.special_requests.description) }}
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                {{ render_field(form.early_hours, label_visible=true, class="form-control", type="number", min=0, max=12, placeholder="e.g., 2 for 2 hours early") }}
+                                <div class="form-text">Standard check-in 3:00 PM. Fees may apply.</div>
+                            </div>
+                            <div class="col-md-6">
+                                {{ render_field(form.late_hours, label_visible=true, class="form-control", type="number", min=0, max=12, placeholder="e.g., 2 for 2 hours late") }}
+                                <div class="form-text">Standard check-out 11:00 AM. Fees may apply.</div>
+                            </div>
+                        </div>
+
+                        {% if estimated_price is not none %}
+                        <div class="alert alert-info mt-3">
+                            <strong>Estimated New Total Price:</strong> ${{ "%.2f"|format(estimated_price) }}
+                            <small class="d-block">Original Price: ${{ "%.2f"|format(booking.total_price) }}. Final price confirmed upon update. Payment differences handled separately if any.</small>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="mb-3 alert alert-secondary" role="alert">
+                            <i class="bi bi-info-circle-fill me-2"></i>
+                            Fields marked with <span class="text-danger">*</span> are required.
+                        </div>
+                        
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{{ url_for('customer.booking_details', booking_id=booking.id) }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Cancel Edit
+                            </a>
+                            <button type="submit" class="btn btn-warning" id="updateBookingBtn">
+                                <i class="bi bi-pencil-square"></i> Update Booking
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Room types display could be useful here too, similar to new_booking.html -->
+            <div class="card shadow mt-4">
+                <div class="card-header bg-light">
+                    <h3 class="h5 mb-0">Available Room Types (for reference)</h3>
+                </div>
+                <div class="card-body">
+                    {% if room_types %}
+                    <div class="row">
+                        {% for room_type in room_types %}
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100">
+                                <div class="card-header">
+                                    <h4 class="h6 mb-0">{{ room_type.name }}</h4>
+                                </div>
+                                <div class="card-body">
+                                    <p class="card-text"><strong>Base Rate:</strong> ${{ "%.2f"|format(room_type.base_rate) }}/night</p>
+                                    <p class="card-text"><strong>Capacity:</strong> {{ room_type.capacity }} person(s)</p>
+                                    <p class="card-text small"><em>{{ room_type.description }}</em></p>
+                                    {% if room_type.amenities %}
+                                    <p class="card-text small"><strong>Amenities:</strong><br>{{ room_type.amenities }}</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p>No room types available at the moment.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const checkInDateEl = document.getElementById('check_in_date');
+        const checkOutDateEl = document.getElementById('check_out_date');
+        const roomIdSelectEl = document.getElementById('room_id_select'); 
+        const editBookingForm = document.getElementById('editBookingForm');
+
+        function submitFormForUpdate() {
+            let updateInput = document.createElement('input');
+            updateInput.type = 'hidden';
+            updateInput.name = 'action';
+            updateInput.value = 'update_options';
+            editBookingForm.appendChild(updateInput);
+            editBookingForm.submit();
+        }
+
+        if (checkInDateEl) {
+            checkInDateEl.addEventListener('change', function() {
+                if (checkOutDateEl.value) { 
+                   submitFormForUpdate();
+                }
+            });
+        }
+        if (checkOutDateEl) {
+            checkOutDateEl.addEventListener('change', function() {
+                 if (checkInDateEl.value) { 
+                    submitFormForUpdate();
+                }
+            });
+        }
+        // Consider if room selection change should also trigger update_options if it affects price components not covered by date changes alone
+        // if (roomIdSelectEl) {
+        //     roomIdSelectEl.addEventListener('change', submitFormForUpdate);
+        // }
+    });
+</script>
+{% endblock %} 

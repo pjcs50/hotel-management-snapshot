@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}Staff Details - {{ staff.username }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Staff Details</h1>
+    
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('manager.dashboard') }}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('manager.staff') }}">Staff Management</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ staff.username }}</li>
+        </ol>
+    </nav>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="h5 mb-0">Staff Information</h3>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <div class="rounded-circle bg-secondary text-white d-inline-flex justify-content-center align-items-center mb-3" style="width: 100px; height: 100px; font-size: 2rem;">
+                            {{ staff.username[0].upper() }}
+                        </div>
+                        <h4>{{ staff.username }}</h4>
+                        <p class="text-muted">{{ staff.role | title }}</p>
+                        <span class="badge {% if staff.is_active %}bg-success{% else %}bg-danger{% endif %}">
+                            {% if staff.is_active %}Active{% else %}Inactive{% endif %}
+                        </span>
+                    </div>
+                    
+                    <table class="table">
+                        <tr>
+                            <th>Email:</th>
+                            <td>{{ staff.email }}</td>
+                        </tr>
+                        <tr>
+                            <th>Joined:</th>
+                            <td>{{ staff.created_at.strftime('%Y-%m-%d') }}</td>
+                        </tr>
+                        <tr>
+                            <th>ID:</th>
+                            <td>#{{ staff.id }}</td>
+                        </tr>
+                    </table>
+                    
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('manager.edit_staff', staff_id=staff.id) }}" class="btn btn-primary">
+                            <i class="fas fa-edit me-2"></i> Edit Staff
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h3 class="h5 mb-0">Activity Overview</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 text-center mb-3">
+                            <h5>Logins</h5>
+                            <h3>{{ activity_data.logins }}</h3>
+                        </div>
+                        <div class="col-md-4 text-center mb-3">
+                            <h5>Actions</h5>
+                            <h3>{{ activity_data.actions }}</h3>
+                        </div>
+                        <div class="col-md-4 text-center mb-3">
+                            <h5>Last Login</h5>
+                            <h3>{{ activity_data.last_login }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h3 class="h5 mb-0">Performance Metrics</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 text-center mb-3">
+                            <h5>Tasks Completed</h5>
+                            <h3>{{ performance_metrics.tasks_completed }}</h3>
+                        </div>
+                        <div class="col-md-4 text-center mb-3">
+                            <h5>Avg Response Time</h5>
+                            <h3>{{ performance_metrics.avg_response_time }} mins</h3>
+                        </div>
+                        <div class="col-md-4 text-center mb-3">
+                            <h5>Rating</h5>
+                            <h3>
+                                {% for i in range(5) %}
+                                    {% if i < performance_metrics.rating %}
+                                        <i class="fas fa-star text-warning"></i>
+                                    {% else %}
+                                        <i class="far fa-star text-warning"></i>
+                                    {% endif %}
+                                {% endfor %}
+                            </h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card mb-4">
+        <div class="card-header bg-secondary text-white">
+            <h3 class="h5 mb-0">Recent Activity</h3>
+        </div>
+        <div class="card-body">
+            <p class="text-center">No recent activity found.</p>
+        </div>
+    </div>
+    
+    <a href="{{ url_for('manager.staff') }}" class="btn btn-secondary mb-4">
+        <i class="fas fa-arrow-left me-2"></i> Back to Staff Management
+    </a>
+</div>
+{% endblock %} 

@@ -1,0 +1,341 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Admin Dashboard</h1>
+    
+    <!-- Admin Navigation Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <a href="{{ url_for('admin.dashboard') }}" class="text-decoration-none">
+                <div class="card bg-primary text-white h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-speedometer2 display-4"></i>
+                        <h5 class="mt-2">Dashboard</h5>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-3 mb-3">
+            <a href="{{ url_for('admin.guests') }}" class="text-decoration-none">
+                <div class="card bg-success text-white h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-person-vcard display-4"></i>
+                        <h5 class="mt-2">Guests</h5>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-3 mb-3">
+            <a href="{{ url_for('admin.reservations') }}" class="text-decoration-none">
+                <div class="card bg-info text-white h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-calendar-check display-4"></i>
+                        <h5 class="mt-2">Reservations</h5>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-3 mb-3">
+            <a href="{{ url_for('admin.reports') }}" class="text-decoration-none">
+                <div class="card bg-warning text-dark h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-graph-up display-4"></i>
+                        <h5 class="mt-2">Reports</h5>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+    
+    {% if metrics.error %}
+    <div class="alert alert-danger">
+        {{ metrics.error }}
+    </div>
+    {% else %}
+    
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-white bg-primary h-100">
+                <div class="card-header">Total Users</div>
+                <div class="card-body">
+                    <h2 class="display-4 text-center">{{ metrics.total_users }}</h2>
+                </div>
+                <div class="card-footer d-flex justify-content-center">
+                    <a href="{{ url_for('admin.users') }}" class="btn btn-light btn-sm">Manage Users</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card text-white bg-success h-100">
+                <div class="card-header">Total Bookings</div>
+                <div class="card-body">
+                    <h2 class="display-4 text-center">{{ metrics.total_bookings }}</h2>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card text-white bg-info h-100">
+                <div class="card-header">Active Bookings</div>
+                <div class="card-body">
+                    <h2 class="display-4 text-center">{{ metrics.active_bookings }}</h2>
+                </div>
+                <div class="card-footer text-center">
+                    <small>Reserved or Checked In</small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card text-white bg-warning h-100">
+                <div class="card-header">Pending Role Requests</div>
+                <div class="card-body">
+                    <h2 class="display-4 text-center">{{ metrics.pending_role_requests|length }}</h2>
+                </div>
+                <div class="card-footer d-flex justify-content-center">
+                    <a href="{{ url_for('admin.roles') }}" class="btn btn-light btn-sm">Manage Roles</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+                    <h3 class="h5 mb-0">Users by Role</h3>
+                    <button class="btn btn-sm btn-light" id="toggleRoleView">Toggle View</button>
+                </div>
+                <div class="card-body">
+                    <div id="userRoleTable">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Role</th>
+                                        <th>Count</th>
+                                        <th>Percentage</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for role, count in metrics.user_counts.items() %}
+                                    <tr>
+                                        <td>{{ role | title }}</td>
+                                        <td>{{ count }}</td>
+                                        <td>{{ (count / metrics.total_users * 100) | round(1) }}%</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div id="userRoleChart" style="height: 300px; display: none;">
+                        <canvas id="userRolesCanvas"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header bg-info text-white">
+                    <h3 class="h5">User Registrations (Last 30 Days)</h3>
+                </div>
+                <div class="card-body">
+                    <div style="height: 300px;">
+                        <canvas id="registrationHistoryCanvas"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card mb-4">
+        <div class="card-header bg-warning text-dark">
+            <h3 class="h5">Pending Role Requests</h3>
+        </div>
+        <div class="card-body">
+            {% if metrics.pending_role_requests %}
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Current Role</th>
+                            <th>Requested Role</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in metrics.pending_role_requests %}
+                        <tr>
+                            <td>{{ user.username }}</td>
+                            <td>{{ user.email }}</td>
+                            <td>{{ user.current_role | title }}</td>
+                            <td>{{ user.requested_role | title }}</td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="{{ url_for('admin.approve_role', user_id=user.id) }}" class="btn btn-sm btn-success">Approve</a>
+                                    <a href="{{ url_for('admin.deny_role', user_id=user.id) }}" class="btn btn-sm btn-danger">Deny</a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-center">No pending role requests at this time.</p>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="card mb-4">
+        <div class="card-header bg-success text-white">
+            <h3 class="h5">Recent User Registrations</h3>
+        </div>
+        <div class="card-body">
+            {% if metrics.recent_users %}
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Registered</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in metrics.recent_users %}
+                        <tr>
+                            <td>{{ user.username }}</td>
+                            <td>{{ user.email }}</td>
+                            <td>{{ user.role | title }}</td>
+                            <td>{{ user.created_at }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-center">No recent user registrations.</p>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="h5">Quick Links</h3>
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        <a href="{{ url_for('admin.users') }}" class="list-group-item list-group-item-action">
+                            <i class="bi bi-people me-2"></i> Manage Users
+                        </a>
+                        <a href="{{ url_for('admin.roles') }}" class="list-group-item list-group-item-action">
+                            <i class="bi bi-person-badge me-2"></i> Manage Roles
+                        </a>
+                        <a href="{{ url_for('admin.guests') }}" class="list-group-item list-group-item-action">
+                            <i class="bi bi-person-vcard me-2"></i> Guest Management
+                        </a>
+                        <a href="{{ url_for('admin.reservations') }}" class="list-group-item list-group-item-action">
+                            <i class="bi bi-calendar-check me-2"></i> Reservations
+                        </a>
+                        <a href="{{ url_for('admin.reports') }}" class="list-group-item list-group-item-action">
+                            <i class="bi bi-graph-up me-2"></i> Reports & Analytics
+                        </a>
+                        <a href="{{ url_for('admin.settings') }}" class="list-group-item list-group-item-action">
+                            <i class="bi bi-gear me-2"></i> System Settings
+                        </a>
+                        <a href="{{ url_for('admin.logs') }}" class="list-group-item list-group-item-action">
+                            <i class="bi bi-journal-text me-2"></i> System Logs
+                        </a>
+                        <a href="{{ url_for('admin.backup') }}" class="list-group-item list-group-item-action">
+                            <i class="bi bi-cloud-download me-2"></i> Backup System
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/dashboard-charts.js') }}"></script>
+<script>
+    // Initialize charts when document is ready
+    document.addEventListener('DOMContentLoaded', function() {
+        // User roles chart
+        {% if metrics.user_counts %}
+        initUserRolesChart('userRolesCanvas', {{ metrics.user_counts|tojson }});
+        {% endif %}
+
+        // Registration history chart
+        {% if metrics.user_registration_history %}
+        const registrationHistoryCtx = document.getElementById('registrationHistoryCanvas');
+        const registrationHistoryData = {{ metrics.user_registration_history|tojson }};
+        
+        new Chart(registrationHistoryCtx, {
+            type: 'line',
+            data: {
+                labels: Object.keys(registrationHistoryData).map(date => {
+                    if (date.includes('-')) {
+                        const [year, month, day] = date.split('-');
+                        return `${month}/${day}`;
+                    }
+                    return date;
+                }),
+                datasets: [{
+                    label: 'New Users',
+                    data: Object.values(registrationHistoryData),
+                    borderColor: 'rgba(40, 167, 69, 1)',
+                    backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                    tension: 0.3,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
+                        }
+                    }
+                }
+            }
+        });
+        {% endif %}
+
+        // Toggle user role view (table/chart)
+        const toggleRoleBtn = document.getElementById('toggleRoleView');
+        const userRoleTable = document.getElementById('userRoleTable');
+        const userRoleChart = document.getElementById('userRoleChart');
+        
+        if (toggleRoleBtn) {
+            toggleRoleBtn.addEventListener('click', function() {
+                if (userRoleTable.style.display !== 'none') {
+                    userRoleTable.style.display = 'none';
+                    userRoleChart.style.display = 'block';
+                } else {
+                    userRoleTable.style.display = 'block';
+                    userRoleChart.style.display = 'none';
+                }
+            });
+        }
+    });
+</script>
+{% endblock %} 

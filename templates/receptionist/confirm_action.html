@@ -1,0 +1,29 @@
+{% extends "dashboard_base.html" %}
+
+{% block dashboard_title %}{{ title }}{% endblock %}
+{% block dashboard_heading %}{{ title }}{% endblock %}
+
+{% block dashboard_content %}
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">{{ title }}</h5>
+    </div>
+    <div class="card-body">
+        <p class="mb-4">{{ message }}</p>
+        
+        <form method="POST" action="{{ form_action }}">
+            {% if show_notes %}
+            <div class="mb-3">
+                <label for="notes" class="form-label">Notes (optional)</label>
+                <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Enter any additional information..."></textarea>
+            </div>
+            {% endif %}
+            
+            <div class="d-flex justify-content-end">
+                <a href="{{ return_url }}" class="btn btn-secondary me-2">Cancel</a>
+                <button type="submit" class="btn btn-primary">Confirm</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %} 

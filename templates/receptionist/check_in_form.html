@@ -1,0 +1,196 @@
+{% extends "dashboard_base.html" %}
+
+{% block dashboard_title %}Guest Check-in{% endblock %}
+{% block dashboard_heading %}Guest Check-in{% endblock %}
+
+{% block dashboard_navigation %}
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <a href="{{ url_for('receptionist.dashboard') }}" class="text-decoration-none">
+            <div class="card bg-secondary text-white h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-speedometer2 display-4"></i>
+                    <h5 class="mt-2">Dashboard</h5>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3 mb-3">
+        <a href="{{ url_for('receptionist.bookings') }}" class="text-decoration-none">
+            <div class="card bg-success text-white h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-calendar-check display-4"></i>
+                    <h5 class="mt-2">Bookings</h5>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3 mb-3">
+        <a href="{{ url_for('receptionist.guest_list') }}" class="text-decoration-none">
+            <div class="card bg-info text-white h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-people display-4"></i>
+                    <h5 class="mt-2">Guests</h5>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3 mb-3">
+        <a href="{{ url_for('receptionist.check_in') }}" class="text-decoration-none">
+            <div class="card bg-primary text-white h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-box-arrow-in-right display-4"></i>
+                    <h5 class="mt-2">Check-in</h5>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">Guest Information</h5>
+            </div>
+            <div class="card-body">
+                <h5 class="card-title">{{ booking.customer.name }}</h5>
+                <dl class="row">
+                    <dt class="col-sm-4">Email</dt>
+                    <dd class="col-sm-8">{{ booking.customer.email or 'Not provided' }}</dd>
+                    
+                    <dt class="col-sm-4">Phone</dt>
+                    <dd class="col-sm-8">{{ booking.customer.phone or 'Not provided' }}</dd>
+                    
+                    <dt class="col-sm-4">Address</dt>
+                    <dd class="col-sm-8">{{ booking.customer.address or 'Not provided' }}</dd>
+                    
+                    <dt class="col-sm-4">Emergency Contact</dt>
+                    <dd class="col-sm-8">{{ booking.customer.emergency_contact or 'Not provided' }}</dd>
+                </dl>
+            </div>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">Room Information</h5>
+            </div>
+            <div class="card-body">
+                <h5 class="card-title">Room {{ booking.room.number }}</h5>
+                <dl class="row">
+                    <dt class="col-sm-4">Type</dt>
+                    <dd class="col-sm-8">{{ booking.room.room_type.name }}</dd>
+                    
+                    <dt class="col-sm-4">Rate</dt>
+                    <dd class="col-sm-8">${{ booking.room.room_type.base_rate }}/night</dd>
+                    
+                    <dt class="col-sm-4">Status</dt>
+                    <dd class="col-sm-8">
+                        <span class="badge {% if booking.room.status == 'Available' %}bg-success{% else %}bg-danger{% endif %}">
+                            {{ booking.room.status }}
+                        </span>
+                    </dd>
+                    
+                    {% if booking.room.last_cleaned %}
+                    <dt class="col-sm-4">Last Cleaned</dt>
+                    <dd class="col-sm-8">{{ booking.room.last_cleaned.strftime('%Y-%m-%d %H:%M') }}</dd>
+                    {% endif %}
+                </dl>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Check-in Form</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <h5 class="alert-heading">Booking Details</h5>
+                    <p>Booking #{{ booking.id }}</p>
+                    <dl class="row">
+                        <dt class="col-sm-3">Check-in Date</dt>
+                        <dd class="col-sm-9">{{ booking.check_in_date.strftime('%Y-%m-%d') }}</dd>
+                        
+                        <dt class="col-sm-3">Check-out Date</dt>
+                        <dd class="col-sm-9">{{ booking.check_out_date.strftime('%Y-%m-%d') }}</dd>
+                        
+                        <dt class="col-sm-3">Length of Stay</dt>
+                        <dd class="col-sm-9">{{ booking.nights }} night(s)</dd>
+                        
+                        <dt class="col-sm-3">Guests</dt>
+                        <dd class="col-sm-9">{{ booking.num_guests }} person(s)</dd>
+                        
+                        <dt class="col-sm-3">Total Price</dt>
+                        <dd class="col-sm-9">${{ booking.total_price }}</dd>
+                        
+                        <dt class="col-sm-3">Current Payment</dt>
+                        <dd class="col-sm-9">${{ booking.payment_amount }} ({{ booking.payment_status }})</dd>
+                        
+                        <dt class="col-sm-3">Balance Due</dt>
+                        <dd class="col-sm-9">${{ booking.balance_due }}</dd>
+                        
+                        {% if booking.special_requests %}
+                        <dt class="col-sm-3">Special Requests</dt>
+                        <dd class="col-sm-9">
+                            <ul class="mb-0">
+                                {% for request in booking.special_requests %}
+                                <li>{{ request }}</li>
+                                {% endfor %}
+                            </ul>
+                        </dd>
+                        {% endif %}
+                    </dl>
+                </div>
+                
+                <form method="POST" action="{{ url_for('receptionist.check_in_guest', booking_id=booking.id) }}">
+                    <h5 class="mt-4">Check-in Information</h5>
+                    
+                    {% if booking.balance_due > 0 %}
+                    <div class="mb-3">
+                        <label for="payment_amount" class="form-label">Payment Amount (Balance Due: ${{ booking.balance_due }})</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" class="form-control" id="payment_amount" name="payment_amount" step="0.01" min="0" max="{{ booking.balance_due }}">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="payment_type" class="form-label">Payment Method</label>
+                        <select class="form-select" id="payment_type" name="payment_type">
+                            <option value="Credit Card">Credit Card</option>
+                            <option value="Debit Card">Debit Card</option>
+                            <option value="Cash">Cash</option>
+                            <option value="Bank Transfer">Bank Transfer</option>
+                            <option value="Loyalty Points">Loyalty Points</option>
+                            <option value="Gift Card">Gift Card</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mb-3">
+                        <label for="special_notes" class="form-label">Special Notes</label>
+                        <textarea class="form-control" id="special_notes" name="special_notes" rows="3" placeholder="Enter any additional information or instructions for the guest..."></textarea>
+                    </div>
+                    
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="id_verification" required>
+                        <label class="form-check-label" for="id_verification">
+                            I have verified the guest's identity
+                        </label>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('receptionist.check_in') }}" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Complete Check-in</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

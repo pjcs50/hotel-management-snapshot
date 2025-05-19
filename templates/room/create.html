@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block title %}Add New Room - Horizon Hotel{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="h4 mb-0">Add New Room</h2>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{{ url_for('room.create_room') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        
+                        <div class="mb-3">
+                            <label for="number" class="form-label">Room Number <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="number" name="number" required 
+                                   placeholder="e.g., 101, 102A" maxlength="10">
+                            <div class="form-text">Unique identifier for the room.</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="room_type_id" class="form-label">Room Type <span class="text-danger">*</span></label>
+                            <select class="form-select" id="room_type_id" name="room_type_id" required>
+                                <option value="">-- Select Room Type --</option>
+                                {% for room_type in room_types %}
+                                <option value="{{ room_type.id }}">{{ room_type.name }} - ${{ room_type.base_rate }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">Determines room features and base rate.</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="status" class="form-label">Status <span class="text-danger">*</span></label>
+                            <select class="form-select" id="status" name="status" required>
+                                {% for status in room_statuses %}
+                                <option value="{{ status }}" {% if status == 'Available' %}selected{% endif %}>{{ status }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">Current room availability status.</div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{{ url_for('room.list_rooms') }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Back to Rooms
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save"></i> Create Room
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

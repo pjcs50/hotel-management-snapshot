@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+
+{% block title %}Rooms - Horizon Hotel{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2">Room Management</h1>
+        <a href="{{ url_for('room.create_room') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Add New Room
+        </a>
+    </div>
+
+    {% if rooms %}
+    <div class="card shadow">
+        <div class="card-header">
+            <h5 class="mb-0">All Rooms</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Room Number</th>
+                            <th>Type</th>
+                            <th>Status</th>
+                            <th>Last Cleaned</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for room in rooms %}
+                        <tr>
+                            <td>{{ room.number }}</td>
+                            <td>{{ room.room_type.name }}</td>
+                            <td>
+                                {% if room.status == 'Available' %}
+                                <span class="badge bg-success">{{ room.status }}</span>
+                                {% elif room.status == 'Occupied' %}
+                                <span class="badge bg-danger">{{ room.status }}</span>
+                                {% elif room.status == 'Booked' %}
+                                <span class="badge bg-warning text-dark">{{ room.status }}</span>
+                                {% elif room.status == 'Needs Cleaning' %}
+                                <span class="badge bg-info text-dark">{{ room.status }}</span>
+                                {% elif room.status == 'Under Maintenance' %}
+                                <span class="badge bg-secondary">{{ room.status }}</span>
+                                {% else %}
+                                <span class="badge bg-dark">{{ room.status }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if room.last_cleaned %}
+                                {{ room.last_cleaned.strftime('%Y-%m-%d %H:%M') }}
+                                {% else %}
+                                <span class="text-muted">Not recorded</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{{ url_for('room.view_room', room_id=room.id) }}" class="btn btn-outline-primary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{{ url_for('room.edit_room', room_id=room.id) }}" class="btn btn-outline-secondary">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    {% if room.status == 'Needs Cleaning' %}
+                                    <form action="{{ url_for('room.mark_room_cleaned', room_id=room.id) }}" method="post" class="d-inline">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-outline-success" title="Mark as Cleaned">
+                                            <i class="bi bi-check2"></i>
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle"></i> No rooms found. Click "Add New Room" to create your first room.
+    </div>
+    {% endif %}
+
+    <div class="card mt-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Room Status Summary</h5>
+        </div>
+        <div class="card-body">
+            <div class="row text-center">
+                <div class="col-md-3 mb-3">
+                    <div class="card bg-success text-white">
+                        <div class="card-body">
+                            <h5 class="card-title">Available</h5>
+                            <p class="card-text display-5">
+                                {{ rooms|selectattr('status', 'equalto', 'Available')|list|length }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="card bg-danger text-white">
+                        <div class="card-body">
+                            <h5 class="card-title">Occupied</h5>
+                            <p class="card-text display-5">
+                                {{ rooms|selectattr('status', 'equalto', 'Occupied')|list|length }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="card bg-warning text-dark">
+                        <div class="card-body">
+                            <h5 class="card-title">Booked</h5>
+                            <p class="card-text display-5">
+                                {{ rooms|selectattr('status', 'equalto', 'Booked')|list|length }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="card bg-info text-dark">
+                        <div class="card-body">
+                            <h5 class="card-title">Needs Cleaning</h5>
+                            <p class="card-text display-5">
+                                {{ rooms|selectattr('status', 'equalto', 'Needs Cleaning')|list|length }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

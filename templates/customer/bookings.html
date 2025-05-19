@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+
+{% block title %}My Bookings - Horizon Hotel{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-10 offset-md-1">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h1 class="display-6">My Bookings</h1>
+                <a href="{{ url_for('customer.new_booking') }}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> New Booking
+                </a>
+            </div>
+            
+            {% if not bookings %}
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle-fill me-2"></i>
+                    You don't have any bookings yet. Click the "New Booking" button to create your first reservation.
+                </div>
+            {% else %}
+                <div class="card shadow mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h2 class="h4 mb-0">Current & Upcoming Bookings</h2>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Room</th>
+                                        <th>Check-in</th>
+                                        <th>Check-out</th>
+                                        <th>Nights</th>
+                                        <th>Status</th>
+                                        <th class="text-center">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% set current_found = false %}
+                                    {% for booking in bookings %}
+                                        {% if booking.status in ['Reserved', 'Checked In'] %}
+                                            {% set current_found = true %}
+                                            <tr>
+                                                <td>
+                                                    <strong>{{ booking.room.number }}</strong><br>
+                                                    <span class="text-muted small">{{ booking.room.room_type.name }}</span>
+                                                </td>
+                                                <td>{{ booking.check_in_date.strftime('%Y-%m-%d') }}</td>
+                                                <td>{{ booking.check_out_date.strftime('%Y-%m-%d') }}</td>
+                                                <td>{{ booking.nights }}</td>
+                                                <td>
+                                                    {% if booking.status == 'Reserved' %}
+                                                        <span class="badge bg-warning text-dark">{{ booking.status }}</span>
+                                                    {% elif booking.status == 'Checked In' %}
+                                                        <span class="badge bg-success">{{ booking.status }}</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td class="text-center">
+                                                    <a href="{{ url_for('customer.booking_details', booking_id=booking.id) }}" class="btn btn-sm btn-outline-primary me-1">
+                                                        <i class="bi bi-eye"></i> Details
+                                                    </a>
+                                                    {% if booking.status == 'Reserved' %}
+                                                        <form method="post" action="{{ url_for('customer.cancel_booking', booking_id=booking.id) }}" class="d-inline">
+                                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to cancel this booking?')">
+                                                                <i class="bi bi-x-circle"></i> Cancel
+                                                            </button>
+                                                        </form>
+                                                    {% else %}
+                                                        <button class="btn btn-sm btn-secondary" disabled>
+                                                            <i class="bi bi-info-circle"></i> Active
+                                                        </button>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                        {% endif %}
+                                    {% endfor %}
+                                    
+                                    {% if not current_found %}
+                                        <tr>
+                                            <td colspan="6" class="text-center py-3">No current or upcoming bookings found.</td>
+                                        </tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card shadow">
+                    <div class="card-header bg-secondary text-white">
+                        <h2 class="h4 mb-0">Past Bookings</h2>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Room</th>
+                                        <th>Check-in</th>
+                                        <th>Check-out</th>
+                                        <th>Nights</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% set past_found = false %}
+                                    {% for booking in bookings %}
+                                        {% if booking.status in ['Checked Out', 'Cancelled', 'No Show'] %}
+                                            {% set past_found = true %}
+                                            <tr>
+                                                <td>
+                                                    <strong>{{ booking.room.number }}</strong><br>
+                                                    <span class="text-muted small">{{ booking.room.room_type.name }}</span>
+                                                </td>
+                                                <td>{{ booking.check_in_date.strftime('%Y-%m-%d') }}</td>
+                                                <td>{{ booking.check_out_date.strftime('%Y-%m-%d') }}</td>
+                                                <td>{{ booking.nights }}</td>
+                                                <td>
+                                                    {% if booking.status == 'Checked Out' %}
+                                                        <span class="badge bg-info text-dark">{{ booking.status }}</span>
+                                                    {% elif booking.status == 'Cancelled' %}
+                                                        <span class="badge bg-danger">{{ booking.status }}</span>
+                                                    {% elif booking.status == 'No Show' %}
+                                                        <span class="badge bg-dark">{{ booking.status }}</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td class="text-center">
+                                                    <a href="{{ url_for('customer.booking_details', booking_id=booking.id) }}" class="btn btn-sm btn-outline-secondary">
+                                                        <i class="bi bi-eye"></i> Details
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        {% endif %}
+                                    {% endfor %}
+                                    
+                                    {% if not past_found %}
+                                        <tr>
+                                            <td colspan="6" class="text-center py-3">No past bookings found.</td>
+                                        </tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

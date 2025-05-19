@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+
+{% block title %}Reservation Details{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Reservation Details</h1>
+        <a href="{{ url_for('admin.reservations') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Reservations
+        </a>
+    </div>
+    
+    <div class="row">
+        <!-- Reservation Details -->
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h3 class="h5 mb-0">Booking Information</h3>
+                    <span class="badge {% if booking.status == 'Reserved' %}bg-primary{% elif booking.status == 'Checked In' %}bg-success{% elif booking.status == 'Checked Out' %}bg-secondary{% elif booking.status == 'Cancelled' %}bg-danger{% elif booking.status == 'No Show' %}bg-warning text-dark{% endif %}">
+                        {{ booking.status }}
+                    </span>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-4 text-muted">Booking ID:</div>
+                        <div class="col-8 fw-bold">#{{ booking.id }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-4 text-muted">Check-in Date:</div>
+                        <div class="col-8">{{ booking.check_in_date.strftime('%A, %B %d, %Y') }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-4 text-muted">Check-out Date:</div>
+                        <div class="col-8">{{ booking.check_out_date.strftime('%A, %B %d, %Y') }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-4 text-muted">Length of Stay:</div>
+                        <div class="col-8">{{ booking.nights }} nights</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-4 text-muted">Early Check-in:</div>
+                        <div class="col-8">
+                            {% if booking.early_hours > 0 %}
+                            {{ booking.early_hours }} hours before standard time
+                            {% else %}
+                            No early check-in
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-4 text-muted">Late Check-out:</div>
+                        <div class="col-8">
+                            {% if booking.late_hours > 0 %}
+                            {{ booking.late_hours }} hours after standard time
+                            {% else %}
+                            No late check-out
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-4 text-muted">Booking Date:</div>
+                        <div class="col-8">{{ booking.created_at.strftime('%B %d, %Y at %H:%M') }}</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-4 text-muted">Last Updated:</div>
+                        <div class="col-8">{{ booking.updated_at.strftime('%B %d, %Y at %H:%M') }}</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Room Information -->
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h3 class="h5 mb-0">Room Information</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-4 text-muted">Room Number:</div>
+                        <div class="col-8 fw-bold">{{ booking.room.number }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-4 text-muted">Room Type:</div>
+                        <div class="col-8">{{ booking.room.room_type.name }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-4 text-muted">Room Location:</div>
+                        <div class="col-8">{{ booking.room.location or 'Not specified' }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-4 text-muted">Capacity:</div>
+                        <div class="col-8">{{ booking.room.room_type.capacity }} people</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-4 text-muted">Nightly Rate:</div>
+                        <div class="col-8">${{ booking.room.room_type.base_rate }}</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-4 text-muted">Amenities:</div>
+                        <div class="col-8">{{ booking.room.room_type.amenities or 'None specified' }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Guest Information and Pricing Details -->
+        <div class="col-md-4">
+            <!-- Guest Information -->
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h3 class="h5 mb-0">Guest Information</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-5 text-muted">Name:</div>
+                        <div class="col-7 fw-bold">{{ booking.customer.name }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-5 text-muted">Email:</div>
+                        <div class="col-7">{{ booking.customer.user.email }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-5 text-muted">Phone:</div>
+                        <div class="col-7">{{ booking.customer.phone or 'Not provided' }}</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12 text-center mt-3">
+                            <a href="{{ url_for('admin.guest_details', customer_id=booking.customer.id) }}" class="btn btn-outline-info">
+                                <i class="bi bi-person"></i> View Full Guest Profile
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Pricing Details -->
+            <div class="card mb-4">
+                <div class="card-header bg-warning text-dark">
+                    <h3 class="h5 mb-0">Pricing Details</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-7 text-muted">Base Rate:</div>
+                        <div class="col-5 text-end">${{ booking.room.room_type.base_rate }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-7 text-muted">Number of Nights:</div>
+                        <div class="col-5 text-end">{{ booking.nights }}</div>
+                    </div>
+                    {% if booking.early_hours > 0 %}
+                    <div class="row mb-3">
+                        <div class="col-7 text-muted">Early Check-in Fee:</div>
+                        <div class="col-5 text-end">${{ (booking.early_hours * booking.room.room_type.base_rate / 24)|round(2) }}</div>
+                    </div>
+                    {% endif %}
+                    {% if booking.late_hours > 0 %}
+                    <div class="row mb-3">
+                        <div class="col-7 text-muted">Late Check-out Fee:</div>
+                        <div class="col-5 text-end">${{ (booking.late_hours * booking.room.room_type.base_rate / 24)|round(2) }}</div>
+                    </div>
+                    {% endif %}
+                    <hr>
+                    <div class="row fw-bold">
+                        <div class="col-7">Total Amount:</div>
+                        <div class="col-5 text-end">${{ (booking.room.room_type.base_rate * booking.nights + booking.early_hours * booking.room.room_type.base_rate / 24 + booking.late_hours * booking.room.room_type.base_rate / 24)|round(2) }}</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Actions -->
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <h3 class="h5 mb-0">Actions</h3>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        {% if booking.status == 'Reserved' %}
+                        <form action="{{ url_for('admin.check_in_reservation', booking_id=booking.id) }}" method="POST">
+                            <button type="submit" class="btn btn-success w-100">
+                                <i class="bi bi-box-arrow-in-right"></i> Check In Guest
+                            </button>
+                        </form>
+                        <form action="{{ url_for('admin.cancel_reservation', booking_id=booking.id) }}" method="POST" onsubmit="return confirm('Are you sure you want to cancel this reservation?');">
+                            <button type="submit" class="btn btn-danger w-100">
+                                <i class="bi bi-x-circle"></i> Cancel Reservation
+                            </button>
+                        </form>
+                        {% elif booking.status == 'Checked In' %}
+                        <form action="{{ url_for('admin.check_out_reservation', booking_id=booking.id) }}" method="POST">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-box-arrow-right"></i> Check Out Guest
+                            </button>
+                        </form>
+                        {% endif %}
+                        <a href="{{ url_for('admin.print_reservation', booking_id=booking.id) }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-printer"></i> Print Reservation
+                        </a>
+                        <a href="{{ url_for('admin.email_reservation', booking_id=booking.id) }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-envelope"></i> Email Confirmation
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

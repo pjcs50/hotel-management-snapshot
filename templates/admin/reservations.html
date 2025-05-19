@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Reservations{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Reservation Management</h1>
+        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+    
+    <!-- Admin Navigation Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <a href="{{ url_for('admin.dashboard') }}" class="text-decoration-none">
+                <div class="card bg-secondary text-white h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-speedometer2 display-4"></i>
+                        <h5 class="mt-2">Dashboard</h5>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-3 mb-3">
+            <a href="{{ url_for('admin.guests') }}" class="text-decoration-none">
+                <div class="card bg-secondary text-white h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-person-vcard display-4"></i>
+                        <h5 class="mt-2">Guests</h5>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-3 mb-3">
+            <a href="{{ url_for('admin.reservations') }}" class="text-decoration-none">
+                <div class="card bg-primary text-white h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-calendar-check display-4"></i>
+                        <h5 class="mt-2">Reservations</h5>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-3 mb-3">
+            <a href="{{ url_for('admin.reports') }}" class="text-decoration-none">
+                <div class="card bg-secondary text-white h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-graph-up display-4"></i>
+                        <h5 class="mt-2">Reports</h5>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+    
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h3 class="h5 mb-0">Search & Filters</h3>
+        </div>
+        <div class="card-body">
+            <form action="{{ url_for('admin.reservations') }}" method="GET" class="row g-3">
+                <!-- Status filter -->
+                <div class="col-md-3">
+                    <label for="status" class="form-label">Status</label>
+                    <select name="status" id="status" class="form-select">
+                        <option value="">All Statuses</option>
+                        {% for status in statuses %}
+                        <option value="{{ status }}" {% if filters.status == status %}selected{% endif %}>{{ status }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <!-- Date range filters -->
+                <div class="col-md-3">
+                    <label for="date_from" class="form-label">From Date</label>
+                    <input type="date" name="date_from" id="date_from" class="form-control" value="{{ filters.date_from }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="date_to" class="form-label">To Date</label>
+                    <input type="date" name="date_to" id="date_to" class="form-control" value="{{ filters.date_to }}">
+                </div>
+                
+                <!-- Room type filter -->
+                <div class="col-md-3">
+                    <label for="room_type_id" class="form-label">Room Type</label>
+                    <select name="room_type_id" id="room_type_id" class="form-select">
+                        <option value="">All Room Types</option>
+                        {% for room_type in room_types %}
+                        <option value="{{ room_type.id }}" {% if filters.room_type_id|int == room_type.id %}selected{% endif %}>{{ room_type.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <!-- Search term -->
+                <div class="col-md-6">
+                    <label for="search_query" class="form-label">Search Guest or Room</label>
+                    <input type="text" name="q" id="search_query" class="form-control" placeholder="Guest name or room number" value="{{ filters.search_query }}">
+                </div>
+                
+                <!-- Buttons -->
+                <div class="col-md-6 d-flex justify-content-end align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="bi bi-filter"></i> Apply Filters
+                    </button>
+                    {% if filters.status or filters.date_from or filters.date_to or filters.room_type_id or filters.search_query %}
+                    <a href="{{ url_for('admin.reservations') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-circle"></i> Clear Filters
+                    </a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Reservations list -->
+    <div class="card">
+        <div class="card-header bg-success text-white">
+            <h3 class="h5 mb-0">Reservation Directory</h3>
+        </div>
+        <div class="card-body">
+            {% if pagination.items %}
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>Guest</th>
+                            <th>Room</th>
+                            <th>Room Type</th>
+                            <th>Check-in</th>
+                            <th>Check-out</th>
+                            <th>Nights</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for booking, customer, room, room_type in pagination.items %}
+                        <tr>
+                            <td>{{ customer.name }}</td>
+                            <td>{{ room.number }}</td>
+                            <td>{{ room_type.name }}</td>
+                            <td>{{ booking.check_in_date.strftime('%Y-%m-%d') }}</td>
+                            <td>{{ booking.check_out_date.strftime('%Y-%m-%d') }}</td>
+                            <td>{{ (booking.check_out_date - booking.check_in_date).days }}</td>
+                            <td>
+                                {% if booking.status == 'Reserved' %}
+                                <span class="badge bg-primary">{{ booking.status }}</span>
+                                {% elif booking.status == 'Checked In' %}
+                                <span class="badge bg-success">{{ booking.status }}</span>
+                                {% elif booking.status == 'Checked Out' %}
+                                <span class="badge bg-secondary">{{ booking.status }}</span>
+                                {% elif booking.status == 'Cancelled' %}
+                                <span class="badge bg-danger">{{ booking.status }}</span>
+                                {% elif booking.status == 'No Show' %}
+                                <span class="badge bg-warning text-dark">{{ booking.status }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{{ url_for('admin.reservation_details', booking_id=booking.id) }}" class="btn btn-sm btn-info">
+                                    <i class="bi bi-eye"></i> View
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            <nav aria-label="Reservation pagination">
+                <ul class="pagination justify-content-center">
+                    {% if pagination.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('admin.reservations', page=pagination.prev_num, status=filters.status, date_from=filters.date_from, date_to=filters.date_to, room_type_id=filters.room_type_id, q=filters.search_query) }}">
+                            <i class="bi bi-chevron-left"></i> Previous
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link"><i class="bi bi-chevron-left"></i> Previous</span>
+                    </li>
+                    {% endif %}
+                    
+                    {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                        {% if page_num %}
+                            {% if page_num == pagination.page %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ page_num }}</span>
+                            </li>
+                            {% else %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('admin.reservations', page=page_num, status=filters.status, date_from=filters.date_from, date_to=filters.date_to, room_type_id=filters.room_type_id, q=filters.search_query) }}">{{ page_num }}</a>
+                            </li>
+                            {% endif %}
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">…</span>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if pagination.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('admin.reservations', page=pagination.next_num, status=filters.status, date_from=filters.date_from, date_to=filters.date_to, room_type_id=filters.room_type_id, q=filters.search_query) }}">
+                            Next <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Next <i class="bi bi-chevron-right"></i></span>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% else %}
+            <div class="alert alert-info text-center">
+                <i class="bi bi-info-circle me-2"></i>
+                {% if filters.status or filters.date_from or filters.date_to or filters.room_type_id or filters.search_query %}
+                No reservations found matching your filter criteria.
+                {% else %}
+                No reservations have been made in the system yet.
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+        <div class="card-footer">
+            <div class="small text-muted">
+                Showing {{ pagination.items|length }} of {{ pagination.total }} reservations
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

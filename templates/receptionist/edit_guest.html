@@ -1,0 +1,126 @@
+{% extends "dashboard_base.html" %}
+
+{% block dashboard_title %}Edit Guest{% endblock %}
+{% block dashboard_heading %}Edit Guest: {{ customer.name }}{% endblock %}
+
+{% block dashboard_navigation %}
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <a href="{{ url_for('receptionist.dashboard') }}" class="text-decoration-none">
+            <div class="card bg-secondary text-white h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-speedometer2 display-4"></i>
+                    <h5 class="mt-2">Dashboard</h5>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3 mb-3">
+        <a href="{{ url_for('receptionist.bookings') }}" class="text-decoration-none">
+            <div class="card bg-success text-white h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-calendar-check display-4"></i>
+                    <h5 class="mt-2">Bookings</h5>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3 mb-3">
+        <a href="{{ url_for('receptionist.guest_list') }}" class="text-decoration-none">
+            <div class="card bg-info text-white h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-people display-4"></i>
+                    <h5 class="mt-2">Guests</h5>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3 mb-3">
+        <a href="{{ url_for('receptionist.view_guest', customer_id=customer.id) }}" class="text-decoration-none">
+            <div class="card bg-primary text-white h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-person display-4"></i>
+                    <h5 class="mt-2">Guest Profile</h5>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">Edit Guest Information</h5>
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('receptionist.edit_guest', customer_id=customer.id) }}">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Name</label>
+                        <input type="text" class="form-control" id="name" name="name" value="{{ customer.name }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" name="email" value="{{ customer.email or '' }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="phone" class="form-label">Phone</label>
+                        <input type="tel" class="form-control" id="phone" name="phone" value="{{ customer.phone or '' }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="address" class="form-label">Address</label>
+                        <textarea class="form-control" id="address" name="address" rows="3">{{ customer.address or '' }}</textarea>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="id_type" class="form-label">ID Type</label>
+                        <select class="form-select" id="id_type" name="id_type">
+                            <option value="" {% if not customer.id_type %}selected{% endif %}>Select ID Type</option>
+                            <option value="Passport" {% if customer.id_type == 'Passport' %}selected{% endif %}>Passport</option>
+                            <option value="Driver's License" {% if customer.id_type == "Driver's License" %}selected{% endif %}>Driver's License</option>
+                            <option value="National ID" {% if customer.id_type == 'National ID' %}selected{% endif %}>National ID</option>
+                            <option value="Residence Permit" {% if customer.id_type == 'Residence Permit' %}selected{% endif %}>Residence Permit</option>
+                            <option value="Other" {% if customer.id_type and customer.id_type not in ['Passport', "Driver's License", 'National ID', 'Residence Permit'] %}selected{% endif %}>Other</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_number" class="form-label">ID Number</label>
+                        <input type="text" class="form-control" id="id_number" name="id_number" value="{{ customer.id_number or '' }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="emergency_contact" class="form-label">Emergency Contact</label>
+                        <input type="text" class="form-control" id="emergency_contact" name="emergency_contact" value="{{ customer.emergency_contact or '' }}">
+                    </div>
+                    
+                    {% if hasattr(customer, 'loyalty_tier') %}
+                    <div class="card mt-4 bg-light">
+                        <div class="card-body">
+                            <h6 class="card-title">Loyalty Program Information</h6>
+                            <dl class="row mb-0">
+                                <dt class="col-sm-4">Tier</dt>
+                                <dd class="col-sm-8">
+                                    <span class="badge bg-{{ 'secondary' if customer.loyalty_tier == 'Silver' else 'warning' if customer.loyalty_tier == 'Gold' else 'info' }} {{ 'text-dark' if customer.loyalty_tier == 'Gold' else '' }}">
+                                        {{ customer.loyalty_tier }}
+                                    </span>
+                                </dd>
+                                
+                                <dt class="col-sm-4">Points</dt>
+                                <dd class="col-sm-8">{{ customer.loyalty_points or 0 }}</dd>
+                            </dl>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="d-flex justify-content-end mt-3">
+                <a href="{{ url_for('receptionist.view_guest', customer_id=customer.id) }}" class="btn btn-secondary me-2">Cancel</a>
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %} 

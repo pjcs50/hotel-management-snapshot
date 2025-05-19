@@ -1,0 +1,167 @@
+## Hotel Management System ER Diagram (Fig. 1)
+
+### User Authentication & Staff
+[users]
+* id (PK)
+* username [unique]
+* email [unique, indexed]
+* password_hash
+* role [indexed]
+* role_requested
+* is_active
+* created_at
+* updated_at
+
+[staff_requests]
+* id (PK)
+* user_id (FK -> users.id)
+* role_requested
+* status [indexed]
+* handled_at
+* handled_by (FK -> users.id)
+* notes
+* created_at
+* updated_at
+
+[customers]
+* id (PK)
+* user_id (FK -> users.id)
+* name
+* phone
+* address
+* emergency_contact
+* profile_complete
+* created_at
+* updated_at
+
+### Room Management
+[room_types]
+* id (PK)
+* name [indexed]
+* description
+* amenities
+* base_rate
+* capacity
+* created_at
+* updated_at
+
+[rooms]
+* id (PK)
+* number [unique]
+* room_type_id (FK -> room_types.id)
+* status [indexed]
+* last_cleaned
+* created_at
+* updated_at
+
+[seasonal_rates]
+* id (PK)
+* room_type_id (FK -> room_types.id)
+* start_date
+* end_date
+* rate_multiplier
+* name
+* created_at
+* updated_at
+
+### Bookings
+[bookings]
+* id (PK)
+* room_id (FK -> rooms.id)
+* customer_id (FK -> customers.id)
+* check_in_date [indexed]
+* check_out_date
+* status
+* early_hours
+* late_hours
+* created_at
+* updated_at
+
+[folio_items]
+* id (PK)
+* booking_id (FK -> bookings.id)
+* date
+* description
+* charge_amount
+* created_at
+* updated_at
+
+[payments]
+* id (PK)
+* booking_id (FK -> bookings.id)
+* amount
+* method
+* status
+* recorded_at
+* created_at
+* updated_at
+
+### Auxiliary
+[room_status_log]
+* id (PK)
+* room_id (FK -> rooms.id)
+* old_status
+* new_status
+* changed_at
+* changed_by (FK -> users.id)
+* created_at
+* updated_at
+
+[notifications]
+* id (PK)
+* user_id (FK -> users.id)
+* message
+* entity_type
+* entity_id
+* is_read [indexed]
+* created_at
+* updated_at
+
+[loyalty_ledgers]
+* id (PK)
+* customer_id (FK -> customers.id)
+* points
+* reason
+* txn_dt
+* created_at
+* updated_at
+
+[waitlist]
+* id (PK)
+* customer_id (FK -> customers.id)
+* room_type_id (FK -> room_types.id)
+* requested_dates
+* status
+* created_at
+* updated_at
+
+[special_requests]
+* id (PK)
+* booking_id (FK -> bookings.id)
+* request_type
+* description
+* status
+* created_at
+* updated_at
+
+[reviews]
+* id (PK)
+* booking_id (FK -> bookings.id)
+* rating
+* comments
+* submitted_at
+* created_at
+* updated_at
+
+[maintenance_requests]
+* id (PK)
+* room_id (FK -> rooms.id)
+* issue_type
+* description
+* status [indexed]
+* reported_at
+* resolved_at
+* created_at
+* updated_at
+
+Note: This text representation will be converted to a proper ER diagram using a diagramming tool. 

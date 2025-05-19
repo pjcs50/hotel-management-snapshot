@@ -1,0 +1,214 @@
+{% extends "dashboard_base.html" %}
+
+{% block dashboard_title %}Bookings Management{% endblock %}
+{% block dashboard_heading %}Bookings Management{% endblock %}
+
+{% block dashboard_navigation %}
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <a href="{{ url_for('receptionist.dashboard') }}" class="text-decoration-none">
+            <div class="card bg-secondary text-white h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-speedometer2 display-4"></i>
+                    <h5 class="mt-2">Dashboard</h5>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3 mb-3">
+        <a href="{{ url_for('receptionist.bookings') }}" class="text-decoration-none">
+            <div class="card bg-primary text-white h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-calendar-check display-4"></i>
+                    <h5 class="mt-2">Bookings</h5>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3 mb-3">
+        <a href="{{ url_for('receptionist.guest_list') }}" class="text-decoration-none">
+            <div class="card bg-info text-white h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-people display-4"></i>
+                    <h5 class="mt-2">Guests</h5>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3 mb-3">
+        <a href="{{ url_for('receptionist.room_availability') }}" class="text-decoration-none">
+            <div class="card bg-warning text-dark h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-house-door display-4"></i>
+                    <h5 class="mt-2">Availability</h5>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h3 class="h5 mb-0">All Bookings</h3>
+                <a href="{{ url_for('receptionist.new_booking') }}" class="btn btn-sm btn-light">
+                    <i class="bi bi-plus-circle"></i> New Booking
+                </a>
+            </div>
+            <div class="card-body">
+                <!-- Search and filters form -->
+                <form method="get" action="{{ url_for('receptionist.bookings') }}">
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <div class="mb-2">
+                                <label class="form-label small">Status</label>
+                                <select name="status" class="form-select form-select-sm">
+                                    <option value="">All Statuses</option>
+                                    {% for status_value, status_label in statuses %}
+                                    <option value="{{ status_value }}" {% if filters.status == status_value %}selected{% endif %}>{{ status_label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-2">
+                                <label class="form-label small">From Date</label>
+                                <input type="date" name="date_from" class="form-control form-control-sm" value="{{ filters.date_from }}">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-2">
+                                <label class="form-label small">To Date</label>
+                                <input type="date" name="date_to" class="form-control form-control-sm" value="{{ filters.date_to }}">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-2">
+                                <label class="form-label small">Search Guest</label>
+                                <div class="input-group input-group-sm">
+                                    <input type="text" name="q" class="form-control form-control-sm" value="{{ filters.search_query }}" placeholder="Guest name...">
+                                    <button class="btn btn-primary" type="submit">
+                                        <i class="bi bi-search"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+                
+                <!-- Bookings table -->
+                {% if bookings.items %}
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Guest</th>
+                                <th>Room</th>
+                                <th>Check-in</th>
+                                <th>Check-out</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for booking in bookings.items %}
+                            <tr>
+                                <td>{{ booking.id }}</td>
+                                <td>
+                                    {% if booking.customer %}
+                                    <a href="{{ url_for('receptionist.guest_list') }}?q={{ booking.customer.name }}">{{ booking.customer.name }}</a>
+                                    {% else %}
+                                    <span class="text-muted">No customer</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ booking.room.number }} ({{ booking.room.room_type.name }})</td>
+                                <td>{{ booking.check_in_date.strftime('%Y-%m-%d') }}</td>
+                                <td>{{ booking.check_out_date.strftime('%Y-%m-%d') }}</td>
+                                <td>
+                                    {% if booking.status == 'Reserved' %}
+                                    <span class="badge bg-info">{{ booking.status }}</span>
+                                    {% elif booking.status == 'Checked In' %}
+                                    <span class="badge bg-success">{{ booking.status }}</span>
+                                    {% elif booking.status == 'Checked Out' %}
+                                    <span class="badge bg-secondary">{{ booking.status }}</span>
+                                    {% elif booking.status == 'Cancelled' %}
+                                    <span class="badge bg-danger">{{ booking.status }}</span>
+                                    {% else %}
+                                    <span class="badge bg-warning">{{ booking.status }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="#" class="btn btn-outline-primary">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        {% if booking.status == 'Reserved' %}
+                                        <a href="#" class="btn btn-outline-success">
+                                            <i class="bi bi-box-arrow-in-right"></i> Check In
+                                        </a>
+                                        {% elif booking.status == 'Checked In' %}
+                                        <a href="#" class="btn btn-outline-secondary">
+                                            <i class="bi bi-box-arrow-right"></i> Check Out
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Pagination -->
+                {% if bookings.pages > 1 %}
+                <nav aria-label="Bookings pagination">
+                    <ul class="pagination justify-content-center">
+                        {% if bookings.has_prev %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('receptionist.bookings', page=bookings.prev_num, status=filters.status, date_from=filters.date_from, date_to=filters.date_to, q=filters.search_query) }}">Previous</a>
+                        </li>
+                        {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">Previous</span>
+                        </li>
+                        {% endif %}
+                        
+                        {% for page_num in bookings.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                        {% if page_num %}
+                        <li class="page-item {{ 'active' if page_num == bookings.page else '' }}">
+                            <a class="page-link" href="{{ url_for('receptionist.bookings', page=page_num, status=filters.status, date_from=filters.date_from, date_to=filters.date_to, q=filters.search_query) }}">{{ page_num }}</a>
+                        </li>
+                        {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">...</span>
+                        </li>
+                        {% endif %}
+                        {% endfor %}
+                        
+                        {% if bookings.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('receptionist.bookings', page=bookings.next_num, status=filters.status, date_from=filters.date_from, date_to=filters.date_to, q=filters.search_query) }}">Next</a>
+                        </li>
+                        {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">Next</span>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+                
+                {% else %}
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle me-2"></i> No bookings found matching your criteria.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,262 @@
+{% extends "base.html" %}
+
+{% block title %}Staff Management{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Staff Management</h1>
+    
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('manager.dashboard') }}">Dashboard</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Staff Management</li>
+        </ol>
+    </nav>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h3 class="h5 mb-0">Staff Members</h3>
+                    <div>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#filterModal">
+                            <i class="fas fa-filter me-2"></i> Filter
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if staff_members %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Role</th>
+                                    <th>Email</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for staff in staff_members %}
+                                <tr>
+                                    <td>{{ staff.username }}</td>
+                                    <td>{{ staff.role | title }}</td>
+                                    <td>{{ staff.email }}</td>
+                                    <td>
+                                        {% if staff.is_active %}
+                                        <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                        <span class="badge bg-danger">Inactive</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <a href="{{ url_for('manager.view_staff', staff_id=staff.id) }}" class="btn btn-info">
+                                                View
+                                            </a>
+                                            <a href="{{ url_for('manager.edit_staff', staff_id=staff.id) }}" class="btn btn-primary">
+                                                Edit
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    {% if pagination.pages > 1 %}
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination justify-content-center">
+                            <li class="page-item {% if pagination.page == 1 %}disabled{% endif %}">
+                                <a class="page-link" href="{{ url_for('manager.staff', page=pagination.page-1, **request.args) if pagination.page > 1 else '#' }}">Previous</a>
+                            </li>
+                            
+                            {% for p in range(max(1, pagination.page - 2), min(pagination.pages + 1, pagination.page + 3)) %}
+                            <li class="page-item {% if p == pagination.page %}active{% endif %}">
+                                <a class="page-link" href="{{ url_for('manager.staff', page=p, **request.args) }}">{{ p }}</a>
+                            </li>
+                            {% endfor %}
+                            
+                            <li class="page-item {% if pagination.page == pagination.pages %}disabled{% endif %}">
+                                <a class="page-link" href="{{ url_for('manager.staff', page=pagination.page+1, **request.args) if pagination.page < pagination.pages else '#' }}">Next</a>
+                            </li>
+                        </ul>
+                    </nav>
+                    {% endif %}
+                    
+                    {% else %}
+                    <div class="alert alert-info">
+                        <p class="mb-0">No staff members found. Try adjusting your filters.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="h5">Staff by Role</h3>
+                </div>
+                <div class="card-body">
+                    <div style="height: 300px;">
+                        <canvas id="staffRolesCanvas"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h3 class="h5">Staff Performance</h3>
+                </div>
+                <div class="card-body">
+                    {% if performance_data %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Staff</th>
+                                    <th>Role</th>
+                                    <th>Tasks Completed</th>
+                                    <th>Rating</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for staff in performance_data %}
+                                <tr>
+                                    <td>{{ staff.username }}</td>
+                                    <td>{{ staff.role | title }}</td>
+                                    <td>{{ staff.tasks_completed }}</td>
+                                    <td>
+                                        {% for i in range(5) %}
+                                            {% if i < staff.rating %}
+                                                <i class="fas fa-star text-warning"></i>
+                                            {% else %}
+                                                <i class="far fa-star text-warning"></i>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-center">No performance data available.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h3 class="h5">Recent Activities</h3>
+                </div>
+                <div class="card-body">
+                    {% if activity_logs %}
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Staff</th>
+                                    <th>Action</th>
+                                    <th>Timestamp</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for log in activity_logs %}
+                                <tr>
+                                    <td>{{ log.username }}</td>
+                                    <td>{{ log.action }}</td>
+                                    <td>{{ log.timestamp }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-center">No recent activities found.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <a href="{{ url_for('manager.dashboard') }}" class="btn btn-secondary mb-4">
+        <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+    </a>
+</div>
+
+<!-- Filter Modal -->
+<div class="modal fade" id="filterModal" tabindex="-1" aria-labelledby="filterModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="filterModalLabel">Filter Staff</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="filterForm" action="{{ url_for('manager.staff') }}" method="GET">
+                    <div class="mb-3">
+                        <label for="roleFilter" class="form-label">Role</label>
+                        <select class="form-select" id="roleFilter" name="role">
+                            <option value="">All Roles</option>
+                            {% for role in roles %}
+                            <option value="{{ role }}" {% if current_filters.role == role %}selected{% endif %}>{{ role | title }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="statusFilter" class="form-label">Status</label>
+                        <select class="form-select" id="statusFilter" name="status">
+                            <option value="">All Statuses</option>
+                            <option value="active" {% if current_filters.status == 'active' %}selected{% endif %}>Active</option>
+                            <option value="inactive" {% if current_filters.status == 'inactive' %}selected{% endif %}>Inactive</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="searchFilter" class="form-label">Search</label>
+                        <input type="text" class="form-control" id="searchFilter" name="q" value="{{ current_filters.search }}" placeholder="Search by name or email">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <a href="{{ url_for('manager.staff') }}" class="btn btn-secondary">Clear Filters</a>
+                <button type="submit" form="filterForm" class="btn btn-primary">Apply Filters</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/dashboard-charts.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        {% if staff_roles %}
+        // Staff roles chart
+        initUserRolesChart('staffRolesCanvas', {{ staff_roles|tojson }});
+        {% endif %}
+    });
+</script>
+{% endblock %} 

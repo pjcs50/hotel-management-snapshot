@@ -1,0 +1,129 @@
+"""
+Flask application factory for the Hotel Management System.
+
+This module initializes the Flask application and registers all
+required extensions and blueprints.
+"""
+
+import os
+import logging
+from logging.handlers import RotatingFileHandler
+from flask import Flask
+from flask_login import LoginManager
+from flask_jwt_extended import JWTManager
+from flask_mail import Mail
+from flask_wtf.csrf import CSRFProtect
+from apscheduler.schedulers.background import BackgroundScheduler
+
+from config import get_config
+from db import init_db, db
+
+# Initialize extensions
+login_manager = LoginManager()
+jwt = JWTManager()
+mail = Mail()
+csrf = CSRFProtect()
+scheduler = BackgroundScheduler()
+
+
+def create_app(config_class=None):
+    """Create and configure the Flask application."""
+    # Create Flask app
+    app = Flask(__name__)
+
+    # Load configuration
+    if config_class is None:
+        app.config.from_object(get_config())
+    else:
+        app.config.from_object(config_class)
+
+    # Initialize extensions
+    init_db(app)
+    login_manager.init_app(app)
+    jwt.init_app(app)
+    mail.init_app(app)
+    csrf.init_app(app)
+
+    # Setup login manager
+    login_manager.login_view = "auth.login"
+    login_manager.login_message = "Please log in to access this page."
+    login_manager.login_message_category = "info"
+
+    # Configure logging
+    if not app.testing:
+        setup_logging(app)
+
+    # Register blueprints
+    register_blueprints(app)
+
+    # Start scheduler for background tasks
+    if not app.testing and not scheduler.running:
+        scheduler.start()
+
+    # Shell context for flask cli
+    @app.shell_context_processor
+    def make_shell_context():
+        """
+        Add database instance and models to flask shell context.
+        
+        This allows direct access to db and models in shell with:
+        $ flask shell
+        """
+        # Import models here to avoid circular imports
+        # Return dictionary of objects available in shell context
+        return {"db": db}
+
+    return app
+
+
+def register_blueprints(app):
+    """Register Flask blueprints."""
+    # Import blueprints here to avoid circular imports
+    # from app.routes.auth import auth_bp
+    # from app.routes.main import main_bp
+    # from app.routes.admin import admin_bp
+    # from app.routes.booking import booking_bp
+    
+    # app.register_blueprint(main_bp)
+    # app.register_blueprint(auth_bp, url_prefix="/auth")
+    # app.register_blueprint(admin_bp, url_prefix="/admin")
+    # app.register_blueprint(booking_bp, url_prefix="/booking")
+    
+    # Placeholder for future blueprint registration
+    pass
+
+
+def setup_logging(app):
+    """Configure logging for the application."""
+    log_level = getattr(logging, app.config["LOG_LEVEL"])
+    log_file = app.config["LOG_FILE"]
+    
+    if not os.path.exists(os.path.dirname(log_file)):
+        os.makedirs(os.path.dirname(log_file))
+    
+    handler = RotatingFileHandler(
+        log_file, maxBytes=10485760, backupCount=10  # 10MB  # Keep 10 backup files
+    )
+    handler.setLevel(log_level)
+    formatter = logging.Formatter(
+        "%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]"
+    )
+    handler.setFormatter(formatter)
+    
+    app.logger.addHandler(handler)
+    app.logger.setLevel(log_level)
+    app.logger.info("Hotel Management System startup")
+
+
+# Create app instance for 'flask run' command
+app = create_app()
+
+
+@app.route("/")
+def index():
+    """Temporary index route for testing."""
+    return "Hotel Management System - Coming Soon!"
+
+
+if __name__ == "__main__":
+    app.run(debug=app.config["DEBUG"]) 
