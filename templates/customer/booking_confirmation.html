@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+
+{% block title %}Booking Confirmation - Horizon Hotel{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-8 offset-md-2">
+            <div class="card shadow border-success">
+                <div class="card-header bg-success text-white">
+                    <h1 class="h4 mb-0">
+                        <i class="bi bi-check-circle-fill me-2"></i> Booking Confirmed!
+                    </h1>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <div class="display-1 text-success mb-3">
+                            <i class="bi bi-check-circle"></i>
+                        </div>
+                        <h2 class="h4">Thank you for your reservation!</h2>
+                        <p class="lead">Your booking has been successfully confirmed.</p>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0 me-3">
+                                <i class="bi bi-info-circle-fill fs-1"></i>
+                            </div>
+                            <div>
+                                <h3 class="h5 mb-1">Confirmation Details</h3>
+                                <p class="mb-0">A confirmation email has been sent to your registered email address. Please keep this information for your records.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h3 class="h5 mb-0">Booking Information</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <p class="mb-1"><strong>Confirmation Code:</strong></p>
+                                    <div class="p-2 bg-light rounded border">
+                                        <span class="h5 mb-0 font-monospace">{{ booking.confirmation_code }}</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <p class="mb-1"><strong>Booking Status:</strong></p>
+                                    <div class="p-2 rounded 
+                                        {% if booking.status == 'Reserved' %}bg-success text-white
+                                        {% elif booking.status == 'Cancelled' %}bg-danger text-white
+                                        {% elif booking.status == 'Checked In' %}bg-primary text-white
+                                        {% elif booking.status == 'Checked Out' %}bg-secondary text-white
+                                        {% else %}bg-light{% endif %}">
+                                        <span class="h5 mb-0">{{ booking.status }}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <p><strong>Check-in Date:</strong><br>
+                                    {{ booking.check_in_date.strftime('%A, %B %d, %Y') }}</p>
+                                    
+                                    {% if booking.early_hours %}
+                                    <p class="small text-success">
+                                        <i class="bi bi-clock-history me-1"></i> Early check-in: {{ booking.early_hours }} hour(s) before standard time
+                                    </p>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Check-out Date:</strong><br>
+                                    {{ booking.check_out_date.strftime('%A, %B %d, %Y') }}</p>
+                                    
+                                    {% if booking.late_hours %}
+                                    <p class="small text-success">
+                                        <i class="bi bi-clock-history me-1"></i> Late check-out: {{ booking.late_hours }} hour(s) after standard time
+                                    </p>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <p><strong>Room:</strong><br>
+                                    Room {{ booking.room.number }} - {{ booking.room.room_type.name }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Number of Guests:</strong><br>
+                                    {{ booking.num_guests }} person(s)</p>
+                                </div>
+                            </div>
+
+                            {% if booking.special_requests %}
+                            <div class="mb-3">
+                                <p><strong>Special Requests:</strong></p>
+                                <div class="p-2 bg-light rounded">
+                                    {{ booking.special_requests }}
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            <div class="mb-3">
+                                <p><strong>Total Price:</strong></p>
+                                <div class="p-3 bg-light rounded text-center">
+                                    <span class="h3 text-primary">${{ "%.2f"|format(booking.total_price) }}</span>
+                                    <small class="d-block text-muted">Including all taxes and fees</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h3 class="h5 mb-0">Important Information</h3>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item">
+                                    <i class="bi bi-clock me-2 text-primary"></i>
+                                    <strong>Standard Check-in Time:</strong> 3:00 PM
+                                </li>
+                                <li class="list-group-item">
+                                    <i class="bi bi-clock me-2 text-primary"></i>
+                                    <strong>Standard Check-out Time:</strong> 11:00 AM
+                                </li>
+                                <li class="list-group-item">
+                                    <i class="bi bi-credit-card me-2 text-primary"></i>
+                                    <strong>Payment:</strong> Your payment has been processed successfully.
+                                </li>
+                                <li class="list-group-item">
+                                    <i class="bi bi-shield-check me-2 text-primary"></i>
+                                    <strong>Cancellation Policy:</strong> Free cancellation until 48 hours before check-in.
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('customer.dashboard') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-house me-2"></i> Return to Dashboard
+                        </a>
+                        <a href="{{ url_for('customer.bookings') }}" class="btn btn-primary">
+                            <i class="bi bi-calendar-check me-2"></i> View All Bookings
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add to calendar functionality could be added here
+    });
+</script>
+{% endblock %}

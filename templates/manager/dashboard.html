@@ -34,14 +34,14 @@
         </div>
 
         <div class="col-lg-3 col-md-6 mb-4">
-            <a href="{{ url_for('manager.reports', report_type='revenue') }}" class="text-decoration-none">
+            <a href="{{ url_for('manager.forecasts') }}" class="text-decoration-none">
                 <div class="card text-white bg-info h-100 dashboard-card">
                     <div class="card-header">RevPAR</div>
                     <div class="card-body">
                         <h2 class="display-4 text-center">${{ "%.2f" | format(metrics.revpar if metrics.revpar is not none else 0.0) }}</h2>
                     </div>
                     <div class="card-footer text-center">
-                        <small>Last 30 Days</small>
+                        <small>Last 30 Days <i class="fas fa-chart-line ms-1"></i></small>
                     </div>
                 </div>
             </a>

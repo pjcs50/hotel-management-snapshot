@@ -112,7 +112,7 @@ def create_app(config_class=None):
                 except Exception: # Catch potential BuildError if a dashboard doesn't exist
                     # Fallback for roles that might not have a 'dashboard' or if current_user.role is None/empty
                     pass # Let it fall through to a more generic redirect or login
-            
+
             # Generic fallback if specific role dashboard isn't found or user has no clear role dashboard
             # This could be auth.login or another safe page. For now, let's try customer.dashboard or login.
             try:
@@ -131,17 +131,17 @@ def create_app(config_class=None):
     def make_shell_context():
         """
         Add database instance and models to flask shell context.
-        
+
         This allows direct access to db and models in shell with:
         $ flask shell
         """
         # Import models here to avoid circular imports
         from app.models import User, Customer, Room, RoomType, Booking
-        
+
         # Return dictionary of objects available in shell context
         return {
             "db": db,
-            "User": User, 
+            "User": User,
             "Customer": Customer,
             "Room": Room,
             "RoomType": RoomType,
@@ -169,7 +169,9 @@ def register_blueprints(app):
     from app.routes.manager import manager_bp
     from app.routes.housekeeping import housekeeping_bp
     from app.routes.admin import admin_bp
-    
+    from app.routes.api import api_bp
+    from app.routes.payment import payment_bp
+
     app.register_blueprint(auth_bp, url_prefix="/auth")
     app.register_blueprint(room_bp, url_prefix="/rooms")
     app.register_blueprint(customer_bp, url_prefix="/customer")
@@ -177,21 +179,23 @@ def register_blueprints(app):
     app.register_blueprint(manager_bp, url_prefix="/manager")
     app.register_blueprint(housekeeping_bp, url_prefix="/housekeeping")
     app.register_blueprint(admin_bp, url_prefix="/admin")
+    app.register_blueprint(api_bp, url_prefix="/api")
+    app.register_blueprint(payment_bp, url_prefix="/payment")
 
 
 def setup_logging(app):
     """Configure logging for the application."""
     log_level = getattr(logging, app.config["LOG_LEVEL"])
     log_file = app.config["LOG_FILE"]
-    
+
     # CHANGE: Add check for empty log_file and ensure directory exists
     if not log_file:
         log_file = "app.log"
-        
+
     log_dir = os.path.dirname(log_file)
     if log_dir and not os.path.exists(log_dir):
         os.makedirs(log_dir)
-    
+
     handler = RotatingFileHandler(
         log_file, maxBytes=10485760, backupCount=10  # 10MB  # Keep 10 backup files
     )
@@ -200,7 +204,7 @@ def setup_logging(app):
         "%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]"
     )
     handler.setFormatter(formatter)
-    
+
     app.logger.addHandler(handler)
     app.logger.setLevel(log_level)
-    app.logger.info("Hotel Management System startup") 
+    app.logger.info("Hotel Management System startup")

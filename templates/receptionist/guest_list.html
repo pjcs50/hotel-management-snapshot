@@ -54,7 +54,7 @@
         <div class="card">
             <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                 <h3 class="h5 mb-0">All Guests</h3>
-                <a href="{{ url_for('receptionist.search_guest') }}" class="btn btn-sm btn-light">
+                <a href="{{ url_for('receptionist.search_customers') }}" class="btn btn-sm btn-light">
                     <i class="bi bi-search"></i> Advanced Search
                 </a>
             </div>
@@ -72,7 +72,7 @@
                         </div>
                     </div>
                 </form>
-                
+
                 <!-- Guests table -->
                 {% if customers.items %}
                 <div class="table-responsive">
@@ -123,7 +123,7 @@
                         </tbody>
                     </table>
                 </div>
-                
+
                 <!-- Pagination -->
                 {% if customers.pages > 1 %}
                 <nav aria-label="Guest list pagination">
@@ -137,7 +137,7 @@
                             <span class="page-link">Previous</span>
                         </li>
                         {% endif %}
-                        
+
                         {% for page_num in customers.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
                         {% if page_num %}
                         <li class="page-item {{ 'active' if page_num == customers.page else '' }}">
@@ -149,7 +149,7 @@
                         </li>
                         {% endif %}
                         {% endfor %}
-                        
+
                         {% if customers.has_next %}
                         <li class="page-item">
                             <a class="page-link" href="{{ url_for('receptionist.guest_list', page=customers.next_num, q=search_query) }}">Next</a>
@@ -162,7 +162,7 @@
                     </ul>
                 </nav>
                 {% endif %}
-                
+
                 {% else %}
                 <div class="alert alert-info">
                     <i class="bi bi-info-circle me-2"></i> No guests found matching your criteria.
@@ -172,4 +172,4 @@
         </div>
     </div>
 </div>
-{% endblock %} 
+{% endblock %}

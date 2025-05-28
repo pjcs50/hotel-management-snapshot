@@ -492,3 +492,582 @@
 2025-05-19 19:56:52,890 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:206]
 2025-05-19 19:57:11,373 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:206]
 2025-05-19 20:15:05,484 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:206]
+2025-05-19 20:26:03,471 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:206]
+2025-05-19 20:26:04,180 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:206]
+2025-05-19 20:27:16,722 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:206]
+2025-05-20 07:10:53,141 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:206]
+2025-05-20 07:14:14,509 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:206]
+2025-05-20 07:14:15,216 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:206]
+2025-05-20 07:15:52,608 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:206]
+2025-05-20 07:15:53,258 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:206]
+2025-05-20 07:19:53,362 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:206]
+2025-05-20 07:19:54,164 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:206]
+2025-05-20 07:21:17,255 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:206]
+2025-05-20 07:21:18,101 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:206]
+2025-05-20 07:22:44,937 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:206]
+2025-05-20 07:22:45,622 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:206]
+2025-05-20 07:24:11,529 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:206]
+2025-05-20 07:24:12,196 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:206]
+2025-05-20 07:24:28,213 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:206]
+2025-05-20 07:30:05,906 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:206]
+2025-05-20 07:30:21,855 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:206]
+2025-05-20 07:30:33,515 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:206]
+2025-05-20 07:30:44,964 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:206]
+2025-05-20 07:30:57,404 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:206]
+2025-05-20 07:31:07,878 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:206]
+2025-05-20 07:31:18,668 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:206]
+2025-05-20 07:31:32,378 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:206]
+2025-05-20 07:48:10,885 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:208]
+2025-05-20 07:48:11,679 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:208]
+2025-05-20 07:56:34,038 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:208]
+2025-05-20 07:56:46,907 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:208]
+2025-05-20 07:59:10,747 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:208]
+2025-05-20 07:59:20,603 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:208]
+2025-05-20 08:41:41,489 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:208]
+2025-05-20 08:41:42,175 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:208]
+2025-05-20 08:41:43,540 ERROR: Dashboard error: block 'dashboard_navigation' defined twice [in /Users/prakharjain/Desktop/cs ia save/app/routes/receptionist.py:42]
+Traceback (most recent call last):
+  File "/Users/prakharjain/Desktop/cs ia save/app/routes/receptionist.py", line 38, in dashboard
+    return render_template('receptionist/dashboard.html', metrics=metrics)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/flask/templating.py", line 150, in render_template
+    template = app.jinja_env.get_or_select_template(template_name_or_list)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/jinja2/environment.py", line 1081, in get_or_select_template
+    return self.get_template(template_name_or_list, parent, globals)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/jinja2/environment.py", line 1010, in get_template
+    return self._load_template(name, globals)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/jinja2/environment.py", line 969, in _load_template
+    template = self.loader.load(self, name, self.make_globals(globals))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/jinja2/loaders.py", line 137, in load
+    code = environment.compile(source, name, filename)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/jinja2/environment.py", line 768, in compile
+    self.handle_exception(source=source_hint)
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/jinja2/environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "/Users/prakharjain/Desktop/cs ia save/templates/receptionist/dashboard.html", line 464, in template
+    {% block dashboard_navigation %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+jinja2.exceptions.TemplateAssertionError: block 'dashboard_navigation' defined twice
+2025-05-20 08:41:55,338 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:208]
+2025-05-20 08:41:55,968 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:208]
+2025-05-20 08:42:04,483 ERROR: Dashboard error: block 'dashboard_navigation' defined twice [in /Users/prakharjain/Desktop/cs ia save/app/routes/receptionist.py:42]
+Traceback (most recent call last):
+  File "/Users/prakharjain/Desktop/cs ia save/app/routes/receptionist.py", line 38, in dashboard
+    return render_template('receptionist/dashboard.html', metrics=metrics)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/flask/templating.py", line 150, in render_template
+    template = app.jinja_env.get_or_select_template(template_name_or_list)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/jinja2/environment.py", line 1081, in get_or_select_template
+    return self.get_template(template_name_or_list, parent, globals)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/jinja2/environment.py", line 1010, in get_template
+    return self._load_template(name, globals)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/jinja2/environment.py", line 969, in _load_template
+    template = self.loader.load(self, name, self.make_globals(globals))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/jinja2/loaders.py", line 137, in load
+    code = environment.compile(source, name, filename)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/jinja2/environment.py", line 768, in compile
+    self.handle_exception(source=source_hint)
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/jinja2/environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "/Users/prakharjain/Desktop/cs ia save/templates/receptionist/dashboard.html", line 464, in template
+    {% block dashboard_navigation %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+jinja2.exceptions.TemplateAssertionError: block 'dashboard_navigation' defined twice
+2025-05-20 08:42:10,763 ERROR: Dashboard error: block 'dashboard_navigation' defined twice [in /Users/prakharjain/Desktop/cs ia save/app/routes/receptionist.py:42]
+Traceback (most recent call last):
+  File "/Users/prakharjain/Desktop/cs ia save/app/routes/receptionist.py", line 38, in dashboard
+    return render_template('receptionist/dashboard.html', metrics=metrics)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/flask/templating.py", line 150, in render_template
+    template = app.jinja_env.get_or_select_template(template_name_or_list)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/jinja2/environment.py", line 1081, in get_or_select_template
+    return self.get_template(template_name_or_list, parent, globals)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/jinja2/environment.py", line 1010, in get_template
+    return self._load_template(name, globals)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/jinja2/environment.py", line 969, in _load_template
+    template = self.loader.load(self, name, self.make_globals(globals))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/jinja2/loaders.py", line 137, in load
+    code = environment.compile(source, name, filename)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/jinja2/environment.py", line 768, in compile
+    self.handle_exception(source=source_hint)
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/jinja2/environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "/Users/prakharjain/Desktop/cs ia save/templates/receptionist/dashboard.html", line 464, in template
+    {% block dashboard_navigation %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+jinja2.exceptions.TemplateAssertionError: block 'dashboard_navigation' defined twice
+2025-05-20 08:46:39,351 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-20 11:10:28,433 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-20 11:11:50,471 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-20 11:11:52,274 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-20 11:12:06,067 ERROR: Dashboard error: block 'dashboard_navigation' defined twice [in /Users/prakharjain/Desktop/cs ia save/app/routes/receptionist.py:42]
+Traceback (most recent call last):
+  File "/Users/prakharjain/Desktop/cs ia save/app/routes/receptionist.py", line 38, in dashboard
+    return render_template('receptionist/dashboard.html', metrics=metrics)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/flask/templating.py", line 150, in render_template
+    template = app.jinja_env.get_or_select_template(template_name_or_list)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/jinja2/environment.py", line 1081, in get_or_select_template
+    return self.get_template(template_name_or_list, parent, globals)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/jinja2/environment.py", line 1010, in get_template
+    return self._load_template(name, globals)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/jinja2/environment.py", line 969, in _load_template
+    template = self.loader.load(self, name, self.make_globals(globals))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/jinja2/loaders.py", line 137, in load
+    code = environment.compile(source, name, filename)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/jinja2/environment.py", line 768, in compile
+    self.handle_exception(source=source_hint)
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/jinja2/environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "/Users/prakharjain/Desktop/cs ia save/templates/receptionist/dashboard.html", line 464, in template
+    {% block dashboard_navigation %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+jinja2.exceptions.TemplateAssertionError: block 'dashboard_navigation' defined twice
+2025-05-20 11:12:35,627 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-20 11:12:36,961 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-20 11:12:39,403 ERROR: Dashboard error: block 'dashboard_navigation' defined twice [in /Users/prakharjain/Desktop/cs ia save/app/routes/receptionist.py:42]
+Traceback (most recent call last):
+  File "/Users/prakharjain/Desktop/cs ia save/app/routes/receptionist.py", line 38, in dashboard
+    return render_template('receptionist/dashboard.html', metrics=metrics)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/flask/templating.py", line 150, in render_template
+    template = app.jinja_env.get_or_select_template(template_name_or_list)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/jinja2/environment.py", line 1081, in get_or_select_template
+    return self.get_template(template_name_or_list, parent, globals)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/jinja2/environment.py", line 1010, in get_template
+    return self._load_template(name, globals)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/jinja2/environment.py", line 969, in _load_template
+    template = self.loader.load(self, name, self.make_globals(globals))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/jinja2/loaders.py", line 137, in load
+    code = environment.compile(source, name, filename)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/jinja2/environment.py", line 768, in compile
+    self.handle_exception(source=source_hint)
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/jinja2/environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "/Users/prakharjain/Desktop/cs ia save/templates/receptionist/dashboard.html", line 464, in template
+    {% block dashboard_navigation %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+jinja2.exceptions.TemplateAssertionError: block 'dashboard_navigation' defined twice
+2025-05-20 11:16:41,058 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-20 11:16:42,383 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-20 11:22:55,061 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-20 11:23:31,387 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-20 11:23:49,832 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-20 11:24:34,405 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-20 11:26:08,238 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-20 11:26:14,046 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-20 11:26:15,285 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-20 11:26:42,674 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-20 11:26:43,928 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-20 11:28:41,341 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-20 11:29:06,761 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-20 11:29:16,957 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-20 11:29:18,234 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-20 11:30:04,589 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-20 11:30:05,858 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-20 12:04:14,736 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-20 12:04:15,993 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-20 12:05:01,036 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-20 12:27:41,072 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-20 12:27:49,380 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-20 12:28:56,217 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-20 12:30:46,844 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-20 12:32:16,648 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-20 12:32:29,058 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-20 12:32:38,931 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-20 12:32:47,091 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-20 12:32:54,285 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-20 12:33:09,473 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-20 12:36:47,375 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-20 12:37:46,010 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-20 12:39:24,564 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-20 12:39:49,041 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-20 12:40:01,582 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-20 12:40:02,759 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-20 12:50:23,394 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-20 12:50:52,768 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-20 12:51:19,641 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-20 12:52:24,268 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-20 12:52:50,441 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-20 13:40:23,687 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-20 13:40:25,089 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-20 13:42:12,872 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-20 13:42:14,196 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-23 22:00:13,453 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-23 22:00:15,064 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-23 22:29:09,562 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-23 22:30:02,363 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-23 22:31:37,776 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-23 22:32:43,043 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-23 22:33:05,684 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-23 22:35:28,259 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-23 22:36:37,309 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-23 22:36:51,599 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-23 22:37:04,913 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-23 22:43:33,032 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-23 22:44:30,103 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-23 22:51:12,190 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-23 22:51:24,465 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-23 22:51:49,064 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-23 22:53:30,492 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-23 22:54:05,605 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-23 22:54:17,860 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-23 23:30:13,126 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-23 23:31:10,125 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-23 23:31:11,441 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-23 23:33:19,135 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-23 23:33:48,151 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 07:41:39,748 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 07:41:41,212 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 07:45:22,097 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 07:47:41,251 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 07:47:46,112 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 07:47:51,399 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 07:48:04,794 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 07:48:06,186 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 07:52:39,783 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 07:52:49,703 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 07:53:47,079 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 07:54:47,658 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 07:54:58,648 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 07:54:59,899 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 07:55:34,291 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 07:55:35,592 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 07:57:21,942 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 07:57:23,232 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 07:59:05,793 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 07:59:07,083 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:00:25,823 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:00:27,186 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:02:53,865 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:02:55,213 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:06:15,514 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:06:15,516 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:06:15,516 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:06:15,517 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:06:15,518 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:06:15,520 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:06:26,917 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:06:26,922 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:06:26,922 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:06:26,924 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:06:26,929 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:06:26,951 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:06:54,174 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:06:54,174 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:06:54,176 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:06:54,176 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:06:54,181 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:06:54,181 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:07:01,806 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:07:03,543 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:11:21,251 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:11:21,284 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:11:21,290 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:11:21,291 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:11:21,299 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:11:21,309 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:11:21,347 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:11:38,864 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:11:40,736 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:13:08,268 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:13:08,273 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:13:08,282 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:13:08,287 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:13:08,288 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:13:08,289 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:13:08,289 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:13:08,299 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:13:25,736 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:13:25,740 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:13:25,741 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:13:25,750 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:13:25,758 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:13:25,762 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:13:25,784 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:13:25,790 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:13:38,022 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:13:38,081 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:13:38,085 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:13:38,091 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:13:38,092 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:13:38,096 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:13:38,103 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:13:38,119 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:13:53,114 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:13:53,166 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:13:53,167 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:13:53,168 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:13:53,169 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:13:53,216 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:13:53,227 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:13:53,263 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:14:06,146 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:14:06,231 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:14:06,264 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:14:06,266 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:14:06,268 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:14:06,274 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:14:06,278 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:14:06,296 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:14:11,512 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:14:12,739 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:17:51,787 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:17:51,796 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:17:51,800 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:17:51,801 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:17:51,804 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:17:51,806 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:17:51,815 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:17:51,817 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:17:51,818 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:19:02,079 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:19:02,788 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:19:02,871 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:19:02,909 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:19:03,113 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:19:03,158 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:19:03,236 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:19:03,325 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:19:03,347 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:20:03,689 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:20:03,750 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:20:03,784 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:20:03,792 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:20:03,795 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:20:03,797 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:20:03,801 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:20:03,827 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:20:03,849 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:20:28,102 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:20:28,116 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:20:28,142 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:20:28,169 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:20:28,198 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:20:28,212 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:20:28,229 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:20:28,309 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:20:28,350 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:22:58,880 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:22:58,963 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:22:58,984 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:22:58,993 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:22:59,000 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:22:59,008 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:22:59,036 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:22:59,075 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:22:59,169 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:23:26,585 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:23:33,029 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:23:58,009 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:23:58,140 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:23:58,140 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:23:58,150 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:23:58,163 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:23:58,173 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:23:58,175 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:23:58,197 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:23:58,218 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:24:26,157 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:24:26,221 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:24:26,746 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:24:26,812 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:24:27,312 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:24:27,328 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:24:27,354 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:24:27,410 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:24:27,553 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:28:09,553 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:28:10,120 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:28:10,123 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:28:10,138 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:28:10,214 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:28:10,278 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:28:10,282 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:28:10,289 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:28:10,302 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:28:37,878 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:28:38,441 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:28:38,530 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:28:38,609 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:28:40,980 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:28:41,213 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:28:41,371 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:28:41,418 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:28:41,562 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:29:55,244 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:29:55,592 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:29:55,606 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:29:55,618 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:29:55,648 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:29:55,724 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:29:55,735 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:29:55,757 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:29:55,780 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:33:11,290 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:33:11,416 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:33:11,448 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:33:11,452 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:33:11,467 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:33:11,489 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:33:11,516 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:33:11,636 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:33:11,683 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:36:33,301 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:36:33,361 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:36:33,374 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:36:33,376 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:36:33,393 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:36:33,413 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:36:33,429 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:36:33,461 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:36:33,515 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:37:21,178 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:37:21,219 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:37:21,230 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:37:21,232 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:37:21,243 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:37:21,246 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:37:21,248 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:37:21,267 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:37:21,287 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:38:12,804 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:38:13,460 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:38:13,729 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:38:13,764 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:38:13,816 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:38:13,836 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:38:13,866 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:38:13,926 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:38:14,154 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:41:07,824 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:41:08,099 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:41:08,118 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:41:08,122 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:41:08,143 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:41:08,665 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:41:08,671 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:41:08,688 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:41:08,839 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:41:37,239 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:41:37,241 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:41:37,242 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:41:37,272 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:41:37,881 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:41:37,899 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:41:38,104 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:41:38,192 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:41:38,215 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:42:12,377 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:42:12,438 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:42:12,879 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:42:12,962 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:42:13,012 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:42:13,996 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:42:14,005 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:42:14,018 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:42:14,030 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:42:48,542 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:42:49,019 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:42:49,045 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:42:50,222 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:42:50,253 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:42:50,311 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:42:50,320 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:42:50,325 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:42:50,520 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:44:05,541 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:44:05,555 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:44:05,921 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:44:05,926 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:44:05,929 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:44:06,034 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:44:06,195 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:44:06,232 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:44:06,384 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:44:24,362 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:44:24,407 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:44:24,970 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:44:24,974 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:44:24,975 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:44:25,006 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:44:25,043 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:44:25,090 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:44:25,101 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:44:39,507 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:44:39,878 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:44:41,078 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:44:41,085 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:44:41,214 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:44:41,226 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:44:41,365 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:44:41,408 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:44:41,465 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:45:28,576 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:45:28,637 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:45:28,648 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:45:28,656 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:45:28,680 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:45:28,679 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:45:28,826 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:45:29,072 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 08:45:29,098 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 09:41:23,140 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 09:41:24,567 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 09:43:10,938 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 09:43:12,215 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 09:48:31,207 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 09:49:52,034 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 10:33:40,528 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 10:35:18,343 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 10:35:35,815 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-24 10:42:50,707 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-28 18:24:59,729 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-28 18:25:01,517 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-28 18:27:35,886 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-28 18:29:59,629 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-28 18:39:51,385 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-28 18:48:43,231 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-28 18:49:45,024 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-28 18:49:46,325 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-28 18:52:45,490 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-28 18:53:13,246 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-28 18:53:53,630 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-28 18:57:22,240 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-28 18:58:51,793 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-28 18:59:57,339 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-28 18:59:58,674 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-28 19:12:43,537 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-28 19:12:56,962 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-28 19:13:27,874 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-28 19:13:42,150 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-28 19:16:30,442 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-28 19:16:31,814 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-28 19:19:57,405 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-28 19:22:13,252 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]
+2025-05-28 19:22:54,833 INFO: Hotel Management System startup [in /Users/prakharjain/Desktop/cs ia save/app_factory.py:210]

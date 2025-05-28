@@ -1,0 +1,144 @@
+{% extends "dashboard_base.html" %}
+
+{% block dashboard_title %}Rooms to Clean{% endblock %}
+{% block dashboard_heading %}Rooms to Clean {% if total_rooms > 0 %}({{ total_rooms }}){% endif %}{% endblock %}
+
+{% block dashboard_navigation %}
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <a href="{{ url_for('housekeeping.dashboard') }}" class="text-decoration-none">
+            <div class="card bg-primary text-white h-100 dashboard-card">
+                <div class="card-body text-center">
+                    <i class="bi bi-speedometer2 display-4"></i>
+                    <h5 class="mt-2">Dashboard</h5>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3 mb-3">
+        <a href="{{ url_for('housekeeping.rooms_to_clean_view') }}" class="text-decoration-none">
+            <div class="card bg-info text-white h-100 dashboard-card active">
+                <div class="card-body text-center">
+                    <i class="bi bi-brush display-4"></i>
+                    <h5 class="mt-2">Rooms to Clean</h5>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3 mb-3">
+        <a href="{{ url_for('housekeeping.checkout_rooms_view') }}" class="text-decoration-none">
+            <div class="card bg-warning text-white h-100 dashboard-card">
+                <div class="card-body text-center">
+                    <i class="bi bi-door-open display-4"></i>
+                    <h5 class="mt-2">Check-outs Today</h5>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3 mb-3">
+        <a href="{{ url_for('housekeeping.cleaning_schedule') }}" class="text-decoration-none">
+            <div class="card bg-success text-white h-100 dashboard-card">
+                <div class="card-body text-center">
+                    <i class="bi bi-calendar-check display-4"></i>
+                    <h5 class="mt-2">Cleaning Schedule</h5>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block dashboard_content %}
+<!-- Rooms to Clean -->
+{% if total_rooms == 0 %}
+<div class="alert alert-success">
+    <h4 class="alert-heading">Great job!</h4>
+    <p>There are currently no rooms that need cleaning. All rooms are clean and ready.</p>
+</div>
+{% else %}
+<!-- Legend -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Room Status Legend</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-2">
+                        <div class="p-2 bg-danger text-white text-center rounded">
+                            <strong>Dirty</strong> - Needs cleaning
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <div class="p-2 bg-warning text-white text-center rounded">
+                            <strong>Checkout</strong> - Guest checked out today
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <div class="p-2 bg-secondary text-white text-center rounded">
+                            <strong>Maintenance</strong> - Under maintenance
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <div class="p-2 bg-success text-white text-center rounded">
+                            <strong>Clean</strong> - Ready for guests
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Rooms by Floor -->
+{% for floor, rooms in rooms_by_floor.items() %}
+<div class="row mb-4">
+    <div class="col-lg-12">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-primary">Floor {{ floor }}</h6>
+                <span class="badge bg-primary">{{ rooms|length }} room{% if rooms|length != 1 %}s{% endif %}</span>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for room in rooms %}
+                    <div class="col-md-3 mb-4">
+                        <div class="card h-100 {% if room.status == 'dirty' %}border-danger{% elif room.status == 'checkout' %}border-warning{% elif room.status == 'maintenance' %}border-secondary{% endif %}">
+                            <div class="card-header py-3 {% if room.status == 'dirty' %}bg-danger text-white{% elif room.status == 'checkout' %}bg-warning text-white{% elif room.status == 'maintenance' %}bg-secondary text-white{% endif %}">
+                                <h6 class="m-0 font-weight-bold">Room {{ room.number }}</h6>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>Type:</strong> {{ room.room_type.name }}</p>
+                                <p><strong>Status:</strong> {{ room.status | title }}</p>
+                                <p><strong>Last Cleaned:</strong> {{ room.last_cleaned.strftime("%Y-%m-%d %H:%M") if room.last_cleaned else "Never" }}</p>
+                                <div class="d-grid gap-2">
+                                    <a href="{{ url_for('housekeeping.room_status') }}?room_id={{ room.id }}" class="btn btn-primary btn-sm">Update Status</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endif %}
+{% endblock %}
+
+{% block quick_links %}
+<a href="{{ url_for('housekeeping.dashboard') }}" class="list-group-item list-group-item-action">
+    <i class="bi bi-speedometer2 me-2"></i> Dashboard
+</a>
+<a href="{{ url_for('housekeeping.room_status') }}" class="list-group-item list-group-item-action">
+    <i class="bi bi-house-door me-2"></i> Room Status Overview
+</a>
+<a href="{{ url_for('housekeeping.maintenance_requests') }}" class="list-group-item list-group-item-action">
+    <i class="bi bi-tools me-2"></i> Maintenance Requests
+</a>
+<a href="{{ url_for('housekeeping.tasks') }}" class="list-group-item list-group-item-action">
+    <i class="bi bi-check2-square me-2"></i> My Tasks
+</a>
+{% endblock %} 

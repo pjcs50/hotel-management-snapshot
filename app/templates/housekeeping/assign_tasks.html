@@ -1,0 +1,161 @@
+{% extends "dashboard_base.html" %}
+
+{% block dashboard_title %}Assign Cleaning Tasks{% endblock %}
+{% block dashboard_heading %}Assign Cleaning Tasks{% endblock %}
+
+{% block dashboard_navigation %}
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <a href="{{ url_for('housekeeping.dashboard') }}" class="text-decoration-none">
+            <div class="card bg-primary text-white h-100 dashboard-card">
+                <div class="card-body text-center">
+                    <i class="bi bi-speedometer2 display-4"></i>
+                    <h5 class="mt-2">Dashboard</h5>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3 mb-3">
+        <a href="{{ url_for('housekeeping.rooms_to_clean_view') }}" class="text-decoration-none">
+            <div class="card bg-info text-white h-100 dashboard-card">
+                <div class="card-body text-center">
+                    <i class="bi bi-brush display-4"></i>
+                    <h5 class="mt-2">Rooms to Clean</h5>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3 mb-3">
+        <a href="{{ url_for('housekeeping.tasks') }}" class="text-decoration-none">
+            <div class="card bg-warning text-white h-100 dashboard-card">
+                <div class="card-body text-center">
+                    <i class="bi bi-check2-square display-4"></i>
+                    <h5 class="mt-2">My Tasks</h5>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3 mb-3">
+        <a href="{{ url_for('housekeeping.assign_tasks') }}" class="text-decoration-none">
+            <div class="card bg-success text-white h-100 dashboard-card active">
+                <div class="card-body text-center">
+                    <i class="bi bi-person-check display-4"></i>
+                    <h5 class="mt-2">Assign Tasks</h5>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="row">
+    <div class="col-lg-12">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-primary">Unassigned Tasks</h6>
+                <a href="{{ url_for('housekeeping.tasks') }}" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-list-check"></i> View All Tasks
+                </a>
+            </div>
+            <div class="card-body">
+                {% if unassigned_tasks %}
+                <div class="table-responsive">
+                    <table class="table table-bordered" id="unassignedTasksTable" width="100%" cellspacing="0">
+                        <thead>
+                            <tr>
+                                <th>Room</th>
+                                <th>Task Type</th>
+                                <th>Priority</th>
+                                <th>Due Date</th>
+                                <th>Description</th>
+                                <th>Assign To</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for task in unassigned_tasks %}
+                            <tr>
+                                <td>{{ rooms[task.room_id].number }}</td>
+                                <td>{{ task.task_type|replace('_', ' ')|title }}</td>
+                                <td>
+                                    <span class="badge {% if task.priority == 'urgent' %}bg-danger{% elif task.priority == 'high' %}bg-warning{% elif task.priority == 'normal' %}bg-primary{% else %}bg-secondary{% endif %}">
+                                        {{ task.priority|title }}
+                                    </span>
+                                </td>
+                                <td>{{ task.due_date.strftime('%Y-%m-%d %H:%M') }}</td>
+                                <td>{{ task.description|truncate(50) }}</td>
+                                <td>
+                                    <form action="{{ url_for('housekeeping.assign_tasks') }}" method="post" class="d-flex">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <input type="hidden" name="task_id" value="{{ task.id }}">
+                                        <select name="staff_id" class="form-select form-select-sm me-2" required>
+                                            <option value="">Select Staff</option>
+                                            {% for staff in housekeeping_staff %}
+                                            <option value="{{ staff.id }}">{{ staff.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <button type="submit" class="btn btn-sm btn-primary">Assign</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> There are no unassigned tasks at the moment.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Staff Workload</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered" id="staffWorkloadTable" width="100%" cellspacing="0">
+                        <thead>
+                            <tr>
+                                <th>Staff Name</th>
+                                <th>Current Tasks</th>
+                                <th>Completed Today</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for staff in housekeeping_staff %}
+                            <tr>
+                                <td>{{ staff.name }}</td>
+                                <td>{{ staff.assigned_tasks|selectattr('status', 'in', ['pending', 'in_progress'])|list|length }}</td>
+                                <td>{{ staff.assigned_tasks|selectattr('status', 'equalto', 'completed')|selectattr('completed_at', 'defined')|selectattr('completed_at.date', 'equalto', now().date())|list|length }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block quick_links %}
+<a href="{{ url_for('housekeeping.dashboard') }}" class="list-group-item list-group-item-action">
+    <i class="bi bi-speedometer2 me-2"></i> Dashboard
+</a>
+<a href="{{ url_for('housekeeping.rooms_to_clean_view') }}" class="list-group-item list-group-item-action">
+    <i class="bi bi-brush me-2"></i> Rooms to Clean
+</a>
+<a href="{{ url_for('housekeeping.tasks') }}" class="list-group-item list-group-item-action">
+    <i class="bi bi-check2-square me-2"></i> My Tasks
+</a>
+<a href="{{ url_for('housekeeping.maintenance_requests') }}" class="list-group-item list-group-item-action">
+    <i class="bi bi-tools me-2"></i> Maintenance Requests
+</a>
+{% endblock %}

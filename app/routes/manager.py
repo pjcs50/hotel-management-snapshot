@@ -20,10 +20,12 @@ from app.services.waitlist_service import WaitlistService
 from app.services.analytics_service import AnalyticsService
 from app.services.maintenance_service import MaintenanceService
 from app.services.housekeeping_service import HousekeepingService
+from app.services.forecast_service import ForecastService
 from app.models.user import User
 from app.models.room import Room
 from app.models.room_type import RoomType
 from app.models.pricing import Pricing
+from app.models.revenue_forecast import RevenueForecast, ForecastAggregation
 from app.forms.seasonal_rate_form import SeasonalRateForm
 from db import db
 
@@ -1378,3 +1380,287 @@ def generate_turnover_tasks():
         flash('No new turnover tasks were needed', 'info')
     
     return redirect(url_for('manager.housekeeping')) 
+
+
+@manager_bp.route('/forecasts')
+@login_required
+@role_required('manager')
+def forecasts():
+    """Display revenue forecasts page."""
+    forecast_service = ForecastService(db.session)
+    
+    # Get query parameters for date range
+    days = request.args.get('days', 30, type=int)
+    start_date_str = request.args.get('start_date')
+    end_date_str = request.args.get('end_date')
+    
+    today = datetime.now().date()
+    
+    # Parse custom date range if provided
+    if start_date_str and end_date_str:
+        try:
+            start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+            end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+        except ValueError:
+            flash("Invalid date format. Using default range.", "warning")
+            start_date = today - timedelta(days=30)
+            end_date = today + timedelta(days=30)
+    else:
+        # Use the days parameter
+        start_date = today - timedelta(days=30)  # Include 30 days of history
+        end_date = today + timedelta(days=days)
+    
+    try:
+        # Get forecast data and metrics for the specified period
+        chart_data = forecast_service.get_forecast_chart_data(
+            start_date=start_date,
+            days=(end_date - start_date).days,
+            include_actuals=True
+        )
+        
+        # Get monthly and quarterly aggregated forecasts
+        monthly_forecasts = db.session.query(ForecastAggregation).filter(
+            ForecastAggregation.period_type == ForecastAggregation.PERIOD_MONTH,
+            ForecastAggregation.period_start >= today.replace(day=1),  # Start of current month
+            ForecastAggregation.period_end <= (today.replace(day=1) + timedelta(days=365))  # 1 year ahead
+        ).order_by(ForecastAggregation.period_start).all()
+        
+        quarterly_forecasts = db.session.query(ForecastAggregation).filter(
+            ForecastAggregation.period_type == ForecastAggregation.PERIOD_QUARTER,
+            ForecastAggregation.period_start >= today.replace(month=((today.month-1)//3)*3+1, day=1),  # Start of current quarter
+            ForecastAggregation.period_end <= (today.replace(month=((today.month-1)//3)*3+1, day=1) + timedelta(days=500))  # ~1.5 years ahead
+        ).order_by(ForecastAggregation.period_start).all()
+        
+        # Calculate period metrics
+        daily_forecasts = db.session.query(RevenueForecast).filter(
+            RevenueForecast.forecast_date >= start_date,
+            RevenueForecast.forecast_date <= end_date
+        ).order_by(RevenueForecast.forecast_date).all()
+        
+        if not daily_forecasts:
+            # Generate forecasts if none exist
+            daily_forecasts = forecast_service.generate_daily_forecasts(
+                start_date=today + timedelta(days=1),
+                days=(end_date - today).days
+            )
+            # Regenerate chart data with new forecasts
+            chart_data = forecast_service.get_forecast_chart_data(
+                start_date=start_date,
+                days=(end_date - start_date).days,
+                include_actuals=True
+            )
+        
+        # Calculate period averages and totals
+        avg_occupancy = sum(f.predicted_occupancy_rate for f in daily_forecasts) / len(daily_forecasts)
+        avg_adr = sum(f.predicted_adr for f in daily_forecasts) / len(daily_forecasts)
+        avg_revpar = sum(f.predicted_revpar for f in daily_forecasts) / len(daily_forecasts)
+        total_revenue = sum(f.predicted_room_revenue for f in daily_forecasts)
+        avg_confidence = sum(f.confidence_score for f in daily_forecasts) / len(daily_forecasts)
+        
+        # Get confidence level class (low, medium, high)
+        confidence_class = 'low'
+        if avg_confidence >= 70:
+            confidence_class = 'high'
+        elif avg_confidence >= 40:
+            confidence_class = 'medium'
+        
+        # Get accuracy metrics for past forecasts
+        accuracy_metrics = forecast_service.get_accuracy_metrics(period_days=30)
+        
+        # Format data for display
+        monthly_data = []
+        for month in monthly_forecasts:
+            monthly_data.append({
+                'period': month.period_start.strftime('%b %Y'),
+                'occupancy': round(month.predicted_occupancy_rate, 1),
+                'adr': round(month.predicted_adr, 2),
+                'revpar': round(month.predicted_revpar, 2),
+                'revenue': round(month.predicted_room_revenue, 2)
+            })
+            
+        quarterly_data = []
+        for quarter in quarterly_forecasts:
+            quarter_num = (quarter.period_start.month - 1) // 3 + 1
+            quarterly_data.append({
+                'period': f"Q{quarter_num} {quarter.period_start.year}",
+                'occupancy': round(quarter.predicted_occupancy_rate, 1),
+                'adr': round(quarter.predicted_adr, 2),
+                'revpar': round(quarter.predicted_revpar, 2),
+                'revenue': round(quarter.predicted_room_revenue, 2)
+            })
+        
+        # Check if we have historical year-over-year data for comparison
+        has_historical = False
+        adr_variance = 0
+        revpar_variance = 0
+        revenue_variance = 0
+        
+        # TODO: Implement year-over-year comparison logic if historical data is available
+        
+        metrics = {
+            'avg_predicted_occupancy': round(avg_occupancy, 1),
+            'avg_predicted_adr': round(avg_adr, 2),
+            'avg_predicted_revpar': round(avg_revpar, 2),
+            'total_predicted_revenue': format(round(total_revenue, 2), ','),
+            'avg_confidence': round(avg_confidence),
+            'confidence_class': confidence_class,
+            'monthly_forecasts': monthly_data,
+            'quarterly_forecasts': quarterly_data,
+            'chart_data': chart_data,
+            'accuracy': accuracy_metrics,
+            'has_historical': has_historical,
+            'adr_variance': adr_variance,
+            'revpar_variance': revpar_variance,
+            'revenue_variance': revenue_variance
+        }
+        
+        return render_template('manager/forecasts.html', metrics=metrics)
+    except Exception as e:
+        flash(f"Error loading forecast data: {str(e)}", "danger")
+        return render_template('manager/forecasts.html', metrics={'error': str(e)})
+
+
+@manager_bp.route('/forecasts/refresh')
+@login_required
+@role_required('manager')
+def refresh_forecasts():
+    """Regenerate forecasts and redirect back to forecasts page."""
+    forecast_service = ForecastService(db.session)
+    
+    try:
+        # Update actuals for past forecasts
+        updated_actuals = forecast_service.update_actuals()
+        
+        # Generate new forecasts
+        forecasts = forecast_service.generate_daily_forecasts()
+        
+        # Generate aggregations
+        aggregations = forecast_service.generate_aggregated_forecasts()
+        
+        # Add success message
+        flash(f"Forecasts refreshed successfully. Generated {len(forecasts)} daily forecasts, updated {updated_actuals} historical data points.", "success")
+    except Exception as e:
+        flash(f"Error refreshing forecasts: {str(e)}", "danger")
+    
+    # Redirect back to referring page, or forecasts page if none
+    redirect_to = request.args.get('redirect_to')
+    if redirect_to:
+        return redirect(redirect_to)
+    else:
+        return redirect(url_for('manager.forecasts'))
+
+
+@manager_bp.route('/forecasts/export')
+@login_required
+@role_required('manager')
+def export_forecast():
+    """Export forecast data in various formats."""
+    forecast_service = ForecastService(db.session)
+    report_service = ReportService(db.session)
+    
+    export_format = request.args.get('format', 'csv')
+    days = request.args.get('days', 90, type=int)
+    start_date_str = request.args.get('start_date')
+    end_date_str = request.args.get('end_date')
+    
+    today = datetime.now().date()
+    
+    # Parse custom date range if provided
+    if start_date_str and end_date_str:
+        try:
+            start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+            end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+        except ValueError:
+            flash("Invalid date format. Using default range.", "warning")
+            start_date = today
+            end_date = today + timedelta(days=days)
+    else:
+        # Use the days parameter
+        start_date = today
+        end_date = today + timedelta(days=days)
+    
+    try:
+        # Get forecast data
+        chart_data = forecast_service.get_forecast_chart_data(
+            start_date=start_date,
+            days=(end_date - start_date).days,
+            include_actuals=True
+        )
+        
+        # Format data for export
+        export_data = []
+        
+        # Add header row
+        export_data.append([
+            'Date', 
+            'Predicted Occupancy (%)', 
+            'Actual Occupancy (%)',
+            'Predicted ADR ($)', 
+            'Actual ADR ($)',
+            'Predicted RevPAR ($)', 
+            'Actual RevPAR ($)',
+            'Predicted Revenue ($)', 
+            'Actual Revenue ($)',
+            'Confidence Score (%)'
+        ])
+        
+        # Get forecasts from database to include confidence score
+        forecasts = db.session.query(RevenueForecast).filter(
+            RevenueForecast.forecast_date >= start_date,
+            RevenueForecast.forecast_date <= end_date
+        ).order_by(RevenueForecast.forecast_date).all()
+        
+        # Build forecast dictionary for quick lookup
+        forecast_dict = {f.forecast_date.strftime('%Y-%m-%d'): f for f in forecasts}
+        
+        # Add data rows
+        for i, date_str in enumerate(chart_data['dates']):
+            forecast = forecast_dict.get(date_str)
+            confidence = forecast.confidence_score if forecast else 'N/A'
+            
+            export_data.append([
+                date_str,
+                chart_data['occupancy']['predicted'][i],
+                chart_data['occupancy']['actual'][i] if chart_data['occupancy']['actual'][i] else 'N/A',
+                chart_data['adr']['predicted'][i],
+                chart_data['adr']['actual'][i] if chart_data['adr']['actual'][i] else 'N/A',
+                chart_data['revpar']['predicted'][i],
+                chart_data['revpar']['actual'][i] if chart_data['revpar']['actual'][i] else 'N/A',
+                chart_data['revenue']['predicted'][i],
+                chart_data['revenue']['actual'][i] if chart_data['revenue']['actual'][i] else 'N/A',
+                confidence
+            ])
+        
+        # Export data in requested format
+        if export_format == 'csv':
+            output = report_service.export_to_csv(export_data, 'Revenue Forecast')
+            mimetype = 'text/csv'
+            extension = 'csv'
+        elif export_format == 'excel':
+            output = report_service.export_to_excel(export_data, 'Revenue Forecast')
+            mimetype = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            extension = 'xlsx'
+        elif export_format == 'pdf':
+            try:
+                output = report_service.export_to_pdf(export_data, 'Revenue Forecast')
+                mimetype = 'application/pdf'
+                extension = 'pdf'
+            except ImportError:
+                flash("PDF export requires additional dependencies. Falling back to CSV format.", "warning")
+                output = report_service.export_to_csv(export_data, 'Revenue Forecast')
+                mimetype = 'text/csv'
+                extension = 'csv'
+        else:
+            output = report_service.export_to_csv(export_data, 'Revenue Forecast')
+            mimetype = 'text/csv'
+            extension = 'csv'
+        
+        return send_file(
+            io.BytesIO(output),
+            mimetype=mimetype,
+            as_attachment=True,
+            download_name=f"revenue_forecast_{start_date.strftime('%Y-%m-%d')}_to_{end_date.strftime('%Y-%m-%d')}.{extension}"
+        )
+    except Exception as e:
+        flash(f"Error exporting forecast: {str(e)}", "danger")
+        return redirect(url_for('manager.forecasts')) 

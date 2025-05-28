@@ -1,0 +1,604 @@
+{% extends "dashboard_base.html" %}
+
+{% block dashboard_title %}Revenue Forecasts{% endblock %}
+{% block dashboard_heading %}Revenue Forecasts{% endblock %}
+
+{% block extra_head %}
+<style>
+    .confidence-indicator {
+        width: 80px;
+        height: 8px;
+        background-color: #e9ecef;
+        border-radius: 4px;
+        overflow: hidden;
+        display: inline-block;
+        margin-right: 10px;
+    }
+    
+    .confidence-bar {
+        height: 100%;
+        background-color: #28a745;
+    }
+    
+    .confidence-low .confidence-bar {
+        background-color: #dc3545;
+    }
+    
+    .confidence-medium .confidence-bar {
+        background-color: #ffc107;
+    }
+    
+    .confidence-high .confidence-bar {
+        background-color: #28a745;
+    }
+    
+    .forecast-card {
+        transition: all 0.3s ease;
+    }
+    
+    .forecast-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    
+    .variance-positive {
+        color: #28a745;
+    }
+    
+    .variance-negative {
+        color: #dc3545;
+    }
+    
+    .forecast-period-selector .nav-link {
+        border-radius: 0;
+        padding: 0.5rem 1rem;
+    }
+    
+    .forecast-period-selector .nav-link.active {
+        background-color: #007bff;
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h3 class="h5 mb-0">Revenue Forecast Overview</h3>
+                <div>
+                    <button class="btn btn-light btn-sm" id="refreshForecastBtn">
+                        <i class="fas fa-sync-alt"></i> Refresh Forecasts
+                    </button>
+                    <div class="btn-group">
+                        <button class="btn btn-light btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-download"></i> Export
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="{{ url_for('manager.export_forecast', format='csv') }}">CSV</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('manager.export_forecast', format='excel') }}">Excel</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('manager.export_forecast', format='pdf') }}">PDF</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Period Selection -->
+                <ul class="nav nav-pills mb-4 forecast-period-selector">
+                    <li class="nav-item">
+                        <a class="nav-link active" id="tab-next-30-days" data-bs-toggle="tab" href="#next-30-days">Next 30 Days</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="tab-next-90-days" data-bs-toggle="tab" href="#next-90-days">Next 90 Days</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="tab-next-180-days" data-bs-toggle="tab" href="#next-180-days">Next 180 Days</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="tab-custom-period" data-bs-toggle="tab" href="#custom-period">Custom Period</a>
+                    </li>
+                </ul>
+                
+                <!-- Custom Date Range Form -->
+                <div class="tab-content">
+                    <div class="tab-pane fade" id="custom-period">
+                        <form id="customPeriodForm" class="row g-3 mb-4">
+                            <div class="col-md-4">
+                                <label for="start_date" class="form-label">Start Date</label>
+                                <input type="date" class="form-control" id="start_date" name="start_date" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="end_date" class="form-label">End Date</label>
+                                <input type="date" class="form-control" id="end_date" name="end_date" required>
+                            </div>
+                            <div class="col-md-4 d-flex align-items-end">
+                                <button type="submit" class="btn btn-primary">Apply Range</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- Forecast Summary Cards -->
+                <div class="row">
+                    <div class="col-md-3 mb-4">
+                        <div class="card forecast-card border-0 shadow-sm h-100">
+                            <div class="card-body">
+                                <h6 class="text-muted mb-1">Predicted Occupancy</h6>
+                                <h3 class="mb-1">{{ metrics.avg_predicted_occupancy }}%</h3>
+                                <p class="text-muted small">Average for selected period</p>
+                                
+                                <h6 class="text-muted mb-1 mt-3">Confidence Level</h6>
+                                <div class="d-flex align-items-center">
+                                    <div class="confidence-indicator confidence-{{ metrics.confidence_class }}">
+                                        <div class="confidence-bar" style="width: {{ metrics.avg_confidence }}%;"></div>
+                                    </div>
+                                    <span class="small">{{ metrics.avg_confidence }}%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3 mb-4">
+                        <div class="card forecast-card border-0 shadow-sm h-100">
+                            <div class="card-body">
+                                <h6 class="text-muted mb-1">Predicted ADR</h6>
+                                <h3 class="mb-1">${{ metrics.avg_predicted_adr }}</h3>
+                                <p class="text-muted small">Average for selected period</p>
+                                
+                                {% if metrics.has_historical %}
+                                <div class="mt-3">
+                                    <span class="small {% if metrics.adr_variance > 0 %}variance-positive{% elif metrics.adr_variance < 0 %}variance-negative{% endif %}">
+                                        {% if metrics.adr_variance > 0 %}+{% endif %}{{ metrics.adr_variance }}% vs last year
+                                    </span>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3 mb-4">
+                        <div class="card forecast-card border-0 shadow-sm h-100">
+                            <div class="card-body">
+                                <h6 class="text-muted mb-1">Predicted RevPAR</h6>
+                                <h3 class="mb-1">${{ metrics.avg_predicted_revpar }}</h3>
+                                <p class="text-muted small">Average for selected period</p>
+                                
+                                {% if metrics.has_historical %}
+                                <div class="mt-3">
+                                    <span class="small {% if metrics.revpar_variance > 0 %}variance-positive{% elif metrics.revpar_variance < 0 %}variance-negative{% endif %}">
+                                        {% if metrics.revpar_variance > 0 %}+{% endif %}{{ metrics.revpar_variance }}% vs last year
+                                    </span>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3 mb-4">
+                        <div class="card forecast-card border-0 shadow-sm h-100">
+                            <div class="card-body">
+                                <h6 class="text-muted mb-1">Total Revenue</h6>
+                                <h3 class="mb-1">${{ metrics.total_predicted_revenue }}</h3>
+                                <p class="text-muted small">Total for selected period</p>
+                                
+                                {% if metrics.has_historical %}
+                                <div class="mt-3">
+                                    <span class="small {% if metrics.revenue_variance > 0 %}variance-positive{% elif metrics.revenue_variance < 0 %}variance-negative{% endif %}">
+                                        {% if metrics.revenue_variance > 0 %}+{% endif %}{{ metrics.revenue_variance }}% vs last year
+                                    </span>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Forecast Charts -->
+                <div class="row">
+                    <div class="col-md-6 mb-4">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-header bg-white border-bottom">
+                                <h5 class="mb-0">Occupancy Forecast</h5>
+                            </div>
+                            <div class="card-body">
+                                <div style="height: 300px;">
+                                    <canvas id="occupancyForecastChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6 mb-4">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-header bg-white border-bottom">
+                                <h5 class="mb-0">ADR Forecast</h5>
+                            </div>
+                            <div class="card-body">
+                                <div style="height: 300px;">
+                                    <canvas id="adrForecastChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-4">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-header bg-white border-bottom">
+                                <h5 class="mb-0">RevPAR Forecast</h5>
+                            </div>
+                            <div class="card-body">
+                                <div style="height: 300px;">
+                                    <canvas id="revparForecastChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6 mb-4">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-header bg-white border-bottom">
+                                <h5 class="mb-0">Revenue Forecast</h5>
+                            </div>
+                            <div class="card-body">
+                                <div style="height: 300px;">
+                                    <canvas id="revenueForecastChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Forecast Accuracy -->
+                {% if metrics.accuracy %}
+                <div class="row">
+                    <div class="col-md-12 mb-4">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-header bg-white border-bottom">
+                                <h5 class="mb-0">Forecast Accuracy (Last 30 Days)</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="text-center mb-3">
+                                            <h6 class="text-muted">Average Accuracy</h6>
+                                            <h3>{{ metrics.accuracy.accuracy_score }}%</h3>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="text-center mb-3">
+                                            <h6 class="text-muted">Mean Absolute Error</h6>
+                                            <h3>${{ metrics.accuracy.mean_absolute_error }}</h3>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="text-center mb-3">
+                                            <h6 class="text-muted">Mean Absolute % Error</h6>
+                                            <h3>{{ metrics.accuracy.mean_absolute_percentage_error }}%</h3>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="text-center mb-3">
+                                            <h6 class="text-muted">Forecasts Evaluated</h6>
+                                            <h3>{{ metrics.accuracy.count }}</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Aggregation Tables -->
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom">
+                <h5 class="mb-0">Monthly Forecasts</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Month</th>
+                                <th>Occupancy</th>
+                                <th>ADR</th>
+                                <th>RevPAR</th>
+                                <th>Revenue</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for month in metrics.monthly_forecasts %}
+                            <tr>
+                                <td>{{ month.period }}</td>
+                                <td>{{ month.occupancy }}%</td>
+                                <td>${{ month.adr }}</td>
+                                <td>${{ month.revpar }}</td>
+                                <td>${{ month.revenue }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom">
+                <h5 class="mb-0">Quarterly Forecasts</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Quarter</th>
+                                <th>Occupancy</th>
+                                <th>ADR</th>
+                                <th>RevPAR</th>
+                                <th>Revenue</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for quarter in metrics.quarterly_forecasts %}
+                            <tr>
+                                <td>{{ quarter.period }}</td>
+                                <td>{{ quarter.occupancy }}%</td>
+                                <td>${{ quarter.adr }}</td>
+                                <td>${{ quarter.revpar }}</td>
+                                <td>${{ quarter.revenue }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Chart.js configurations
+    const commonOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'top',
+            }
+        },
+        scales: {
+            x: {
+                grid: {
+                    display: false
+                }
+            },
+            y: {
+                beginAtZero: false
+            }
+        }
+    };
+    
+    // Initialize charts with forecast data
+    const occupancyChart = new Chart(
+        document.getElementById('occupancyForecastChart'),
+        {
+            type: 'line',
+            data: {
+                labels: {{ metrics.chart_data.dates | tojson }},
+                datasets: [
+                    {
+                        label: 'Predicted Occupancy',
+                        data: {{ metrics.chart_data.occupancy.predicted | tojson }},
+                        borderColor: 'rgb(54, 162, 235)',
+                        backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.1,
+                        fill: true
+                    },
+                    {
+                        label: 'Actual Occupancy',
+                        data: {{ metrics.chart_data.occupancy.actual | tojson }},
+                        borderColor: 'rgb(75, 192, 192)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                        borderWidth: 2,
+                        pointRadius: 4,
+                        tension: 0
+                    }
+                ]
+            },
+            options: {
+                ...commonOptions,
+                scales: {
+                    ...commonOptions.scales,
+                    y: {
+                        ...commonOptions.scales.y,
+                        title: {
+                            display: true,
+                            text: 'Occupancy Rate (%)'
+                        }
+                    }
+                }
+            }
+        }
+    );
+    
+    const adrChart = new Chart(
+        document.getElementById('adrForecastChart'),
+        {
+            type: 'line',
+            data: {
+                labels: {{ metrics.chart_data.dates | tojson }},
+                datasets: [
+                    {
+                        label: 'Predicted ADR',
+                        data: {{ metrics.chart_data.adr.predicted | tojson }},
+                        borderColor: 'rgb(255, 99, 132)',
+                        backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.1,
+                        fill: true
+                    },
+                    {
+                        label: 'Actual ADR',
+                        data: {{ metrics.chart_data.adr.actual | tojson }},
+                        borderColor: 'rgb(153, 102, 255)',
+                        backgroundColor: 'rgba(153, 102, 255, 0.1)',
+                        borderWidth: 2,
+                        pointRadius: 4,
+                        tension: 0
+                    }
+                ]
+            },
+            options: {
+                ...commonOptions,
+                scales: {
+                    ...commonOptions.scales,
+                    y: {
+                        ...commonOptions.scales.y,
+                        title: {
+                            display: true,
+                            text: 'Average Daily Rate ($)'
+                        }
+                    }
+                }
+            }
+        }
+    );
+    
+    const revparChart = new Chart(
+        document.getElementById('revparForecastChart'),
+        {
+            type: 'line',
+            data: {
+                labels: {{ metrics.chart_data.dates | tojson }},
+                datasets: [
+                    {
+                        label: 'Predicted RevPAR',
+                        data: {{ metrics.chart_data.revpar.predicted | tojson }},
+                        borderColor: 'rgb(255, 159, 64)',
+                        backgroundColor: 'rgba(255, 159, 64, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.1,
+                        fill: true
+                    },
+                    {
+                        label: 'Actual RevPAR',
+                        data: {{ metrics.chart_data.revpar.actual | tojson }},
+                        borderColor: 'rgb(75, 192, 192)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                        borderWidth: 2,
+                        pointRadius: 4,
+                        tension: 0
+                    }
+                ]
+            },
+            options: {
+                ...commonOptions,
+                scales: {
+                    ...commonOptions.scales,
+                    y: {
+                        ...commonOptions.scales.y,
+                        title: {
+                            display: true,
+                            text: 'RevPAR ($)'
+                        }
+                    }
+                }
+            }
+        }
+    );
+    
+    const revenueChart = new Chart(
+        document.getElementById('revenueForecastChart'),
+        {
+            type: 'line',
+            data: {
+                labels: {{ metrics.chart_data.dates | tojson }},
+                datasets: [
+                    {
+                        label: 'Predicted Revenue',
+                        data: {{ metrics.chart_data.revenue.predicted | tojson }},
+                        borderColor: 'rgb(46, 184, 92)',
+                        backgroundColor: 'rgba(46, 184, 92, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.1,
+                        fill: true
+                    },
+                    {
+                        label: 'Actual Revenue',
+                        data: {{ metrics.chart_data.revenue.actual | tojson }},
+                        borderColor: 'rgb(75, 192, 192)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                        borderWidth: 2,
+                        pointRadius: 4,
+                        tension: 0
+                    }
+                ]
+            },
+            options: {
+                ...commonOptions,
+                scales: {
+                    ...commonOptions.scales,
+                    y: {
+                        ...commonOptions.scales.y,
+                        title: {
+                            display: true,
+                            text: 'Revenue ($)'
+                        }
+                    }
+                }
+            }
+        }
+    );
+    
+    // Handle tab changes
+    document.querySelectorAll('[data-bs-toggle="tab"]').forEach(function(tab) {
+        tab.addEventListener('shown.bs.tab', function (event) {
+            const targetId = event.target.getAttribute('id');
+            let days = 30;
+            
+            if (targetId === 'tab-next-90-days') {
+                days = 90;
+            } else if (targetId === 'tab-next-180-days') {
+                days = 180;
+            } else if (targetId === 'tab-custom-period') {
+                return; // Custom period handled by form submission
+            }
+            
+            // Reload the page with the selected period
+            window.location.href = `{{ url_for('manager.forecasts') }}?days=${days}`;
+        });
+    });
+    
+    // Handle custom period form submission
+    document.getElementById('customPeriodForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const startDate = document.getElementById('start_date').value;
+        const endDate = document.getElementById('end_date').value;
+        
+        if (startDate && endDate) {
+            window.location.href = `{{ url_for('manager.forecasts') }}?start_date=${startDate}&end_date=${endDate}`;
+        }
+    });
+    
+    // Handle refresh forecasts button
+    document.getElementById('refreshForecastBtn').addEventListener('click', function() {
+        window.location.href = `{{ url_for('manager.refresh_forecasts') }}?redirect_to={{ request.full_path | urlencode }}`;
+    });
+});
+</script>
+{% endblock %} 

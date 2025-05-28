@@ -1,0 +1,120 @@
+{% extends "dashboard_base.html" %}
+
+{% block dashboard_title %}Report Maintenance Issue{% endblock %}
+{% block dashboard_heading %}Report Maintenance Issue{% endblock %}
+
+{% block dashboard_navigation %}
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <a href="{{ url_for('housekeeping.dashboard') }}" class="text-decoration-none">
+            <div class="card bg-primary text-white h-100 dashboard-card">
+                <div class="card-body text-center">
+                    <i class="bi bi-speedometer2 display-4"></i>
+                    <h5 class="mt-2">Dashboard</h5>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3 mb-3">
+        <a href="{{ url_for('housekeeping.rooms_to_clean_view') }}" class="text-decoration-none">
+            <div class="card bg-info text-white h-100 dashboard-card">
+                <div class="card-body text-center">
+                    <i class="bi bi-brush display-4"></i>
+                    <h5 class="mt-2">Rooms to Clean</h5>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3 mb-3">
+        <a href="{{ url_for('housekeeping.maintenance_requests') }}" class="text-decoration-none">
+            <div class="card bg-warning text-white h-100 dashboard-card">
+                <div class="card-body text-center">
+                    <i class="bi bi-tools display-4"></i>
+                    <h5 class="mt-2">Maintenance Requests</h5>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3 mb-3">
+        <a href="{{ url_for('housekeeping.report_maintenance_issue') }}" class="text-decoration-none">
+            <div class="card bg-danger text-white h-100 dashboard-card active">
+                <div class="card-body text-center">
+                    <i class="bi bi-exclamation-triangle display-4"></i>
+                    <h5 class="mt-2">Report Issue</h5>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="row">
+    <div class="col-lg-8 offset-lg-2">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Report a Maintenance Issue</h6>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('housekeeping.report_maintenance_issue') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    
+                    <div class="mb-3">
+                        <label for="room_id" class="form-label">Room</label>
+                        <select class="form-select" id="room_id" name="room_id" required>
+                            <option value="">Select a room</option>
+                            {% for room in rooms %}
+                            <option value="{{ room.id }}">{{ room.number }} ({{ room.room_type.name }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="issue_type" class="form-label">Issue Type</label>
+                        <select class="form-select" id="issue_type" name="issue_type" required>
+                            <option value="">Select issue type</option>
+                            {% for issue_type in issue_types %}
+                            <option value="{{ issue_type }}">{{ issue_type|replace('_', ' ')|title }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="priority" class="form-label">Priority</label>
+                        <select class="form-select" id="priority" name="priority" required>
+                            {% for priority in priorities %}
+                            <option value="{{ priority }}" {% if priority == 'normal' %}selected{% endif %}>{{ priority|title }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="5" required placeholder="Please provide a detailed description of the issue..."></textarea>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('housekeeping.dashboard') }}" class="btn btn-secondary me-md-2">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Submit Report</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block quick_links %}
+<a href="{{ url_for('housekeeping.dashboard') }}" class="list-group-item list-group-item-action">
+    <i class="bi bi-speedometer2 me-2"></i> Dashboard
+</a>
+<a href="{{ url_for('housekeeping.rooms_to_clean_view') }}" class="list-group-item list-group-item-action">
+    <i class="bi bi-brush me-2"></i> Rooms to Clean
+</a>
+<a href="{{ url_for('housekeeping.tasks') }}" class="list-group-item list-group-item-action">
+    <i class="bi bi-check2-square me-2"></i> My Tasks
+</a>
+<a href="{{ url_for('housekeeping.maintenance_requests') }}" class="list-group-item list-group-item-action">
+    <i class="bi bi-tools me-2"></i> Maintenance Requests
+</a>
+{% endblock %}

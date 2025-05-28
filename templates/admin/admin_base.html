@@ -4,48 +4,6 @@
 
 {% block content %}
 <div class="container-fluid">
-    <div class="row">
-        <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
-            <div class="position-sticky pt-3">
-                <ul class="nav flex-column">
-                    <li class="nav-item">
-                        <a class="nav-link active" aria-current="page" href="{{ url_for('admin.dashboard') }}">
-                            <span data-feather="home"></span>
-                            Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('admin.users') }}">
-                            <span data-feather="users"></span>
-                            Users
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('room.list_rooms') }}">
-                            <span data-feather="layout"></span>
-                            Rooms
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('admin.reservations') }}">
-                            <span data-feather="book-open"></span>
-                            Bookings
-                        </a>
-                    </li>
-                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('admin.reports') }}">
-                            <span data-feather="bar-chart-2"></span>
-                            Reports
-                        </a>
-                    </li>
-                    <!-- Add more admin navigation links here -->
-                </ul>
-            </div>
-        </nav>
-
-        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
-            {% block admin_content %}{% endblock %}
-        </main>
-    </div>
+    {% block admin_content %}{% endblock %}
 </div>
 {% endblock %} 

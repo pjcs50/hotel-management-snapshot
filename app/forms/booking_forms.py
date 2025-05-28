@@ -52,10 +52,10 @@ class BookingForm(FlaskForm):
         description="E.g., extra pillows, high floor, dietary needs. We will do our best to accommodate."
     )
 
-    status = SelectField(
+    status = HiddenField(
         'Status',
-        choices=[(status, status) for status in Booking.STATUS_CHOICES],
-        validators=[DataRequired(message="Status is required")]
+        validators=[DataRequired(message="Status is required")],
+        default=Booking.STATUS_RESERVED
     )
 
     early_hours = IntegerField(

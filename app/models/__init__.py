@@ -67,3 +67,4 @@ from app.models.booking_log import BookingLog
 from app.models.loyalty_ledger import LoyaltyLedger
 from app.models.notification import Notification
 from app.models.folio_item import FolioItem
+from app.models.revenue_forecast import RevenueForecast, ForecastAggregation

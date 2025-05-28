@@ -14,8 +14,13 @@ from app_factory import create_app
 # Create app instance for 'flask run' command
 app = create_app()
 
-# Note: The index route is already defined in app_factory.py, 
+# Note: The index route is already defined in app_factory.py,
 # so we don't need to redefine it here to avoid conflicts
 
 if __name__ == "__main__":
-    app.run(debug=app.config["DEBUG"], host=app.config.get("HOST", "127.0.0.1"), port=5001) 
+    import argparse
+    parser = argparse.ArgumentParser(description='Run the Hotel Management System')
+    parser.add_argument('--port', type=int, default=5001, help='Port to run the application on')
+    args = parser.parse_args()
+
+    app.run(debug=app.config["DEBUG"], host=app.config.get("HOST", "127.0.0.1"), port=args.port)

@@ -5,8 +5,8 @@
 {% block content %}
 <div class="container py-4">
     <h2 class="mb-4 fw-bold">{% block dashboard_heading %}Dashboard{% endblock %}</h2>
-    
-    {% if metrics.error %}
+
+    {% if metrics is defined and metrics.error %}
     <div class="alert alert-danger shadow-sm border-0 rounded-3">
         <div class="d-flex align-items-center">
             <i class="bi bi-exclamation-triangle-fill me-2 text-danger"></i>
@@ -14,18 +14,18 @@
         </div>
     </div>
     {% else %}
-    
+
     {# Role-specific Navigation Section #}
     {% block dashboard_navigation %}{% endblock %}
-    
+
     {# Main Metrics Summary Cards #}
     <div class="row g-3 mb-4">
         {% block metrics_summary %}{% endblock %}
     </div>
-    
+
     {# Main Content Sections #}
     {% block dashboard_content %}{% endblock %}
-    
+
     {# Quick Links Section #}
     <div class="row g-4 mb-4">
         <div class="col-md-6">
@@ -40,7 +40,7 @@
                 </div>
             </div>
         </div>
-        
+
         {# Additional Quick Info Section #}
         {% block additional_info %}{% endblock %}
     </div>
@@ -51,4 +51,4 @@
 {% block extra_js %}
 <script src="{{ url_for('static', filename='js/dashboard-charts.js') }}"></script>
 {% block dashboard_js %}{% endblock %}
-{% endblock %} 
+{% endblock %}

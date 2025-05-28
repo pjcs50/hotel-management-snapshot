@@ -226,16 +226,55 @@ class Booking(BaseModel):
         """
         from app.models.seasonal_rate import SeasonalRate
         
-        # Get the base rate for the room type
-        base_rate = self.room.room_type.base_rate
+        # Check if room and room_type are available
+        if not self.room:
+            # Try to load room if it was lazy-loaded
+            try:
+                self.room = db.session.get('Room', self.room_id)
+            except Exception:
+                return 0  # Return 0 if room can't be loaded
+                
+        if not self.room or not hasattr(self.room, 'room_type') or not self.room.room_type:
+            # Try to load room_type directly if accessible
+            try:
+                from app.models.room_type import RoomType
+                if hasattr(self.room, 'room_type_id') and self.room.room_type_id:
+                    room_type_id = self.room.room_type_id
+                else:
+                    print(f"Room {self.room_id} has no room_type_id attribute or it's None")
+                    return 0
+                    
+                room_type = db.session.get(RoomType, room_type_id)
+                if room_type:
+                    base_rate = room_type.base_rate
+                else:
+                    print(f"No room type found for ID: {room_type_id}")
+                    return 0
+            except Exception as e:
+                print(f"Error loading room type: {str(e)}")
+                return 0  # Return 0 if room type can't be loaded
+        else:
+            base_rate = self.room.room_type.base_rate
         
         # Calculate price for each night considering seasonal rates
-        total_price = SeasonalRate.calculate_stay_price(
-            self.room.room_type_id,
-            self.check_in_date,
-            self.check_out_date,
-            base_rate
-        )
+        try:
+            if hasattr(self.room, 'room_type_id') and self.room.room_type_id:
+                room_type_id = self.room.room_type_id
+                print(f"Using room_type_id: {room_type_id} for seasonal price calculation")
+                total_price = SeasonalRate.calculate_stay_price(
+                    room_type_id,
+                    self.check_in_date,
+                    self.check_out_date,
+                    base_rate
+                )
+            else:
+                raise ValueError(f"Missing room_type_id for room {self.room_id}")
+        except Exception as e:
+            print(f"Error calculating seasonal price: {str(e)}")
+            # Fallback to basic calculation
+            nights = (self.check_out_date - self.check_in_date).days
+            total_price = base_rate * nights
+            print(f"Using fallback price calculation: {nights} nights * ${base_rate} = ${total_price}")
         
         # Add early check-in fee (if applicable)
         if self.early_hours:

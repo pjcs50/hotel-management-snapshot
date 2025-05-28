@@ -685,9 +685,9 @@ class DashboardService:
         Returns:
             Dictionary of dashboard metrics
         """
-        # User counts by role
+        # User counts by role (exclude 'pending' and 'Rejected')
         user_counts = self.db_session.execute(
-            select(User.role, func.count(User.id)).group_by(User.role)
+            select(User.role, func.count(User.id)).where(~User.role.in_(["pending", "Rejected"])).group_by(User.role)
         ).all()
         
         user_data = {}
@@ -695,6 +695,9 @@ class DashboardService:
             if len(row) == 2:  # Make sure we have exactly role and count
                 role, count = row
                 user_data[role] = count
+        
+        # Total users (exclude 'pending' and 'Rejected')
+        total_users = sum(user_data.values())
         
         # Recent user registrations
         recent_users = self.db_session.execute(
@@ -746,9 +749,9 @@ class DashboardService:
         
         return {
             "user_counts": user_data,
+            "total_users": total_users,
             "recent_users": recent_users_data,
             "pending_role_requests": pending_requests_data,
-            "total_users": sum(user_data.values()),
             "room_type_counts": room_type_data,
             "total_bookings": total_bookings,
             "active_bookings": active_bookings,

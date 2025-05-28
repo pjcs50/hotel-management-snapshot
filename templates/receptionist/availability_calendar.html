@@ -17,7 +17,7 @@
                     </a>
                 </div>
             </div>
-            
+
             <div class="card shadow mb-4">
                 <div class="card-header bg-primary text-white">
                     <div class="d-flex justify-content-between align-items-center">
@@ -36,12 +36,12 @@
                     <form method="get" action="{{ url_for('receptionist.availability_calendar') }}" class="row g-3 mb-4">
                         <div class="col-md-2">
                             <label for="start_date" class="form-label">Start Date</label>
-                            <input type="date" class="form-control" id="start_date" name="start_date" 
+                            <input type="date" class="form-control" id="start_date" name="start_date"
                                    value="{{ start_date.strftime('%Y-%m-%d') }}">
                         </div>
                         <div class="col-md-2">
                             <label for="end_date" class="form-label">End Date</label>
-                            <input type="date" class="form-control" id="end_date" name="end_date" 
+                            <input type="date" class="form-control" id="end_date" name="end_date"
                                    value="{{ end_date.strftime('%Y-%m-%d') }}">
                         </div>
                         <div class="col-md-4">
@@ -66,7 +66,7 @@
                             </button>
                         </div>
                     </form>
-                    
+
                     <div class="collapse mb-3" id="quickRangeCollapse">
                         <div class="card card-body">
                             <div class="d-flex flex-wrap gap-2">
@@ -100,10 +100,10 @@
                                         <div class="small text-muted">${{ room_type['base_rate'] }}/night</div>
                                         <div class="small text-muted">{{ room_type['capacity'] }} person(s)</div>
                                     </td>
-                                    
+
                                     {% for date in availability_data['dates'] %}
                                     {% set availability = availability_data['availability'][room_type['id']|string][date] %}
-                                    <td class="text-center position-relative 
+                                    <td class="text-center position-relative
                                         {% if date == today_str %}today-column{% endif %}
                                         {% if availability['available'] == 0 %}
                                             bg-danger bg-opacity-10
@@ -115,7 +115,7 @@
                                     ">
                                         <span class="d-block fw-bold">{{ availability['available'] }}</span>
                                         <small class="text-muted">of {{ availability['total'] }}</small>
-                                        
+
                                         <button class="btn btn-sm btn-link p-0 position-absolute top-0 end-0 m-1 calendar-info-btn"
                                                 data-bs-toggle="modal" data-bs-target="#roomDetailsModal"
                                                 data-room-type-id="{{ room_type['id'] }}"
@@ -159,7 +159,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <!-- Room Statistics -->
             <div class="card shadow">
                 <div class="card-header bg-info text-white">
@@ -241,13 +241,46 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <p class="text-center">
-                    <i class="bi bi-exclamation-circle text-warning"></i>
-                    New booking functionality will be implemented soon.
-                </p>
+                <div class="text-center mb-4">
+                    <i class="bi bi-calendar-plus text-primary fs-1 mb-3"></i>
+                    <h4>Ready to create a new booking?</h4>
+                    <p class="lead">Use our comprehensive booking form to create a new reservation.</p>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <h5 class="card-title"><i class="bi bi-check-circle text-success me-2"></i>Features</h5>
+                                <ul class="list-unstyled">
+                                    <li><i class="bi bi-dot me-2"></i>Room selection with real-time availability</li>
+                                    <li><i class="bi bi-dot me-2"></i>Guest information management</li>
+                                    <li><i class="bi bi-dot me-2"></i>Early check-in and late check-out options</li>
+                                    <li><i class="bi bi-dot me-2"></i>Special requests handling</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <h5 class="card-title"><i class="bi bi-info-circle text-info me-2"></i>Benefits</h5>
+                                <ul class="list-unstyled">
+                                    <li><i class="bi bi-dot me-2"></i>Instant confirmation</li>
+                                    <li><i class="bi bi-dot me-2"></i>Automatic price calculation</li>
+                                    <li><i class="bi bi-dot me-2"></i>Seamless guest experience</li>
+                                    <li><i class="bi bi-dot me-2"></i>Efficient booking management</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <a href="{{ url_for('receptionist.new_booking') }}" class="btn btn-primary">
+                    <i class="bi bi-calendar-plus me-2"></i> Create New Booking
+                </a>
             </div>
         </div>
     </div>
@@ -258,16 +291,16 @@
     document.addEventListener('DOMContentLoaded', function() {
         // Today's date for highlighting
         const today = new Date().toISOString().split('T')[0];
-        
+
         // Toggle quick range options
         const quickRangeToggle = document.getElementById('quickRangeToggle');
         const quickRangeCollapse = document.getElementById('quickRangeCollapse');
-        
+
         quickRangeToggle.addEventListener('click', function() {
             const bsCollapse = new bootstrap.Collapse(quickRangeCollapse);
             bsCollapse.toggle();
         });
-        
+
         // Quick range selection
         const quickRangeButtons = document.querySelectorAll('.quick-range');
         quickRangeButtons.forEach(button => {
@@ -275,43 +308,43 @@
                 const days = parseInt(this.getAttribute('data-days'));
                 const startDateInput = document.getElementById('start_date');
                 const endDateInput = document.getElementById('end_date');
-                
+
                 // Set start date to today
                 const startDate = new Date();
                 startDateInput.value = startDate.toISOString().split('T')[0];
-                
+
                 // Set end date to today + days
                 const endDate = new Date();
                 endDate.setDate(endDate.getDate() + days);
                 endDateInput.value = endDate.toISOString().split('T')[0];
-                
+
                 // Submit the form
                 this.closest('form').submit();
             });
         });
-        
+
         // Room details modal
         const roomDetailsModal = document.getElementById('roomDetailsModal');
         const calendarInfoButtons = document.querySelectorAll('.calendar-info-btn');
         const createBookingBtn = document.getElementById('createBookingBtn');
-        
+
         roomDetailsModal.addEventListener('show.bs.modal', function(event) {
             const button = event.relatedTarget;
             const roomTypeId = button.getAttribute('data-room-type-id');
             const date = button.getAttribute('data-date');
             const roomTypeName = button.getAttribute('data-room-type-name');
-            
+
             // Set modal title
             const modalTitle = this.querySelector('.modal-title');
             modalTitle.textContent = `${roomTypeName} - ${date}`;
-            
+
             // Set create booking button URL
             createBookingBtn.href = `/receptionist/bookings/new?room_type_id=${roomTypeId}&check_in_date=${date}`;
-            
+
             // Load room details into modal (placeholder - would need an API endpoint)
             const modalBody = this.querySelector('.modal-body');
             modalBody.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div><p class="mt-2">Loading room details...</p></div>';
-            
+
             // Simulate loading details (would be an API call in production)
             setTimeout(() => {
                 modalBody.innerHTML = `
@@ -329,13 +362,13 @@
                 `;
             }, 1000);
         });
-        
+
         // Print calendar functionality
         const printCalendarBtn = document.getElementById('printCalendar');
         printCalendarBtn.addEventListener('click', function() {
             window.print();
         });
-        
+
         // Export CSV functionality (placeholder)
         const exportCsvBtn = document.getElementById('exportCsv');
         exportCsvBtn.addEventListener('click', function() {
@@ -358,7 +391,7 @@
     .calendar-info-btn:hover {
         opacity: 1;
     }
-    
+
     @media print {
         .no-print {
             display: none !important;
@@ -374,4 +407,4 @@
 </style>
 {% endblock %}
 
-{% endblock %} 
+{% endblock %}

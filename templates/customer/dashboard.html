@@ -4,8 +4,25 @@
 {% block dashboard_heading %}Customer Dashboard{% endblock %}
 
 {% block dashboard_navigation %}
+<!-- Book Now Banner -->
+<div class="card mb-4 bg-light border-0 shadow-sm">
+    <div class="card-body p-4">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h2 class="h3 mb-3">Ready for your next stay?</h2>
+                <p class="mb-0">Book your next reservation with us and enjoy a comfortable stay with premium amenities and exceptional service.</p>
+            </div>
+            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                <a href="{{ url_for('customer.room_types') }}" class="btn btn-primary btn-lg">
+                    <i class="bi bi-building me-2"></i> Browse Rooms
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="row mb-4 g-3">
-    <div class="col-md-4 col-sm-6">
+    <div class="col-md-3 col-sm-6">
         <a href="{{ url_for('customer.dashboard') }}" class="text-decoration-none">
             <div class="card h-100 shadow-sm border-0">
                 <div class="card-body text-center">
@@ -15,7 +32,7 @@
             </div>
         </a>
     </div>
-    <div class="col-md-4 col-sm-6">
+    <div class="col-md-3 col-sm-6">
         <a href="{{ url_for('customer.bookings') }}" class="text-decoration-none">
             <div class="card h-100 shadow-sm border-0">
                 <div class="card-body text-center">
@@ -25,12 +42,34 @@
             </div>
         </a>
     </div>
-    <div class="col-md-4 col-sm-6">
+    <div class="col-md-3 col-sm-6">
+        <a href="{{ url_for('customer.room_types') }}" class="text-decoration-none">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body text-center">
+                    <i class="bi bi-building text-danger fs-1"></i>
+                    <h6 class="mt-2">Room Types</h6>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3 col-sm-6">
         <a href="{{ url_for('customer.profile') }}" class="text-decoration-none">
             <div class="card h-100 shadow-sm border-0">
                 <div class="card-body text-center">
                     <i class="bi bi-person-circle text-info fs-1"></i>
                     <h6 class="mt-2">My Profile</h6>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+<div class="row mb-4 g-3">
+    <div class="col-md-12">
+        <a href="{{ url_for('customer.new_booking') }}" class="text-decoration-none">
+            <div class="card h-100 shadow-sm border-0 bg-warning-subtle">
+                <div class="card-body text-center py-3">
+                    <i class="bi bi-calendar-plus text-warning fs-1 me-2"></i>
+                    <h5 class="d-inline-block mb-0 align-middle">Create New Booking</h5>
                 </div>
             </div>
         </a>
@@ -100,7 +139,7 @@
                 </div>
                 <h6 class="card-title mb-0">Current Stay</h6>
             </div>
-            
+
             {% if metrics.active_booking %}
             <div class="row">
                 <div class="col-md-6">
@@ -296,7 +335,7 @@ document.addEventListener('DOMContentLoaded', function() {
             this.style.boxShadow = '0 6px 12px rgba(0, 0, 0, 0.15)';
             this.style.transition = 'all 0.3s ease';
         });
-        
+
         card.addEventListener('mouseleave', function() {
             this.style.transform = 'translateY(0)';
             this.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
@@ -309,7 +348,7 @@ document.addEventListener('DOMContentLoaded', function() {
         toggleUpcomingBtn.addEventListener('click', function() {
             const tableDiv = document.getElementById('upcomingTable');
             const chartDiv = document.getElementById('upcomingChart');
-            
+
             if (tableDiv.style.display === 'none') {
                 tableDiv.style.display = 'block';
                 chartDiv.style.display = 'none';
@@ -318,7 +357,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 tableDiv.style.display = 'none';
                 chartDiv.style.display = 'block';
                 toggleUpcomingBtn.textContent = 'Table View';
-                
+
                 // Initialize chart if not already done
                 if (!window.upcomingBookingsChart) {
                     initUpcomingBookingsChart();
@@ -326,14 +365,14 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-    
+
     // Toggle booking history view
     const toggleHistoryBtn = document.getElementById('toggleHistoryView');
     if (toggleHistoryBtn) {
         toggleHistoryBtn.addEventListener('click', function() {
             const tableDiv = document.getElementById('historyTable');
             const chartDiv = document.getElementById('historyChart');
-            
+
             if (tableDiv.style.display === 'none') {
                 tableDiv.style.display = 'block';
                 chartDiv.style.display = 'none';
@@ -342,7 +381,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 tableDiv.style.display = 'none';
                 chartDiv.style.display = 'block';
                 toggleHistoryBtn.textContent = 'Table View';
-                
+
                 // Initialize chart if not already done
                 if (!window.bookingHistoryChart) {
                     initBookingHistoryChart();
@@ -350,12 +389,12 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-    
+
     // Initialize upcoming bookings chart
     function initUpcomingBookingsChart() {
         const ctx = document.getElementById('upcomingBookingsCanvas');
         if (!ctx) return;
-        
+
         // Create booking data for chart
         const bookingData = [];
         {% for booking in metrics.upcoming_bookings %}
@@ -367,10 +406,10 @@ document.addEventListener('DOMContentLoaded', function() {
             nights: {{ booking.nights }}
         });
         {% endfor %}
-        
+
         const labels = bookingData.map(b => b.roomNumber + ' (' + b.roomType + ')');
         const data = bookingData.map(b => b.nights);
-        
+
         window.upcomingBookingsChart = new Chart(ctx, {
             type: 'bar',
             data: {
@@ -401,25 +440,25 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-    
+
     // Initialize booking history chart
     function initBookingHistoryChart() {
         const ctx = document.getElementById('bookingHistoryCanvas');
         if (!ctx) return;
-        
+
         // Prepare data
         const statusCounts = {
             'Checked Out': 0,
             'Cancelled': 0,
             'No Show': 0
         };
-        
+
         {% for booking in metrics.past_bookings %}
         if(statusCounts['{{ booking.status }}'] !== undefined) {
             statusCounts['{{ booking.status }}']++;
         }
         {% endfor %}
-        
+
         // Create the chart
         window.bookingHistoryChart = new Chart(ctx, {
             type: 'pie',
@@ -447,4 +486,4 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
-{% endblock %} 
+{% endblock %}

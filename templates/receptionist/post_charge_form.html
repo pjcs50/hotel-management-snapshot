@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+
+{% block title %}Post Charge{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <h1>Post Charge</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('receptionist.dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('receptionist.view_booking', booking_id=booking.id) }}">Booking Details</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('receptionist.view_folio', booking_id=booking.id) }}">Folio</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Post Charge</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Booking Information</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Guest:</strong> {{ booking.customer.name }}</p>
+                    <p><strong>Room:</strong> {{ booking.room.number }} ({{ booking.room.room_type.name }})</p>
+                    <p><strong>Check-in Date:</strong> {{ booking.check_in_date.strftime('%Y-%m-%d') }}</p>
+                    <p><strong>Check-out Date:</strong> {{ booking.check_out_date.strftime('%Y-%m-%d') }}</p>
+                    <p><strong>Status:</strong> {{ booking.status }}</p>
+                    <p><strong>Confirmation Code:</strong> {{ booking.confirmation_code }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Post a Charge</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('receptionist.post_charge', booking_id=booking.id) }}">
+                        <div class="form-group mb-3">
+                            <label for="charge_amount">Charge Amount:</label>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">$</span>
+                                </div>
+                                <input type="number" step="0.01" class="form-control" id="charge_amount" name="charge_amount" required min="0.01">
+                            </div>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="charge_type">Charge Type:</label>
+                            <select class="form-control" id="charge_type" name="charge_type" required>
+                                {% for charge_type in charge_types %}
+                                <option value="{{ charge_type }}">{{ charge_type }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="description">Description:</label>
+                            <input type="text" class="form-control" id="description" name="description" required>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="reference">Reference (Optional):</label>
+                            <input type="text" class="form-control" id="reference" name="reference">
+                        </div>
+
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary">Post Charge</button>
+                            <a href="{{ url_for('receptionist.view_folio', booking_id=booking.id) }}" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

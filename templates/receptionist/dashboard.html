@@ -4,6 +4,22 @@
 {% block dashboard_heading %}Receptionist Dashboard{% endblock %}
 
 {% block dashboard_navigation %}
+<div class="card mb-4 bg-light border-0 shadow-sm">
+    <div class="card-body p-4">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h2 class="h3 mb-3">Quick Booking</h2>
+                <p class="mb-0">Create a new reservation for guests with our streamlined booking process.</p>
+            </div>
+            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                <a href="{{ url_for('receptionist.new_booking') }}" class="btn btn-primary btn-lg">
+                    <i class="bi bi-calendar-plus me-2"></i> New Booking
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="row mb-4">
     <div class="col-md-3 mb-3">
         <a href="{{ url_for('receptionist.dashboard') }}" class="text-decoration-none">
@@ -47,7 +63,7 @@
     </div>
 </div>
 {% endblock %}
-    
+
 {% block metrics_summary %}
         <div class="col-md-4">
             <a href="{{ url_for('receptionist.check_in') }}" class="text-decoration-none">
@@ -62,7 +78,7 @@
                 </div>
             </a>
         </div>
-        
+
         <div class="col-md-4">
             <a href="{{ url_for('receptionist.check_out') }}" class="text-decoration-none">
                 <div class="card text-white bg-success h-100 dashboard-card">
@@ -76,7 +92,7 @@
                 </div>
             </a>
         </div>
-        
+
         <div class="col-md-4">
             <a href="{{ url_for('receptionist.bookings') }}" class="text-decoration-none">
                 <div class="card text-white bg-info h-100 dashboard-card">
@@ -91,7 +107,7 @@
             </a>
         </div>
 {% endblock %}
-    
+
 {% block dashboard_content %}
     <div class="row mb-4">
         <div class="col-md-6">
@@ -135,7 +151,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="col-md-6">
             <div class="card h-100">
                 <ul class="nav nav-tabs" id="checkInOutTabs" role="tablist">
@@ -177,13 +193,13 @@
                                         </td>
                                         <td>
                                             {% if booking.special_requests %}
-                                            <small><strong>Special Requests:</strong> 
+                                            <small><strong>Special Requests:</strong>
                                             {% for request in booking.special_requests %}
                                                 {{ request }}{% if not loop.last %}, {% endif %}
                                             {% endfor %}
                                             </small>
                                             {% endif %}
-                                            
+
                                             {% if booking.notes %}
                                             <br><small><strong>Notes:</strong> {{ booking.notes }}</small>
                                             {% endif %}
@@ -317,7 +333,7 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Room Status Overview -->
     <div class="card mb-4">
         <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
@@ -363,7 +379,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <!-- Room Type Status -->
             <h5 class="mb-3">Status by Room Type</h5>
             <div class="table-responsive">
@@ -392,11 +408,11 @@
                             <td>{{ stats.cleaning_rooms }}</td>
                             <td>
                                 <div class="progress">
-                                    <div class="progress-bar {% if stats.occupancy_rate > 80 %}bg-danger{% elif stats.occupancy_rate > 60 %}bg-warning{% else %}bg-success{% endif %}" 
-                                        role="progressbar" 
-                                        style="width: {{ stats.occupancy_rate }}%;" 
-                                        aria-valuenow="{{ stats.occupancy_rate }}" 
-                                        aria-valuemin="0" 
+                                    <div class="progress-bar {% if stats.occupancy_rate > 80 %}bg-danger{% elif stats.occupancy_rate > 60 %}bg-warning{% else %}bg-success{% endif %}"
+                                        role="progressbar"
+                                        style="width: {{ stats.occupancy_rate }}%;"
+                                        aria-valuenow="{{ stats.occupancy_rate }}"
+                                        aria-valuemin="0"
                                         aria-valuemax="100">{{ stats.occupancy_rate }}%</div>
                                 </div>
                             </td>
@@ -405,13 +421,13 @@
                     </tbody>
                 </table>
             </div>
-            
+
             <div class="text-center mt-3">
                 <a href="{{ url_for('receptionist.room_inventory') }}" class="btn btn-primary">View Full Room Inventory</a>
             </div>
         </div>
     </div>
-    
+
     <div class="card mb-4">
     <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
         <h3 class="h5 mb-0">Recent Bookings</h3>
@@ -461,11 +477,13 @@
 </div>
 {% endblock %}
 
+
+
 {% block quick_links %}
                         <a href="{{ url_for('receptionist.new_booking') }}" class="list-group-item list-group-item-action">
                             <i class="bi bi-calendar-plus me-2"></i> New Booking
                         </a>
-                        <a href="{{ url_for('receptionist.search_guest') }}" class="list-group-item list-group-item-action">
+                        <a href="{{ url_for('receptionist.search_customers') }}" class="list-group-item list-group-item-action">
                             <i class="bi bi-search me-2"></i> Search Guest
                         </a>
                         <a href="{{ url_for('receptionist.room_availability') }}" class="list-group-item list-group-item-action">
@@ -487,20 +505,20 @@
             this.style.boxShadow = '0 6px 12px rgba(0, 0, 0, 0.15)';
             this.style.transition = 'all 0.3s ease';
         });
-        
+
         card.addEventListener('mouseleave', function() {
             this.style.transform = 'translateY(0)';
             this.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
         });
     });
-    
+
     // Toggle room status view
         const toggleRoomStatusBtn = document.getElementById('toggleRoomStatusView');
         if (toggleRoomStatusBtn) {
             toggleRoomStatusBtn.addEventListener('click', function() {
             const tableDiv = document.getElementById('roomStatusTable');
             const chartDiv = document.getElementById('roomStatusChart');
-            
+
             if (tableDiv.style.display === 'none') {
                 tableDiv.style.display = 'block';
                 chartDiv.style.display = 'none';
@@ -509,7 +527,7 @@
                 tableDiv.style.display = 'none';
                 chartDiv.style.display = 'block';
                 toggleRoomStatusBtn.textContent = 'Table View';
-                
+
                 // Initialize chart if not already done
                 if (!window.roomStatusChart) {
                     initRoomStatusChart();
@@ -517,14 +535,14 @@
             }
         });
     }
-    
+
     // Toggle recent bookings view
     const toggleRecentBookingsBtn = document.getElementById('toggleRecentBookingsView');
     if (toggleRecentBookingsBtn) {
         toggleRecentBookingsBtn.addEventListener('click', function() {
             const tableDiv = document.getElementById('recentBookingsTable');
             const chartDiv = document.getElementById('recentBookingsChart');
-            
+
             if (tableDiv.style.display === 'none') {
                 tableDiv.style.display = 'block';
                 chartDiv.style.display = 'none';
@@ -533,7 +551,7 @@
                 tableDiv.style.display = 'none';
                 chartDiv.style.display = 'block';
                 toggleRecentBookingsBtn.textContent = 'Table View';
-                
+
                 // Initialize chart if not already done
                 if (!window.bookingStatusChart) {
                     initBookingStatusChart();
@@ -541,7 +559,7 @@
             }
         });
     }
-    
+
     // Initialize room status chart
     function initRoomStatusChart() {
         const roomStatusData = {
@@ -549,16 +567,16 @@
             'Occupied': {{ metrics.occupied_rooms if metrics.occupied_rooms is defined else 0 }},
             'Cleaning': {{ metrics.cleaning_rooms if metrics.cleaning_rooms is defined else 0 }}
         };
-        
+
         // Initialize chart using the function from dashboard-charts.js
         initRoomStatusChart('roomStatusCanvas', roomStatusData);
     }
-    
+
     // Initialize booking status chart
     function initBookingStatusChart() {
         const ctx = document.getElementById('bookingStatusCanvas');
         if (!ctx) return;
-        
+
         // Count bookings by status
         const statusCounts = {};
         {% if metrics.recent_bookings %}
@@ -566,10 +584,10 @@
                 statusCounts['{{ booking.status }}'] = (statusCounts['{{ booking.status }}'] || 0) + 1;
             {% endfor %}
         {% endif %}
-        
+
         const labels = Object.keys(statusCounts);
         const data = Object.values(statusCounts);
-        
+
         // Create color array based on status
         const backgroundColor = labels.map(status => {
             if (status === 'Reserved') return 'rgba(255, 205, 86, 0.7)'; // Yellow
@@ -578,7 +596,7 @@
             if (status === 'Cancelled') return 'rgba(255, 99, 132, 0.7)'; // Red
             return 'rgba(153, 102, 255, 0.7)'; // Purple (default)
         });
-        
+
         window.bookingStatusChart = new Chart(ctx, {
             type: 'pie',
             data: {
@@ -602,4 +620,4 @@
     }
 });
 </script>
-{% endblock %} 
+{% endblock %}

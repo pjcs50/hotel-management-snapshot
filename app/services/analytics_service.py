@@ -78,6 +78,77 @@ class AnalyticsService:
         
         return result
     
+    def get_daily_occupancy(self, date):
+        """
+        Get occupancy rate for a specific date.
+        
+        Args:
+            date: Date to get occupancy for
+            
+        Returns:
+            float: Occupancy rate as a percentage
+        """
+        # Get total number of rooms
+        total_rooms = self.db_session.query(func.count(Room.id)).scalar() or 0
+        
+        if total_rooms == 0:
+            return 0.0
+            
+        # Get count of occupied rooms for the date
+        occupied_rooms = self.db_session.query(func.count(Booking.id)).filter(
+            Booking.check_in_date <= date,
+            Booking.check_out_date > date,
+            Booking.status.in_([Booking.STATUS_RESERVED, Booking.STATUS_CHECKED_IN])
+        ).scalar() or 0
+        
+        # Calculate occupancy rate
+        occupancy_rate = (occupied_rooms / total_rooms) * 100
+        
+        return round(occupancy_rate, 2)
+    
+    def get_daily_adr(self, date):
+        """
+        Get average daily rate for a specific date.
+        
+        Args:
+            date: Date to get ADR for
+            
+        Returns:
+            float: Average daily rate
+        """
+        # Query bookings for this date
+        bookings = self.db_session.query(Booking).filter(
+            Booking.check_in_date <= date,
+            Booking.check_out_date > date,
+            Booking.status.in_([Booking.STATUS_RESERVED, Booking.STATUS_CHECKED_IN, Booking.STATUS_CHECKED_OUT])
+        ).all()
+        
+        if not bookings:
+            # If no bookings for this date, return average from similar dates
+            # This is a fallback to provide sensible data
+            day_of_week = date.weekday()
+            month = date.month
+            
+            # Look for bookings on same day of week in same month
+            similar_bookings = self.db_session.query(Booking).filter(
+                extract('dow', Booking.check_in_date) == day_of_week,
+                extract('month', Booking.check_in_date) == month,
+                Booking.status.in_([Booking.STATUS_RESERVED, Booking.STATUS_CHECKED_IN, Booking.STATUS_CHECKED_OUT])
+            ).all()
+            
+            if not similar_bookings:
+                return 100.0  # Default value if no reference data
+                
+            # Calculate average rate
+            total_price = sum(booking.total_price / booking.nights for booking in similar_bookings if booking.nights > 0)
+            return round(total_price / len(similar_bookings), 2)
+        
+        # Calculate ADR from bookings
+        total_price = sum(booking.total_price / booking.nights for booking in bookings if booking.nights > 0)
+        adr = total_price / len(bookings)
+        
+        return round(adr, 2)
+    
     def get_revenue_by_room_type(self, year=None, month=None):
         """
         Get revenue data grouped by room type.
@@ -252,46 +323,44 @@ class AnalyticsService:
             end_date: The end date of the period.
 
         Returns:
-            Total number of rooms sold as an integer.
+            Number of rooms sold (occupied room nights).
         """
-        # This counts each night a room is occupied within the period.
-        # It iterates through each day in the period and counts rooms occupied on that day.
-        rooms_sold = 0
-        current_date = start_date
-        while current_date <= end_date:
-            occupied_on_date = self.db_session.query(
-                func.count(Booking.id)
-            ).filter(
-                Booking.check_in_date <= current_date,
-                Booking.check_out_date > current_date,
-                Booking.status.in_([Booking.STATUS_CHECKED_IN, Booking.STATUS_RESERVED]) # Changed from STATUS_CONFIRMED
-            ).scalar()
-            rooms_sold += (occupied_on_date if occupied_on_date else 0)
-            current_date += timedelta(days=1)
-        return rooms_sold
+        # Approach: For each booking that overlaps with the period, count the days it overlaps
+        overlapping_bookings = self.db_session.query(Booking).filter(
+            Booking.check_in_date <= end_date,
+            Booking.check_out_date > start_date,
+            Booking.status.in_([Booking.STATUS_CHECKED_IN, Booking.STATUS_CHECKED_OUT, Booking.STATUS_RESERVED])
+        ).all()
+        
+        room_nights = 0
+        for booking in overlapping_bookings:
+            # Calculate the overlap between the booking and the period
+            overlap_start = max(booking.check_in_date, start_date)
+            overlap_end = min(booking.check_out_date, end_date)
+            days_overlapping = (overlap_end - overlap_start).days
+            room_nights += days_overlapping
+            
+        return room_nights
 
     def get_total_available_room_nights(self, start_date: datetime.date, end_date: datetime.date) -> int:
         """
-        Calculate the total number of available room nights for a given period.
+        Calculate the total available room nights for a given period.
 
         Args:
             start_date: The start date of the period.
             end_date: The end date of the period.
 
         Returns:
-            Total available room nights as an integer.
+            Total available room nights.
         """
-        total_hotel_rooms = self.db_session.query(func.count(Room.id)).scalar()
-        if not total_hotel_rooms:
-            return 0
+        total_rooms = self.db_session.query(func.count(Room.id)).scalar() or 0
+        days_in_period = (end_date - start_date).days
         
-        num_days = (end_date - start_date).days + 1
-        return total_hotel_rooms * num_days
+        return total_rooms * days_in_period
 
     def calculate_adr(self, start_date: datetime.date, end_date: datetime.date) -> float:
         """
-        Calculate Average Daily Rate (ADR) for a given period.
-        ADR = Total Room Revenue / Number of Rooms Sold
+        Calculate the Average Daily Rate (ADR) for a given period.
 
         Args:
             start_date: The start date of the period.
@@ -305,12 +374,12 @@ class AnalyticsService:
         
         if rooms_sold == 0:
             return 0.0
-        return round(total_revenue / rooms_sold, 2)
+            
+        return total_revenue / rooms_sold
 
     def calculate_revpar(self, start_date: datetime.date, end_date: datetime.date) -> float:
         """
-        Calculate Revenue Per Available Room (RevPAR) for a given period.
-        RevPAR = Total Room Revenue / Total Available Room Nights
+        Calculate the Revenue Per Available Room (RevPAR) for a given period.
 
         Args:
             start_date: The start date of the period.
@@ -324,46 +393,47 @@ class AnalyticsService:
         
         if available_room_nights == 0:
             return 0.0
-        return round(total_revenue / available_room_nights, 2)
+            
+        return total_revenue / available_room_nights
     
     def get_forecast_data(self, days=30):
         """
-        Get forecast data for upcoming days.
+        Get booking forecast data for upcoming days.
         
         Args:
-            days: Number of days to forecast
+            days: Number of days to include in forecast
             
         Returns:
             Dictionary with forecast data
         """
         today = datetime.now().date()
-        date_range = [today + timedelta(days=i) for i in range(days)]
+        end_date = today + timedelta(days=days)
         
-        # Query bookings for the date range
-        bookings_by_date = self.db_session.query(
-            func.date(Booking.check_in_date).label('date'),
-            func.count(Booking.id).label('count')
-        ).filter(
-            Booking.check_in_date >= today,
-            Booking.check_in_date <= today + timedelta(days=days-1),
-            Booking.status.in_(['confirmed', 'checked_in'])
-        ).group_by('date').all()
+        # Get daily counts for next 'days' days
+        daily_counts = []
+        labels = []
         
-        # Convert to dictionary for easier lookup
-        bookings_dict = {row[0].isoformat(): row[1] for row in bookings_by_date}
+        for day in range(days):
+            date = today + timedelta(days=day)
+            labels.append(date.strftime('%b %d'))
         
-        # Create forecast data
-        dates = [d.isoformat() for d in date_range]
-        counts = [bookings_dict.get(d, 0) for d in dates]
+            # Count bookings for this day
+            count = self.db_session.query(func.count(Booking.id)).filter(
+                Booking.check_in_date <= date,
+                Booking.check_out_date > date,
+                Booking.status == Booking.STATUS_RESERVED
+            ).scalar() or 0
+            
+            daily_counts.append(count)
         
-        # Format data for Chart.js
+        # Format for Chart.js
         result = {
-            'labels': dates,
+            'labels': labels,
             'datasets': [{
-                'label': 'Forecast Bookings',
-                'data': counts,
-                'backgroundColor': 'rgba(75, 192, 192, 0.2)',
-                'borderColor': 'rgba(75, 192, 192, 1)',
+                'label': 'Expected Occupancy',
+                'data': daily_counts,
+                'backgroundColor': 'rgba(54, 162, 235, 0.2)',
+                'borderColor': 'rgba(54, 162, 235, 1)',
                 'borderWidth': 1,
                 'tension': 0.4
             }]

@@ -1,66 +1,7 @@
 {% extends "base.html" %}
 
-{% block sidebar %}
-    <div class="sidebar-sticky pt-3">
-        <ul class="nav flex-column">
-            <li class="nav-item">
-                <a class="nav-link {% if request.endpoint == 'manager.dashboard' %}active{% endif %}" href="{{ url_for('manager.dashboard') }}">
-                    <i class="fas fa-tachometer-alt me-2"></i> Dashboard
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link {% if request.endpoint == 'manager.staff' %}active{% endif %}" href="{{ url_for('manager.staff') }}">
-                    <i class="fas fa-users-cog me-2"></i> Staff Management
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link {% if request.endpoint == 'manager.staff_requests' %}active{% endif %}" href="{{ url_for('manager.staff_requests') }}">
-                    <i class="fas fa-user-plus me-2"></i> Staff Requests
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link {% if request.endpoint == 'manager.pricing' %}active{% endif %}" href="{{ url_for('manager.pricing') }}">
-                    <i class="fas fa-dollar-sign me-2"></i> Room Pricing
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link {% if request.endpoint == 'manager.rates' %}active{% endif %}" href="{{ url_for('manager.rates') }}">
-                    <i class="fas fa-calendar-alt me-2"></i> Seasonal Rates
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link {% if request.endpoint == 'manager.waitlist' %}active{% endif %}" href="{{ url_for('manager.waitlist') }}">
-                    <i class="fas fa-hourglass-half me-2"></i> Waitlist
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link {% if request.endpoint == 'manager.maintenance' %}active{% endif %}" href="{{ url_for('manager.maintenance') }}">
-                    <i class="fas fa-tools me-2"></i> Maintenance
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link {% if request.endpoint == 'manager.housekeeping' %}active{% endif %}" href="{{ url_for('manager.housekeeping') }}">
-                    <i class="fas fa-broom me-2"></i> Housekeeping
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link {% if request.endpoint == 'manager.analytics' %}active{% endif %}" href="{{ url_for('manager.analytics') }}">
-                    <i class="fas fa-chart-pie me-2"></i> Analytics
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link {% if request.endpoint == 'manager.reports' %}active{% endif %}" href="{{ url_for('manager.reports') }}">
-                    <i class="fas fa-chart-line me-2"></i> Reports
-                </a>
-            </li>
-            <!-- Add more manager-specific links here -->
-        </ul>
-    </div>
-{% endblock %}
-
 {% block content %}
-    <main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-md-4">
-        {% block manager_content %}
-        {% endblock %}
-    </main>
+<div class="container-fluid">
+    {% block manager_content %}{% endblock %}
+</div>
 {% endblock %} 

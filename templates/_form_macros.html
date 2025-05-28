@@ -1,9 +1,21 @@
-{% macro render_field(field, label_visible=true, class='form-control', placeholder=None) %}
+{% macro render_field(field, label_visible=true, class='form-control', placeholder=None, kwargs={}) %}
   <div class="mb-3">
     {% if label_visible %}
       {{ field.label(class_='form-label') }}
     {% endif %}
-    {{ field(class_=class, placeholder=placeholder) }}
+
+    {% set field_kwargs = {'class': class} %}
+    {% if placeholder %}
+      {% set _ = field_kwargs.update({'placeholder': placeholder}) %}
+    {% endif %}
+
+    {# Add any additional keyword arguments #}
+    {% for key, value in kwargs.items() %}
+      {% set _ = field_kwargs.update({key: value}) %}
+    {% endfor %}
+
+    {{ field(**field_kwargs) }}
+
     {% if field.errors %}
       <div class="invalid-feedback d-block">
         {% for error in field.errors %}
@@ -12,4 +24,4 @@
       </div>
     {% endif %}
   </div>
-{% endmacro %} 
+{% endmacro %}

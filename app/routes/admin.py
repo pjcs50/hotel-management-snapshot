@@ -7,7 +7,7 @@ This module defines the routes for admin operations.
 from datetime import datetime, timedelta
 import io
 import csv
-from flask import Blueprint, jsonify, render_template, redirect, url_for, flash, request, send_file, Response
+from flask import Blueprint, jsonify, render_template, redirect, url_for, flash, request, send_file, Response, render_template_string
 from flask_login import login_required, current_user
 from sqlalchemy import func, desc, extract, case, and_, or_
 
@@ -526,12 +526,14 @@ def reports():
             }
             
         return render_template(
-            'admin/reports.html',  # Fixed the template path to include admin/
+            'admin/reports.html',
             report_data=report_data,
             report_type=report_type,
             start_date=start_date,
             end_date=end_date,
-            title=title
+            title=title,
+            current_year=int(start_date[:4]),
+            current_month=int(start_date[5:7])
         )
     except Exception as e:
         flash(f"Error generating report: {str(e)}", "danger")
@@ -544,12 +546,14 @@ def reports():
             'daily_occupancy': {}
         }
         return render_template(
-            'admin/reports.html',  # Fixed the template path to include admin/
+            'admin/reports.html',
             report_data=report_data,
             report_type=report_type,
             start_date=start_date,
             end_date=end_date,
-            title="Report Error"
+            title="Report Error",
+            current_year=int(start_date[:4]),
+            current_month=int(start_date[5:7])
         )
 
 
@@ -580,7 +584,79 @@ def export_report():
         month_name = month_names[month - 1]
         filename = f"hotel_report_{month_name}_{year}"
         
-        if format_type == 'csv':
+        if format_type == 'html':
+            html_content = render_template_string('''
+                <html>
+                <head>
+                    <title>{{ filename }}</title>
+                    <style>
+                        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 32px; background: #f8f9fa; color: #222; }
+                        h1 { color: #2c3e50; margin-bottom: 0.5em; }
+                        h2 { color: #007bff; margin-top: 2em; margin-bottom: 0.5em; }
+                        table { border-collapse: collapse; width: 100%; margin-bottom: 2em; background: #fff; box-shadow: 0 2px 8px #0001; }
+                        th, td { border: 1px solid #dee2e6; padding: 10px 16px; text-align: left; }
+                        th { background: #007bff; color: #fff; font-weight: 600; }
+                        tr:nth-child(even) { background: #f2f2f2; }
+                        .section { margin-bottom: 2em; }
+                    </style>
+                </head>
+                <body>
+                <h1>{{ filename }}</h1>
+                <div class="section">
+                    <h2>Revenue Summary</h2>
+                    <table>
+                        <tr><th>Metric</th><th>Value</th></tr>
+                        <tr><td>Total Revenue</td><td>${{ report_data['revenue_summary']['total_revenue'] }}</td></tr>
+                        <tr><td>Room Revenue</td><td>${{ report_data['revenue_summary']['room_revenue'] }}</td></tr>
+                    </table>
+                </div>
+                <div class="section">
+                    <h2>Booking Summary</h2>
+                    <table>
+                        <tr><th>Metric</th><th>Value</th></tr>
+                        <tr><td>Total Bookings</td><td>{{ report_data['booking_summary']['total_bookings'] }}</td></tr>
+                        <tr><td>New Bookings</td><td>{{ report_data['booking_summary']['new_bookings'] }}</td></tr>
+                        <tr><td>Cancelled Bookings</td><td>{{ report_data['booking_summary']['cancelled_bookings'] }}</td></tr>
+                        <tr><td>Completed Stays</td><td>{{ report_data['booking_summary']['completed_stays'] }}</td></tr>
+                    </table>
+                </div>
+                <div class="section">
+                    <h2>Occupancy Summary</h2>
+                    <table>
+                        <tr><th>Metric</th><th>Value</th></tr>
+                        <tr><td>Average Occupancy Rate</td><td>{{ report_data['occupancy_summary']['average_occupancy_rate'] }}%</td></tr>
+                        <tr><td>Peak Occupancy Date</td><td>{{ report_data['occupancy_summary']['peak_occupancy_date'] }}</td></tr>
+                        <tr><td>Peak Occupancy Rate</td><td>{{ report_data['occupancy_summary']['peak_occupancy_rate'] }}%</td></tr>
+                        <tr><td>Total Room Nights</td><td>{{ report_data['occupancy_summary']['total_room_nights'] }}</td></tr>
+                    </table>
+                </div>
+                <div class="section">
+                    <h2>Room Type Revenue</h2>
+                    <table>
+                        <tr><th>Room Type</th><th>Revenue</th><th>Percentage</th></tr>
+                        {% for room_type, data in report_data['room_type_revenue'].items() %}
+                        <tr><td>{{ room_type }}</td><td>${{ data['revenue'] }}</td><td>{{ data['percentage'] }}%</td></tr>
+                        {% endfor %}
+                    </table>
+                </div>
+                <div class="section">
+                    <h2>Daily Occupancy</h2>
+                    <table>
+                        <tr><th>Date</th><th>Occupancy Rate (%)</th></tr>
+                        {% for date, rate in report_data['daily_occupancy'].items() %}
+                        <tr><td>{{ date }}</td><td>{{ rate }}%</td></tr>
+                        {% endfor %}
+                    </table>
+                </div>
+                </body></html>
+            ''', filename=filename, report_data=report_data)
+            return Response(
+                html_content,
+                mimetype="text/html",
+                headers={"Content-Disposition": f"attachment;filename={filename}.html"}
+            )
+            
+        elif format_type == 'csv':
             # Create a CSV in memory
             output = io.StringIO()
             writer = csv.writer(output)
@@ -758,12 +834,12 @@ def export_report():
                 styles = getSampleStyleSheet()
                 
                 # Custom styles
-                styles.add(ParagraphStyle(name='Title', 
+                styles.add(ParagraphStyle(name='CustomTitle', 
                                          parent=styles['Title'],
                                          fontSize=16,
                                          alignment=1,  # Center
                                          spaceAfter=12))
-                styles.add(ParagraphStyle(name='Heading2',
+                styles.add(ParagraphStyle(name='CustomHeading2',
                                          parent=styles['Heading2'],
                                          fontSize=14,
                                          spaceAfter=10))
@@ -771,7 +847,7 @@ def export_report():
                 elements = []
                 
                 # Title and date
-                title = Paragraph(f"Hotel Monthly Report - {month_name} {year}", styles['Title'])
+                title = Paragraph(f"Hotel Monthly Report - {month_name} {year}", styles['CustomTitle'])
                 elements.append(title)
                 
                 date_generated = Paragraph(f"Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", 
@@ -780,7 +856,7 @@ def export_report():
                 elements.append(Spacer(1, 20))
                 
                 # Revenue summary
-                revenue_title = Paragraph("Revenue Summary", styles['Heading2'])
+                revenue_title = Paragraph("Revenue Summary", styles['CustomHeading2'])
                 elements.append(revenue_title)
                 elements.append(Spacer(1, 10))
                 
@@ -807,7 +883,7 @@ def export_report():
                 elements.append(Spacer(1, 20))
                 
                 # Occupancy summary
-                occupancy_title = Paragraph("Occupancy Summary", styles['Heading2'])
+                occupancy_title = Paragraph("Occupancy Summary", styles['CustomHeading2'])
                 elements.append(occupancy_title)
                 elements.append(Spacer(1, 10))
                 
@@ -836,7 +912,7 @@ def export_report():
                 elements.append(Spacer(1, 20))
                 
                 # Booking summary
-                booking_title = Paragraph("Booking Summary", styles['Heading2'])
+                booking_title = Paragraph("Booking Summary", styles['CustomHeading2'])
                 elements.append(booking_title)
                 elements.append(Spacer(1, 10))
                 
@@ -865,7 +941,7 @@ def export_report():
                 elements.append(Spacer(1, 20))
                 
                 # Room type revenue
-                room_type_title = Paragraph("Room Type Revenue", styles['Heading2'])
+                room_type_title = Paragraph("Room Type Revenue", styles['CustomHeading2'])
                 elements.append(room_type_title)
                 elements.append(Spacer(1, 10))
                 

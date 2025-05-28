@@ -1,0 +1,426 @@
+{% extends 'receptionist/base.html' %}
+{% from '_form_macros.html' import render_field %}
+
+{% block title %}New Booking - Horizon Hotel{% endblock %}
+
+{% block dashboard_content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h2 class="h4 mb-0">Create New Booking</h2>
+                <a href="{{ url_for('receptionist.bookings') }}" class="btn btn-sm btn-light">
+                    <i class="bi bi-arrow-left"></i> Back to Bookings
+                </a>
+            </div>
+            <div class="card-body">
+                <form method="post" action="{{ url_for('receptionist.new_booking') }}" id="newBookingForm">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    {{ form.status(type="hidden") }}
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <h5 class="border-bottom pb-2 mb-3">Guest Information</h5>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="customer_search" class="form-label">Search Guest</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="customer_search" placeholder="Search by name, email, or phone">
+                                    <button class="btn btn-outline-secondary" type="button" id="searchCustomerBtn">
+                                        <i class="bi bi-search"></i>
+                                    </button>
+                                </div>
+                                <div class="form-text">Search for existing guest or create a new one</div>
+                            </div>
+                            
+                            <div id="customerSearchResults" class="list-group mb-3" style="display: none; max-height: 200px; overflow-y: auto;">
+                                <!-- Search results will be populated here -->
+                            </div>
+                            
+                            {{ form.customer_id(type="hidden", id="selected_customer_id") }}
+                            
+                            <div id="selectedCustomerInfo" class="alert alert-info" style="display: none;">
+                                <h6 class="alert-heading">Selected Guest</h6>
+                                <p id="selectedCustomerName" class="mb-1"></p>
+                                <p id="selectedCustomerEmail" class="mb-1 small"></p>
+                                <p id="selectedCustomerPhone" class="mb-1 small"></p>
+                                <button type="button" class="btn btn-sm btn-outline-secondary mt-2" id="clearCustomerBtn">
+                                    <i class="bi bi-x"></i> Clear Selection
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div id="newCustomerForm" class="border rounded p-3">
+                                <h6 class="mb-3">New Guest Information</h6>
+                                <div class="mb-3">
+                                    <label for="guest_name" class="form-label">Guest Name <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="guest_name" name="guest_name" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="guest_email" class="form-label">Email</label>
+                                    <input type="email" class="form-control" id="guest_email" name="guest_email">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="guest_phone" class="form-label">Phone</label>
+                                    <input type="tel" class="form-control" id="guest_phone" name="guest_phone">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <h5 class="border-bottom pb-2 mb-3">Booking Details</h5>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    {{ render_field(form.check_in_date, label_visible=true, class="form-control", type="date", min=today) }}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    {{ render_field(form.check_out_date, label_visible=true, class="form-control", type="date", min=tomorrow) }}
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    {{ render_field(form.room_id, label_visible=true, class="form-select", id="room_id_select") }}
+                                    {% if not form.room_id.choices and request.method == 'POST' %}
+                                        <div class="alert alert-warning mt-2">
+                                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                            No rooms available for the selected dates.
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    {{ render_field(form.num_guests, label_visible=true, class="form-control", type="number", min=1, max=10) }}
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    {{ render_field(form.early_hours, label_visible=true, class="form-control", type="number", min=0, max=12) }}
+                                    <div class="form-text">Standard check-in 3:00 PM. Fees may apply.</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    {{ render_field(form.late_hours, label_visible=true, class="form-control", type="number", min=0, max=12) }}
+                                    <div class="form-text">Standard check-out 11:00 AM. Fees may apply.</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ render_field(form.special_requests, label_visible=true, class="form-control", rows="4", placeholder=form.special_requests.description) }}
+                            </div>
+                            
+                            <div id="roomDetails" class="card mb-3" style="display: none;">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0">Room Details</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <p><strong>Room Number:</strong> <span id="roomNumber"></span></p>
+                                            <p><strong>Room Type:</strong> <span id="roomType"></span></p>
+                                            <p><strong>Capacity:</strong> <span id="roomCapacity"></span> person(s)</p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <p><strong>Base Rate:</strong> $<span id="roomRate"></span>/night</p>
+                                            <p><strong>Amenities:</strong> <span id="roomAmenities"></span></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            {% if estimated_price and form.room_id.data %}
+                            <div class="alert alert-info">
+                                <h6 class="alert-heading">Pricing Information</h6>
+                                <p class="mb-1"><strong>Base Rate:</strong> ${{ "%.2f"|format(base_rate) }}/night</p>
+                                <p class="mb-1"><strong>Number of Nights:</strong> {{ nights }}</p>
+                                {% if early_fee > 0 %}
+                                <p class="mb-1"><strong>Early Check-in Fee:</strong> ${{ "%.2f"|format(early_fee) }}</p>
+                                {% endif %}
+                                {% if late_fee > 0 %}
+                                <p class="mb-1"><strong>Late Check-out Fee:</strong> ${{ "%.2f"|format(late_fee) }}</p>
+                                {% endif %}
+                                <p class="mb-0"><strong>Estimated Total:</strong> ${{ "%.2f"|format(estimated_price) }}</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mt-4">
+                        <button type="button" class="btn btn-outline-secondary" onclick="window.history.back();">
+                            <i class="bi bi-x-circle"></i> Cancel
+                        </button>
+                        
+                        <div>
+                            <button type="submit" name="action" value="update_options" class="btn btn-outline-primary me-2">
+                                <i class="bi bi-calculator"></i> Calculate Price
+                            </button>
+                            
+                            {% if (not form.room_id.choices and request.method == 'POST') %}
+                                <button type="button" class="btn btn-secondary" disabled>
+                                    <i class="bi bi-calendar-x"></i> No Rooms Available
+                                </button>
+                            {% else %}
+                                <button type="submit" name="action" value="create_booking" class="btn btn-primary" id="createBookingBtn">
+                                    <i class="bi bi-calendar-check"></i> Create Booking
+                                </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Room Availability Modal -->
+<div class="modal fade" id="roomAvailabilityModal" tabindex="-1" aria-labelledby="roomAvailabilityModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="roomAvailabilityModalLabel">Room Availability</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="availabilityCalendar"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const checkInDateEl = document.getElementById('check_in_date');
+        const checkOutDateEl = document.getElementById('check_out_date');
+        const roomIdSelectEl = document.getElementById('room_id_select');
+        const newBookingForm = document.getElementById('newBookingForm');
+        const customerSearchEl = document.getElementById('customer_search');
+        const searchCustomerBtn = document.getElementById('searchCustomerBtn');
+        const customerSearchResults = document.getElementById('customerSearchResults');
+        const selectedCustomerId = document.getElementById('selected_customer_id');
+        const selectedCustomerInfo = document.getElementById('selectedCustomerInfo');
+        const selectedCustomerName = document.getElementById('selectedCustomerName');
+        const selectedCustomerEmail = document.getElementById('selectedCustomerEmail');
+        const selectedCustomerPhone = document.getElementById('selectedCustomerPhone');
+        const clearCustomerBtn = document.getElementById('clearCustomerBtn');
+        const newCustomerForm = document.getElementById('newCustomerForm');
+        const roomDetails = document.getElementById('roomDetails');
+        const roomNumber = document.getElementById('roomNumber');
+        const roomType = document.getElementById('roomType');
+        const roomCapacity = document.getElementById('roomCapacity');
+        const roomRate = document.getElementById('roomRate');
+        const roomAmenities = document.getElementById('roomAmenities');
+
+        // Update room options when dates change
+        function updateRoomOptions() {
+            if (checkInDateEl.value && checkOutDateEl.value) {
+                const formData = new FormData(newBookingForm);
+                formData.append('action', 'update_options');
+                
+                fetch('{{ url_for("receptionist.new_booking") }}', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Update room options
+                    if (data.room_options) {
+                        roomIdSelectEl.innerHTML = '';
+                        data.room_options.forEach(option => {
+                            const optEl = document.createElement('option');
+                            optEl.value = option.value;
+                            optEl.textContent = option.text;
+                            optEl.dataset.roomNumber = option.room_number;
+                            optEl.dataset.roomType = option.room_type;
+                            optEl.dataset.capacity = option.capacity;
+                            optEl.dataset.rate = option.rate;
+                            optEl.dataset.amenities = option.amenities;
+                            roomIdSelectEl.appendChild(optEl);
+                        });
+                        
+                        // Update room details if a room is selected
+                        updateRoomDetails();
+                    }
+                    
+                    // Update price estimate
+                    if (data.estimated_price) {
+                        // This will be handled by the server-side rendering
+                        // We'll reload the form to show the updated price
+                        newBookingForm.submit();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error updating room options:', error);
+                });
+            }
+        }
+        
+        // Update room details when room selection changes
+        function updateRoomDetails() {
+            const selectedOption = roomIdSelectEl.options[roomIdSelectEl.selectedIndex];
+            if (selectedOption && selectedOption.value) {
+                roomNumber.textContent = selectedOption.dataset.roomNumber || '';
+                roomType.textContent = selectedOption.dataset.roomType || '';
+                roomCapacity.textContent = selectedOption.dataset.capacity || '';
+                roomRate.textContent = selectedOption.dataset.rate || '';
+                roomAmenities.textContent = selectedOption.dataset.amenities || 'None';
+                roomDetails.style.display = 'block';
+            } else {
+                roomDetails.style.display = 'none';
+            }
+        }
+        
+        // Search for customers
+        function searchCustomers() {
+            const searchTerm = customerSearchEl.value.trim();
+            if (searchTerm.length < 2) {
+                customerSearchResults.style.display = 'none';
+                return;
+            }
+            
+            fetch(`{{ url_for("receptionist.search_customers") }}?q=${encodeURIComponent(searchTerm)}`)
+                .then(response => response.json())
+                .then(data => {
+                    customerSearchResults.innerHTML = '';
+                    
+                    if (data.customers && data.customers.length > 0) {
+                        data.customers.forEach(customer => {
+                            const item = document.createElement('a');
+                            item.href = '#';
+                            item.className = 'list-group-item list-group-item-action';
+                            item.innerHTML = `
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">${customer.name}</h6>
+                                </div>
+                                <p class="mb-1 small">${customer.email || ''}</p>
+                                <small>${customer.phone || ''}</small>
+                            `;
+                            item.addEventListener('click', function(e) {
+                                e.preventDefault();
+                                selectCustomer(customer);
+                            });
+                            customerSearchResults.appendChild(item);
+                        });
+                        customerSearchResults.style.display = 'block';
+                    } else {
+                        const item = document.createElement('div');
+                        item.className = 'list-group-item';
+                        item.textContent = 'No customers found';
+                        customerSearchResults.appendChild(item);
+                        customerSearchResults.style.display = 'block';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error searching customers:', error);
+                });
+        }
+        
+        // Select a customer
+        function selectCustomer(customer) {
+            selectedCustomerId.value = customer.id;
+            selectedCustomerName.textContent = customer.name;
+            selectedCustomerEmail.textContent = customer.email || '';
+            selectedCustomerPhone.textContent = customer.phone || '';
+            selectedCustomerInfo.style.display = 'block';
+            customerSearchResults.style.display = 'none';
+            newCustomerForm.style.display = 'none';
+        }
+        
+        // Clear customer selection
+        function clearCustomerSelection() {
+            selectedCustomerId.value = '';
+            selectedCustomerInfo.style.display = 'none';
+            newCustomerForm.style.display = 'block';
+            customerSearchEl.value = '';
+        }
+        
+        // Event listeners
+        if (checkInDateEl) {
+            checkInDateEl.addEventListener('change', function() {
+                // Set minimum check-out date to be after check-in date
+                if (checkInDateEl.value) {
+                    const checkInDate = new Date(checkInDateEl.value);
+                    checkInDate.setDate(checkInDate.getDate() + 1);
+                    const minCheckOutDate = checkInDate.toISOString().split('T')[0];
+                    checkOutDateEl.min = minCheckOutDate;
+                    
+                    // If check-out date is before check-in date, update it
+                    if (checkOutDateEl.value && checkOutDateEl.value <= checkInDateEl.value) {
+                        checkOutDateEl.value = minCheckOutDate;
+                    }
+                }
+                
+                if (checkOutDateEl.value) {
+                    updateRoomOptions();
+                }
+            });
+        }
+        
+        if (checkOutDateEl) {
+            checkOutDateEl.addEventListener('change', function() {
+                if (checkInDateEl.value) {
+                    updateRoomOptions();
+                }
+            });
+        }
+        
+        if (roomIdSelectEl) {
+            roomIdSelectEl.addEventListener('change', updateRoomDetails);
+            // Initialize room details
+            updateRoomDetails();
+        }
+        
+        if (searchCustomerBtn) {
+            searchCustomerBtn.addEventListener('click', searchCustomers);
+        }
+        
+        if (customerSearchEl) {
+            customerSearchEl.addEventListener('keyup', function(e) {
+                if (e.key === 'Enter') {
+                    searchCustomers();
+                } else if (e.key === 'Escape') {
+                    customerSearchResults.style.display = 'none';
+                } else if (customerSearchEl.value.trim().length >= 2) {
+                    searchCustomers();
+                }
+            });
+        }
+        
+        if (clearCustomerBtn) {
+            clearCustomerBtn.addEventListener('click', clearCustomerSelection);
+        }
+        
+        // Initialize the form
+        if (selectedCustomerId.value) {
+            selectedCustomerInfo.style.display = 'block';
+            newCustomerForm.style.display = 'none';
+        } else {
+            selectedCustomerInfo.style.display = 'none';
+            newCustomerForm.style.display = 'block';
+        }
+        
+        // Close search results when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!customerSearchEl.contains(e.target) && !customerSearchResults.contains(e.target) && !searchCustomerBtn.contains(e.target)) {
+                customerSearchResults.style.display = 'none';
+            }
+        });
+    });
+</script>
+{% endblock %}

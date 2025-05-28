@@ -60,6 +60,11 @@ class Config:
         os.environ.get("ENABLE_NOTIFICATIONS", "True").lower() == "true"
     )
 
+    # Stripe settings
+    STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "sk_test_51OxXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+    STRIPE_PUBLISHABLE_KEY = os.environ.get("STRIPE_PUBLISHABLE_KEY", "pk_test_51OxXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+    STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "whsec_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+
 
 class DevelopmentConfig(Config):
     """Configuration for development environment."""
@@ -76,6 +81,11 @@ class TestingConfig(Config):
     SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
     WTF_CSRF_ENABLED = False
     MAIL_SUPPRESS_SEND = True
+
+    def __init__(self):
+        """Initialize testing configuration and set environment variables."""
+        os.environ['TESTING'] = 'True'
+        os.environ['FLASK_ENV'] = 'testing'
 
 
 class ProductionConfig(Config):
@@ -96,4 +106,4 @@ config = {
 def get_config():
     """Returns the appropriate configuration class based on the environment."""
     env = os.environ.get("FLASK_ENV", "development")
-    return config.get(env, config["default"]) 
+    return config.get(env, config["default"])

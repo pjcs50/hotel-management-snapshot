@@ -1,0 +1,2 @@
+This is a placeholder for the payment methods image.
+In a production environment, this would be an image showing supported payment methods like Visa, Mastercard, American Express, etc.

@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block title %}Payment Cancelled - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow border-0">
+                <div class="card-body text-center p-5">
+                    <div class="mb-4">
+                        <i class="bi bi-x-circle-fill text-danger" style="font-size: 5rem;"></i>
+                    </div>
+                    
+                    <h1 class="display-4 mb-4">Payment Cancelled</h1>
+                    
+                    <p class="lead mb-4">Your payment for booking #{{ booking.confirmation_code or booking.id }} has been cancelled.</p>
+                    
+                    <div class="alert alert-warning mb-4">
+                        <h5 class="alert-heading">Booking Information</h5>
+                        <p class="mb-1"><strong>Room:</strong> {{ booking.room.number }} - {{ booking.room.room_type.name }}</p>
+                        <p class="mb-1"><strong>Check-in:</strong> {{ booking.check_in_date.strftime('%Y-%m-%d') }}</p>
+                        <p class="mb-1"><strong>Check-out:</strong> {{ booking.check_out_date.strftime('%Y-%m-%d') }}</p>
+                        <p class="mb-1"><strong>Total Price:</strong> ${{ "%.2f"|format(booking.total_price) }}</p>
+                        <p class="mb-0"><strong>Balance Due:</strong> ${{ "%.2f"|format(booking.balance_due) }}</p>
+                    </div>
+                    
+                    <p class="mb-4">No charges have been made to your account. You can try again or contact our support team for assistance.</p>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                        <a href="{{ url_for('payment.checkout', booking_id=booking.id) }}" class="btn btn-primary btn-lg">
+                            <i class="bi bi-credit-card me-2"></i> Try Again
+                        </a>
+                        
+                        {% if current_user.role == 'customer' %}
+                        <a href="{{ url_for('customer.booking_details', booking_id=booking.id) }}" class="btn btn-outline-secondary btn-lg">
+                            <i class="bi bi-file-text me-2"></i> View Booking Details
+                        </a>
+                        {% else %}
+                        <a href="{{ url_for('receptionist.view_booking', booking_id=booking.id) }}" class="btn btn-outline-secondary btn-lg">
+                            <i class="bi bi-file-text me-2"></i> View Booking Details
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

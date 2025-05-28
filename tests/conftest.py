@@ -12,6 +12,10 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 from flask_login import login_user, logout_user
 from flask import url_for
 
+# Set testing environment variables
+os.environ['TESTING'] = 'True'
+os.environ['FLASK_ENV'] = 'testing'
+
 from app_factory import create_app
 from db import db as _db
 from config import TestingConfig
@@ -46,7 +50,7 @@ def db_session(db):
     """Yields a SQLAlchemy session with a transaction that is rolled back after the test."""
     connection = db.engine.connect()
     transaction = connection.begin()
-    
+
     # Clear all data from tables before each test
     # Ensure tables are created if they weren't (e.g. if drop_all was aggressive)
     # db.create_all() # This might be too slow if called for every function
@@ -70,7 +74,7 @@ def db_session(db):
 def client(app):
     """Create a test client for the app."""
     client = app.test_client()
-    
+
     # Add a method to get CSRF token from a page
     def get_csrf_token(self):
         """Extract CSRF token from any page with a form."""
@@ -85,10 +89,10 @@ def client(app):
                 # Use app's CSRF token directly if we can't find it in the page
                 from flask_wtf.csrf import generate_csrf
                 return generate_csrf()
-    
+
     # Attach the method to the client
     client.get_csrf_token = get_csrf_token.__get__(client)
-    
+
     return client
 
 @pytest.fixture
@@ -164,18 +168,25 @@ def admin_user(db_session):
 
 class AuthActions:
     """Helper class for authentication actions in tests."""
-    
+
     def __init__(self, client):
         self._client = client
-        
-    def login(self, email, password):
-        """Log in with the given credentials."""
+
+    def login(self, email, password, role=None):
+        """
+        Log in with the given credentials.
+
+        Args:
+            email: User email
+            password: User password
+            role: Optional role parameter (ignored, for compatibility with tests)
+        """
         return self._client.post(
             "/auth/login",
             data={"email": email, "password": password},
             follow_redirects=True
         )
-    
+
     def logout(self):
         """Log out the current user."""
         return self._client.get("/auth/logout", follow_redirects=True)
@@ -183,7 +194,7 @@ class AuthActions:
 @pytest.fixture
 def auth(client):
     """Create an AuthActions instance for testing."""
-    return AuthActions(client) 
+    return AuthActions(client)
 
 @pytest.fixture
 def login_user(client):
@@ -203,12 +214,12 @@ except ImportError:
     def mocker():
         """Mock fixture to replace pytest-mock when it's not available."""
         from unittest.mock import patch, MagicMock
-        
+
         class SimpleMocker:
             def patch(self, *args, **kwargs):
                 return patch(*args, **kwargs)
-                
+
             def MagicMock(self, *args, **kwargs):
                 return MagicMock(*args, **kwargs)
-                
-        return SimpleMocker() 
+
+        return SimpleMocker()

@@ -236,6 +236,8 @@ class UserService:
             user = self.db_session.get(User, request.user_id)
             if user:
                 user.role_requested = None
+                if user.role == "pending":
+                    user.role = "Rejected"
                 # Keep the user account but with limited access
                 # Optionally could deactivate: user.is_active = False
             

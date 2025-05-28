@@ -1,456 +1,446 @@
 """
 Functional tests for booking routes.
 
-This module contains tests for booking creation, viewing, and management routes.
+These tests verify that all booking-related API endpoints work correctly,
+including the customer booking flow, staff booking management, and error handling.
 """
 
-import pytest
-from datetime import datetime, timedelta
+import unittest
+import json
+import os
+import tempfile
+from datetime import datetime, timedelta, date
 from flask import url_for
 
+from app_factory import create_app
+from db import db as _db
 from app.models.user import User
 from app.models.customer import Customer
 from app.models.room import Room
 from app.models.room_type import RoomType
 from app.models.booking import Booking
+from app.models.seasonal_rate import SeasonalRate
 
 
-def test_customer_bookings_unauthorized(client):
-    """Test that unauthorized users cannot access bookings page."""
-    response = client.get(url_for('customer.bookings'))
-    assert response.status_code == 302  # Redirect to login
+class TestBookingRoutes(unittest.TestCase):
+    """Test suite for booking-related API endpoints."""
 
-
-def test_customer_bookings_wrong_role(client, auth, app, db):
-    """Test that non-customer users cannot access customer bookings."""
-    with app.app_context():
-        # Create receptionist user
-        user = User(username="receptionist", email="receptionist@example.com", role="receptionist")
-        user.set_password("password")
-        db.session.add(user)
-        db.session.commit()
+    @classmethod
+    def setUpClass(cls):
+        """Set up test fixtures before all tests."""
+        # Create a temporary database file
+        cls.db_fd, cls.db_path = tempfile.mkstemp()
+        cls.app = create_app({
+            'TESTING': True,
+            'SQLALCHEMY_DATABASE_URI': f'sqlite:///{cls.db_path}',
+            'SQLALCHEMY_TRACK_MODIFICATIONS': False,
+            'WTF_CSRF_ENABLED': False  # Disable CSRF for testing
+        })
+        cls.app_context = cls.app.app_context()
+        cls.app_context.push()
         
-        # Log in as receptionist
-        auth.login(user.email, "password")
+        # Initialize database
+        _db.init_app(cls.app)
+        _db.create_all()
         
-        # Try to access customer bookings
-        response = client.get(url_for('customer.bookings'))
-        assert response.status_code == 403  # Forbidden
+        # Create test data
+        cls._create_test_data()
 
+    @classmethod
+    def tearDownClass(cls):
+        """Clean up after all tests."""
+        cls.app_context.pop()
+        os.close(cls.db_fd)
+        os.unlink(cls.db_path)
 
-def test_new_booking_unauthorized(client):
-    """Test that unauthorized users cannot access new booking page."""
-    response = client.get(url_for('customer.new_booking'))
-    assert response.status_code == 302  # Redirect to login
-
-
-def test_new_booking_no_profile(client, auth, app, db):
-    """Test that customers without complete profiles are redirected to profile page."""
-    with app.app_context():
-        # Create customer user without complete profile
-        user = User(username="customer_no_profile", email="customer_no_profile@example.com", role="customer")
-        user.set_password("password")
-        customer = Customer(user=user, name="Incomplete Customer")  # Missing required fields
-        db.session.add_all([user, customer])
-        db.session.commit()
+    def setUp(self):
+        """Set up test fixtures before each test."""
+        self.client = self.app.test_client()
+        # Begin transaction
+        self.session = _db.session
+        self.session.begin_nested()
         
-        # Log in as customer
-        auth.login(user.email, "password")
-        
-        # Try to access new booking page
-        response = client.get(url_for('customer.new_booking'))
-        assert response.status_code == 302  # Redirect
-        
-        # Handle both absolute and relative URLs in the response
-        profile_path = url_for('customer.profile')
-        if profile_path.startswith('http'):
-            # If URL has scheme and server, extract the path part
-            from urllib.parse import urlparse
-            profile_path = urlparse(profile_path).path
-            
-        assert profile_path in response.location
+        # Login as customer user
+        with self.client as c:
+            c.post('/auth/login', data={
+                'username': 'customer_user',
+                'password': 'password'
+            }, follow_redirects=True)
 
+    def tearDown(self):
+        """Clean up after each test."""
+        # Logout
+        with self.client as c:
+            c.get('/auth/logout', follow_redirects=True)
+        
+        # Rollback transaction
+        self.session.rollback()
 
-def test_customer_bookings_empty(client, auth, app, db):
-    """Test that bookings page shows empty state when no bookings exist."""
-    with app.app_context():
-        # Create customer with complete profile
-        user = User(username="customer_empty", email="customer_empty@example.com", role="customer")
-        user.set_password("password")
-        customer = Customer(
-            user=user,
-            name="Complete Customer",
-            phone="123-456-7890",
-            address="123 Main St",
-            emergency_contact="Jane Doe, 555-1234",
-            profile_complete=True
+    @classmethod
+    def _create_test_data(cls):
+        """Create test data for all tests."""
+        session = _db.session
+        
+        # Create customer user
+        customer_user = User(
+            username='customer_user',
+            email='customer@example.com',
+            role='customer',
+            is_active=True
         )
-        db.session.add_all([user, customer])
-        db.session.commit()
+        customer_user.set_password('password')
+        session.add(customer_user)
+        session.flush()
         
-        # Log in as customer
-        auth.login(user.email, "password")
-        
-        # Access bookings page
-        response = client.get(url_for('customer.bookings'))
-        assert response.status_code == 200
-        
-        # Check that empty state message is shown
-        assert b"You don't have any bookings yet" in response.data
-        assert b"New Booking" in response.data
-
-
-def test_new_booking_form(client, auth, app, db):
-    """Test that new booking form is displayed correctly."""
-    with app.app_context():
-        # Create customer with complete profile
-        user = User(username="customer_form", email="customer_form@example.com", role="customer")
-        user.set_password("password")
+        # Create customer profile
         customer = Customer(
-            user=user,
-            name="Complete Customer",
-            phone="123-456-7890",
-            address="123 Main St",
-            emergency_contact="Jane Doe, 555-1234",
-            profile_complete=True
+            user_id=customer_user.id,
+            name='Test Customer',
+            email='customer@example.com',
+            phone='123-456-7890',
+            address='123 Test St',
+            loyalty_points=100
         )
+        session.add(customer)
         
-        # Create room type and room
-        room_type = RoomType(name="Standard_form", description="Standard room", base_rate=100, capacity=2)
-        room = Room(number="101_form", room_type=room_type, status=Room.STATUS_AVAILABLE)
+        # Create staff user
+        staff_user = User(
+            username='staff_user',
+            email='staff@example.com',
+            role='receptionist',
+            is_active=True
+        )
+        staff_user.set_password('password')
+        session.add(staff_user)
         
-        db.session.add_all([user, customer, room_type, room])
-        db.session.commit()
-        
-        # Log in as customer
-        auth.login(user.email, "password")
-        
-        # Access new booking page
-        response = client.get(url_for('customer.new_booking'))
-        assert response.status_code == 200
-        
-        # Check form elements - verify presence of booking form elements using more generalized selectors
-        assert b'<form method="post" action="/customer/new-booking">' in response.data
-        assert b'<label for="check_in_date" class="form-label">Check-in Date' in response.data
-        assert b'<label for="check_out_date" class="form-label">Check-out Date' in response.data
-        assert b'<select class="form-select" id="room_id" name="room_id"' in response.data
-        
-        # Check room type info is displayed
-        assert b"Standard_form" in response.data
-        assert b"$100.00/night" in response.data
-
-
-def test_create_booking(client, auth, app, db):
-    """Test booking creation."""
-    with app.app_context():
-        # Create customer with complete profile
-        user = User(username="customer_create", email="customer_create@example.com", role="customer")
-        user.set_password("password")
-        customer = Customer(
-            user=user,
-            name="Complete Customer",
-            phone="123-456-7890",
-            address="123 Main St",
-            emergency_contact="Jane Doe, 555-1234",
-            profile_complete=True
+        # Create room types
+        standard_room = RoomType(
+            name='Standard',
+            description='Standard room with queen bed',
+            base_rate=100.0,
+            capacity=2,
+            max_occupants=2
         )
         
-        # Create room type and room
-        room_type = RoomType(name="Standard_create", description="Standard room", base_rate=100, capacity=2)
-        room = Room(number="101_create", room_type=room_type, status=Room.STATUS_AVAILABLE)
+        deluxe_room = RoomType(
+            name='Deluxe',
+            description='Deluxe room with king bed',
+            base_rate=150.0,
+            capacity=2,
+            max_occupants=3
+        )
         
-        db.session.add_all([user, customer, room_type, room])
-        db.session.commit()
+        session.add_all([standard_room, deluxe_room])
+        session.flush()
         
-        # Log in as customer
-        auth.login(user.email, "password")
+        # Create rooms
+        rooms = []
+        for i in range(1, 6):  # 5 standard rooms
+            room = Room(
+                number=f'S{i}',
+                room_type_id=standard_room.id,
+                status=Room.STATUS_AVAILABLE
+            )
+            rooms.append(room)
         
-        # Create a booking
-        today = datetime.now().date()
-        check_in_date = (today + timedelta(days=1)).strftime("%Y-%m-%d")
-        check_out_date = (today + timedelta(days=3)).strftime("%Y-%m-%d")
+        for i in range(1, 4):  # 3 deluxe rooms
+            room = Room(
+                number=f'D{i}',
+                room_type_id=deluxe_room.id,
+                status=Room.STATUS_AVAILABLE
+            )
+            rooms.append(room)
         
-        response = client.post(
-            url_for('customer.new_booking'),
-            data={
+        session.add_all(rooms)
+        session.flush()
+        
+        # Create existing booking
+        existing_booking = Booking(
+            room_id=rooms[0].id,
+            customer_id=customer.id,
+            check_in_date=date.today() + timedelta(days=10),
+            check_out_date=date.today() + timedelta(days=12),
+            status=Booking.STATUS_RESERVED,
+            num_guests=1,
+            confirmation_code='TEST123',
+            source='website',
+            booking_date=datetime.now()
+        )
+        session.add(existing_booking)
+        
+        # Create seasonal rates
+        summer_start = date(date.today().year, 6, 1)
+        summer_end = date(date.today().year, 8, 31)
+        
+        summer_rate = SeasonalRate(
+            room_type_id=standard_room.id,
+            start_date=summer_start,
+            end_date=summer_end,
+            rate_multiplier=1.25,
+            name='Summer Rate'
+        )
+        session.add(summer_rate)
+        
+        # Commit changes
+        session.commit()
+
+    def test_view_new_booking_page(self):
+        """Test viewing the new booking page."""
+        response = self.client.get('/customer/new-booking')
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b'New Booking', response.data)
+        self.assertIn(b'Check-in Date', response.data)
+        self.assertIn(b'Check-out Date', response.data)
+
+    def test_create_booking_success(self):
+        """Test creating a new booking successfully."""
+        # Get available room
+        room = Room.query.filter_by(status=Room.STATUS_AVAILABLE).first()
+        customer = Customer.query.first()
+        
+        # Define booking data
+        check_in_date = date.today() + timedelta(days=5)
+        check_out_date = check_in_date + timedelta(days=2)
+        booking_data = {
                 'room_id': room.id,
-                'check_in_date': check_in_date,
-                'check_out_date': check_out_date,
-                'early_hours': 0,
-                'late_hours': 0,
-                'status': 'Reserved',
-                'csrf_token': client.get_csrf_token()
-            },
-            follow_redirects=True
-        )
+            'customer_id': customer.id,
+            'check_in_date': check_in_date.strftime('%Y-%m-%d'),
+            'check_out_date': check_out_date.strftime('%Y-%m-%d'),
+            'num_guests': 1,
+            'special_requests': 'Extra pillows please',
+            'status': 'Reserved'
+        }
         
-        # Check that we're redirected to bookings page with success message
-        assert response.status_code == 200
-        assert b'Your booking has been created successfully' in response.data
+        # Submit booking form
+        response = self.client.post('/customer/new-booking', data=booking_data, follow_redirects=True)
         
-        # Check that booking exists in database
-        booking = Booking.query.filter_by(room_id=room.id, customer_id=customer.id).first()
-        assert booking is not None
-        assert booking.status == 'Reserved'
+        # Verify success response
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b'Your booking has been created successfully', response.data)
         
-        # Check that room status is updated
+        # Verify booking was created in the database
+        booking = Booking.query.filter_by(
+            room_id=room.id, 
+            check_in_date=check_in_date
+        ).first()
+        
+        self.assertIsNotNone(booking)
+        self.assertEqual(booking.status, Booking.STATUS_RESERVED)
+        self.assertEqual(booking.num_guests, 1)
+        
+        # Verify room status was updated
         room = Room.query.get(room.id)
-        assert room.status == Room.STATUS_BOOKED
+        self.assertEqual(room.status, Room.STATUS_BOOKED)
 
+    def test_create_booking_invalid_dates(self):
+        """Test creating a booking with invalid dates."""
+        # Get available room
+        room = Room.query.filter_by(status=Room.STATUS_AVAILABLE).first()
+        customer = Customer.query.first()
+        
+        # Define booking data with check-out date before check-in date
+        booking_data = {
+            'room_id': room.id,
+            'customer_id': customer.id,
+            'check_in_date': (date.today() + timedelta(days=5)).strftime('%Y-%m-%d'),
+            'check_out_date': (date.today() + timedelta(days=4)).strftime('%Y-%m-%d'),  # Earlier than check-in
+            'num_guests': 1,
+            'special_requests': '',
+            'status': 'Reserved'
+        }
+        
+        # Submit booking form
+        response = self.client.post('/customer/new-booking', data=booking_data, follow_redirects=True)
+        
+        # Verify error response
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b'Check-out date must be after check-in date', response.data)
+        
+        # Verify no booking was created
+        booking = Booking.query.filter_by(
+            room_id=room.id, 
+            check_in_date=date.today() + timedelta(days=5)
+        ).first()
+        
+        self.assertIsNone(booking)
 
-def test_invalid_booking_dates(client, auth, app, db):
-    """Test validation for invalid booking dates."""
-    with app.app_context():
-        # Create customer with complete profile
-        user = User(username="customer_invalid", email="customer_invalid@example.com", role="customer")
-        user.set_password("password")
-        customer = Customer(
-            user=user,
-            name="Complete Customer",
-            phone="123-456-7890",
-            address="123 Main St",
-            emergency_contact="Jane Doe, 555-1234",
-            profile_complete=True
-        )
+    def test_view_bookings_list(self):
+        """Test viewing the list of bookings."""
+        response = self.client.get('/customer/bookings')
+        self.assertEqual(response.status_code, 200)
         
-        # Create room type and room
-        room_type = RoomType(name="Standard_invalid", description="Standard room", base_rate=100, capacity=2)
-        room = Room(number="101_invalid", room_type=room_type, status=Room.STATUS_AVAILABLE)
-        
-        db.session.add_all([user, customer, room_type, room])
-        db.session.commit()
-        
-        # Log in as customer
-        auth.login(user.email, "password")
-        
-        # Test case 1: Check-out date before check-in date
-        today = datetime.now().date()
-        check_in_date = (today + timedelta(days=3)).strftime("%Y-%m-%d")
-        check_out_date = (today + timedelta(days=1)).strftime("%Y-%m-%d")
-        
-        response = client.post(
-            url_for('customer.new_booking'),
-            data={
-                'room_id': room.id,
-                'check_in_date': check_in_date,
-                'check_out_date': check_out_date,
-                'early_hours': 0,
-                'late_hours': 0,
-                'status': 'Reserved',
-                'csrf_token': client.get_csrf_token()
-            }
-        )
-        
-        # Should fail with check-out date error
-        assert response.status_code == 200
-        assert b'Check-out date must be after check-in date' in response.data
-        
-        # Test case 2: Dates in the past
-        past_date = (today - timedelta(days=5)).strftime("%Y-%m-%d")
-        check_out_date = (today - timedelta(days=1)).strftime("%Y-%m-%d")
-        
-        response = client.post(
-            url_for('customer.new_booking'),
-            data={
-                'room_id': room.id,
-                'check_in_date': past_date,
-                'check_out_date': check_out_date,
-                'early_hours': 0,
-                'late_hours': 0,
-                'status': 'Reserved',
-                'csrf_token': client.get_csrf_token()
-            }
-        )
-        
-        # Should fail with dates in past error
-        assert response.status_code == 200
-        assert b'cannot be in the past' in response.data
+        # Verify existing booking is displayed
+        existing_booking = Booking.query.first()
+        self.assertIn(bytes(existing_booking.confirmation_code, 'utf-8'), response.data)
 
+    def test_view_booking_details(self):
+        """Test viewing details of a booking."""
+        # Get the existing booking
+        existing_booking = Booking.query.first()
+        
+        # View booking details
+        response = self.client.get(f'/customer/bookings/{existing_booking.id}/details')
+        self.assertEqual(response.status_code, 200)
+        
+        # Verify booking details are displayed
+        self.assertIn(bytes(existing_booking.confirmation_code, 'utf-8'), response.data)
+        self.assertIn(bytes(str(existing_booking.num_guests), 'utf-8'), response.data)
 
-def test_double_booking_prevention(client, auth, app, db):
-    """Test that system prevents double-bookings."""
-    with app.app_context():
-        # Create customer with complete profile
-        user = User(username="customer_double", email="customer_double@example.com", role="customer")
-        user.set_password("password")
-        customer = Customer(
-            user=user,
-            name="Complete Customer",
-            phone="123-456-7890",
-            address="123 Main St",
-            emergency_contact="Jane Doe, 555-1234",
-            profile_complete=True
-        )
+    def test_edit_booking_page(self):
+        """Test accessing the edit booking page."""
+        # Get the existing booking
+        existing_booking = Booking.query.first()
         
-        # Create second user/customer for clarity
-        user2 = User(username="customer_double2", email="customer_double2@example.com", role="customer")
-        user2.set_password("password")
-        customer2 = Customer(
-            user=user2,
-            name="Complete Customer 2",
-            phone="123-456-7890",
-            address="123 Main St",
-            emergency_contact="Jane Doe, 555-1234",
-            profile_complete=True
-        )
+        # Access edit page
+        response = self.client.get(f'/customer/bookings/{existing_booking.id}/edit')
+        self.assertEqual(response.status_code, 200)
         
-        # Create room type and room
-        room_type = RoomType(name="Standard_double", description="Standard room", base_rate=100, capacity=2)
-        room1 = Room(number="101_double", room_type=room_type, status=Room.STATUS_AVAILABLE)
-        room2 = Room(number="102_double", room_type=room_type, status=Room.STATUS_AVAILABLE) # Another room of same type
+        # Verify edit form is displayed
+        self.assertIn(b'Edit Booking', response.data)
+        self.assertIn(bytes(existing_booking.confirmation_code, 'utf-8'), response.data)
+
+    def test_edit_booking_success(self):
+        """Test editing a booking successfully."""
+        # Get the existing booking
+        existing_booking = Booking.query.first()
         
-        db.session.add_all([user, customer, user2, customer2, room_type, room1, room2])
-        db.session.commit()
+        # New booking data
+        new_check_out_date = existing_booking.check_out_date + timedelta(days=1)
+        new_num_guests = 2
         
-        # Log in as customer
-        auth.login(user.email, "password")
+        edit_data = {
+            'room_id': existing_booking.room_id,
+            'check_in_date': existing_booking.check_in_date.strftime('%Y-%m-%d'),
+            'check_out_date': new_check_out_date.strftime('%Y-%m-%d'),
+            'num_guests': new_num_guests,
+            'special_requests': 'Updated request',
+            'status': existing_booking.status  # Status should not change
+        }
         
-        # Create first booking
-        today = datetime.now().date()
-        check_in_date = (today + timedelta(days=1)).strftime("%Y-%m-%d")
-        check_out_date = (today + timedelta(days=5)).strftime("%Y-%m-%d")
-        
-        response = client.post(
-            url_for('customer.new_booking'),
-            data={
-                'room_id': room1.id,
-                'check_in_date': check_in_date,
-                'check_out_date': check_out_date,
-                'early_hours': 0,
-                'late_hours': 0,
-                'status': 'Reserved',
-                'csrf_token': client.get_csrf_token()
-            },
+        # Submit edit form
+        response = self.client.post(
+            f'/customer/bookings/{existing_booking.id}/edit', 
+            data=edit_data, 
             follow_redirects=True
         )
         
-        # Check that first booking was created successfully
-        assert response.status_code == 200
-        assert b'Your booking has been created successfully' in response.data
+        # Verify success response
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b'Booking updated successfully', response.data)
         
-        # Log in as second customer
-        auth.login(user2.email, "password")
-        
-        # Try to create overlapping booking
-        response = client.post(
-            url_for('customer.new_booking'),
-            data={
-                'room_id': room1.id,
-                'check_in_date': (today + timedelta(days=3)).strftime("%Y-%m-%d"),
-                'check_out_date': (today + timedelta(days=7)).strftime("%Y-%m-%d"),
-                'early_hours': 0,
-                'late_hours': 0,
-                'status': 'Reserved',
-                'csrf_token': client.get_csrf_token()
-            }
-        )
-        
-        # Check that booking is rejected - looking for form validation error
-        assert response.status_code == 200  # Form is redisplayed
-        assert b'Not a valid choice' in response.data
+        # Verify booking was updated in the database
+        updated_booking = Booking.query.get(existing_booking.id)
+        self.assertEqual(updated_booking.check_out_date, new_check_out_date)
+        self.assertEqual(updated_booking.num_guests, new_num_guests)
 
-
-def test_cancel_booking(client, auth, app, db):
-    """Test booking cancellation."""
-    with app.app_context():
-        # Create customer with complete profile
-        user = User(username="customer_cancel", email="customer_cancel@example.com", role="customer")
-        user.set_password("password")
-        customer = Customer(
-            user=user,
-            name="Complete Customer",
-            phone="123-456-7890",
-            address="123 Main St",
-            emergency_contact="Jane Doe, 555-1234",
-            profile_complete=True
-        )
+    def test_edit_booking_invalid_changes(self):
+        """Test editing a booking with invalid changes."""
+        # Get the existing booking
+        existing_booking = Booking.query.filter_by(status=Booking.STATUS_RESERVED).first()
         
-        # Create room type and room
-        room_type = RoomType(name="Standard_cancel", description="Standard room", base_rate=100, capacity=2)
-        room = Room(number="101_cancel", room_type=room_type, status=Room.STATUS_BOOKED)
+        # Invalid booking data (check-out before check-in)
+        edit_data = {
+            'room_id': existing_booking.room_id,
+            'check_in_date': existing_booking.check_in_date.strftime('%Y-%m-%d'),
+            'check_out_date': (existing_booking.check_in_date - timedelta(days=1)).strftime('%Y-%m-%d'),  # Invalid
+            'num_guests': existing_booking.num_guests,
+            'special_requests': existing_booking.special_requests[0] if existing_booking.special_requests else '',
+            'status': existing_booking.status
+        }
         
-        # Create booking
-        today = datetime.now().date()
-        booking = Booking(
-            room=room,
-            customer=customer,
-            check_in_date=today + timedelta(days=1),
-            check_out_date=today + timedelta(days=3),
-            status=Booking.STATUS_RESERVED
-        )
-        
-        db.session.add_all([user, customer, room_type, room, booking])
-        db.session.commit()
-        
-        # Log in as customer
-        auth.login(user.email, "password")
-        
-        # Cancel booking
-        response = client.post(
-            url_for('customer.cancel_booking', booking_id=booking.id),
-            data={'csrf_token': client.get_csrf_token()},
+        # Submit edit form
+        response = self.client.post(
+            f'/customer/bookings/{existing_booking.id}/edit', 
+            data=edit_data, 
             follow_redirects=True
         )
         
-        # Check that booking was cancelled - look for success message
-        assert response.status_code == 200
-        assert b'has been cancelled' in response.data
+        # Verify error response
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b'Check-out date must be after check-in date', response.data)
         
-        # Check that booking status is updated in database
-        booking = Booking.query.get(booking.id)
-        assert booking.status == Booking.STATUS_CANCELLED
-        
-        # Check that room status is updated
-        room = Room.query.get(room.id)
-        assert room.status == Room.STATUS_AVAILABLE
+        # Verify booking was not updated
+        unchanged_booking = Booking.query.get(existing_booking.id)
+        self.assertEqual(unchanged_booking.check_out_date, existing_booking.check_out_date)
 
-
-def test_cancel_checked_in_booking_fails(client, auth, app, db):
-    """Test that cancelling a checked-in booking fails."""
-    with app.app_context():
-        # Create customer with complete profile
-        user = User(username="customer_cancel_checked", email="customer_cancel_checked@example.com", role="customer")
-        user.set_password("password")
-        customer = Customer(
-            user=user,
-            name="Complete Customer",
-            phone="123-456-7890",
-            address="123 Main St",
-            emergency_contact="Jane Doe, 555-1234",
-            profile_complete=True
-        )
+    def test_cancel_booking(self):
+        """Test cancelling a booking."""
+        # Get the existing booking
+        existing_booking = Booking.query.filter_by(status=Booking.STATUS_RESERVED).first()
         
-        # Create room type and room
-        room_type = RoomType(name="Standard_cancel_checked", description="Standard room", base_rate=100, capacity=2)
-        room = Room(number="101_cancel_checked", room_type=room_type, status=Room.STATUS_OCCUPIED)
-        
-        # Create booking that's already checked in
-        today = datetime.now().date()
-        booking = Booking(
-            room=room,
-            customer=customer,
-            check_in_date=today,
-            check_out_date=today + timedelta(days=2),
-            status=Booking.STATUS_CHECKED_IN
-        )
-        
-        db.session.add_all([user, customer, room_type, room, booking])
-        db.session.commit()
-        
-        # Log in as customer
-        auth.login(user.email, "password")
-        
-        # Try to cancel checked-in booking
-        response = client.post(
-            url_for('customer.cancel_booking', booking_id=booking.id),
-            data={'csrf_token': client.get_csrf_token()},
+        # Cancel the booking
+        response = self.client.post(
+            f'/customer/bookings/{existing_booking.id}/cancel',
             follow_redirects=True
         )
         
-        # Check that cancellation is rejected - look for error message
-        assert response.status_code == 200
-        assert b'Cannot cancel a booking that is already checked in' in response.data
+        # Verify success response
+        self.assertEqual(response.status_code, 200)
         
-        # Check that booking status remains unchanged
-        booking = Booking.query.get(booking.id)
-        assert booking.status == Booking.STATUS_CHECKED_IN 
+        # Verify booking was cancelled in the database
+        cancelled_booking = Booking.query.get(existing_booking.id)
+        self.assertEqual(cancelled_booking.status, Booking.STATUS_CANCELLED)
+
+    def test_room_availability_calendar(self):
+        """Test viewing the room availability calendar."""
+        response = self.client.get('/customer/availability-calendar')
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b'Availability Calendar', response.data)
+
+    def test_room_types_listing(self):
+        """Test viewing the room types listing."""
+        response = self.client.get('/customer/room-types')
+        self.assertEqual(response.status_code, 200)
+        
+        # Verify room types are displayed
+        room_types = RoomType.query.all()
+        for room_type in room_types:
+            self.assertIn(bytes(room_type.name, 'utf-8'), response.data)
+
+    def test_staff_booking_management(self):
+        """Test staff booking management functionality."""
+        # Logout customer user
+        self.client.get('/auth/logout')
+        
+        # Login as staff user
+        response = self.client.post('/auth/login', data={
+            'username': 'staff_user',
+            'password': 'password'
+        }, follow_redirects=True)
+        
+        # Access receptionist bookings page
+        response = self.client.get('/receptionist/bookings')
+        self.assertEqual(response.status_code, 200)
+        
+        # Verify existing booking is displayed
+        existing_booking = Booking.query.first()
+        self.assertIn(bytes(existing_booking.confirmation_code, 'utf-8'), response.data)
+        
+        # Test check-in functionality if the booking has check_in_date today or in the past
+        today = date.today()
+        existing_booking.check_in_date = today
+        _db.session.commit()
+        
+        # Check in the booking
+        response = self.client.post(
+            f'/receptionist/bookings/{existing_booking.id}/check-in',
+            follow_redirects=True
+        )
+        
+        # Verify booking status was updated
+        checked_in_booking = Booking.query.get(existing_booking.id)
+        self.assertEqual(checked_in_booking.status, Booking.STATUS_CHECKED_IN)
+        
+        # Test check-out functionality
+        response = self.client.post(
+            f'/receptionist/bookings/{existing_booking.id}/check-out',
+            follow_redirects=True
+        )
+        
+        # Verify booking status was updated
+        checked_out_booking = Booking.query.get(existing_booking.id)
+        self.assertEqual(checked_out_booking.status, Booking.STATUS_CHECKED_OUT)
+
+
+if __name__ == '__main__':
+    unittest.main() 

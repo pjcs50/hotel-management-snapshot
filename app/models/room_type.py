@@ -11,7 +11,7 @@ from db import db
 
 class RoomType(db.Model):
     """Model representing a type of room in the hotel.
-    
+
     This model stores information about room types, including their
     name, description, base price, capacity, amenities, and images.
     """
@@ -26,17 +26,17 @@ class RoomType(db.Model):
     has_view = db.Column(db.Boolean, default=False)
     has_balcony = db.Column(db.Boolean, default=False)
     smoking_allowed = db.Column(db.Boolean, default=False)
-    
+
     # New fields for enhanced functionality
     amenities_json = db.Column(db.Text, nullable=True, default='[]')
-    image_main = db.Column(db.String(255), nullable=True)
+    image_main = db.Column(db.String(255), nullable=True, default='https://images.unsplash.com/photo-1566665797739-1674de7a421a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1074&q=80')
     image_gallery = db.Column(db.Text, nullable=True, default='[]')  # JSON string of image URLs
-    size_sqm = db.Column(db.Float, nullable=True)  # Room size in square meters
-    bed_type = db.Column(db.String(100), nullable=True)  # e.g., "King", "Queen", "Twin"
+    size_sqm = db.Column(db.Float, nullable=False, default=25.0)  # Room size in square meters
+    bed_type = db.Column(db.String(100), nullable=False, default="Queen Bed")  # e.g., "King", "Queen", "Twin"
     max_occupants = db.Column(db.Integer, default=2)  # Maximum number of occupants
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
+
     # Relationships - these will be defined by SQLAlchemy backref
     # rooms: One-to-many relationship with Room model
     # pricing_rules: One-to-many relationship with SeasonalRate model
@@ -44,47 +44,47 @@ class RoomType(db.Model):
     def __repr__(self):
         """Return a helpful representation of this instance."""
         return f"<RoomType id={self.id} name={self.name} price=${self.base_rate:.2f}>"
-    
+
     @property
     def amenities(self):
         """Return a list of amenities for this room type.
-        
+
         Returns:
             list: A list of strings representing the amenities for this room type.
         """
         standard_amenities = []
-        
+
         if self.has_view:
             standard_amenities.append("Scenic View")
         if self.has_balcony:
             standard_amenities.append("Private Balcony")
         if self.smoking_allowed:
             standard_amenities.append("Smoking Allowed")
-        
+
         # Add custom amenities from JSON
         try:
             custom_amenities = json.loads(self.amenities_json or '[]')
             return standard_amenities + custom_amenities
         except (json.JSONDecodeError, TypeError):
             return standard_amenities
-    
+
     @amenities.setter
     def amenities(self, amenities_list):
         """Set the amenities list for this room type.
-        
+
         Args:
             amenities_list: A list of strings representing custom amenities
         """
         # Filter out standard amenities that are tracked in separate fields
         standard_amenities = ["Scenic View", "Private Balcony", "Smoking Allowed"]
         custom_amenities = [a for a in amenities_list if a not in standard_amenities]
-        
+
         self.amenities_json = json.dumps(custom_amenities)
-    
+
     @property
     def gallery_images(self):
         """Return the list of image URLs for the gallery.
-        
+
         Returns:
             list: A list of strings representing image URLs
         """
@@ -92,46 +92,46 @@ class RoomType(db.Model):
             return json.loads(self.image_gallery or '[]')
         except (json.JSONDecodeError, TypeError):
             return []
-    
+
     @gallery_images.setter
     def gallery_images(self, image_urls):
         """Set the gallery images for this room type.
-        
+
         Args:
             image_urls: A list of strings representing image URLs
         """
         self.image_gallery = json.dumps(image_urls)
-    
+
     @property
     def is_available(self):
         """Check if there are any available rooms of this type.
-        
+
         Returns:
             bool: True if there are available rooms, False otherwise
         """
         from app.models.room import Room
-        
+
         available_count = Room.query.filter_by(
             room_type_id=self.id,
             status=Room.STATUS_AVAILABLE
         ).count()
-        
+
         return available_count > 0
-    
+
     @property
     def available_count(self):
         """Get the number of available rooms of this type.
-        
+
         Returns:
             int: The number of available rooms
         """
         from app.models.room import Room
-        
+
         return Room.query.filter_by(
             room_type_id=self.id,
             status=Room.STATUS_AVAILABLE
         ).count()
-    
+
     def to_dict(self):
         """Return a dictionary representation of the room type."""
         return {
@@ -153,4 +153,4 @@ class RoomType(db.Model):
             'is_available': self.is_available,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
-        } 
+        }
