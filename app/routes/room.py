@@ -173,12 +173,41 @@ def mark_room_cleaned(room_id):
 @login_required
 def api_available_rooms():
     """API endpoint to get available rooms."""
-    room_service = RoomService(db.session)
-    rooms = room_service.get_available_rooms()
+    from datetime import datetime
+    from app.services.booking_service import BookingService
     
-    return jsonify([{
-        'id': room.id,
-        'number': room.number,
-        'type': room.room_type.name,
-        'status': room.status
-    } for room in rooms]) 
+    # Get date parameters from query string
+    check_in_str = request.args.get('check_in_date')
+    check_out_str = request.args.get('check_out_date')
+    room_type_id = request.args.get('room_type_id', type=int)
+    
+    # Parse dates if provided
+    check_in_date = None
+    check_out_date = None
+    
+    try:
+        if check_in_str:
+            check_in_date = datetime.strptime(check_in_str, '%Y-%m-%d').date()
+        if check_out_str:
+            check_out_date = datetime.strptime(check_out_str, '%Y-%m-%d').date()
+    except ValueError:
+        return jsonify({'error': 'Invalid date format. Use YYYY-MM-DD'}), 400
+    
+    # Use BookingService to get available rooms with date filtering
+    booking_service = BookingService(db.session)
+    rooms = booking_service.get_available_rooms(
+        room_type_id=room_type_id,
+        check_in_date=check_in_date,
+        check_out_date=check_out_date
+    )
+    
+    return jsonify({
+        'rooms': [{
+            'id': room.id,
+            'number': room.number,
+            'room_type': room.room_type.name,
+            'rate': float(room.room_type.base_rate),
+            'status': room.status,
+            'capacity': room.room_type.capacity
+        } for room in rooms]
+    }) 

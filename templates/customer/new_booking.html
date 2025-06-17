@@ -278,7 +278,7 @@
                 check_out_date: checkOutInput.value
             });
             
-            fetch(`{{ url_for('customer.get_available_rooms') }}?${params}`)
+            fetch(`{{ url_for('room.api_available_rooms') }}?${params}`)
                 .then(response => response.json())
                 .then(data => {
                     roomSelect.innerHTML = '<option value="">Select a room...</option>';
