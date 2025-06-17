@@ -768,13 +768,23 @@ def new_booking():
                 # email_service.send_booking_confirmation(booking)
 
                 # Create a notification for the customer
-                notification_service = NotificationService(db.session)
-                notification_service.create_notification(
-                    user_id=current_user.id,
-                    message=f"Your booking #{booking.confirmation_code} has been confirmed.",
-                    type='booking_confirmation',
-                    link_url=url_for('customer.booking_confirmation', booking_id=booking.id)
-                )
+                try:
+                    notification_service = NotificationService(db.session)
+                    notification_service.create_notification(
+                        user_id=current_user.id,
+                        message=f"Your booking #{booking.confirmation_code} has been confirmed.",
+                        type='booking_confirmation',
+                        link_url=url_for('customer.booking_confirmation', booking_id=booking.id),
+                        priority='normal',
+                        category='booking',
+                        channels='web',
+                        related_entity_type='booking',
+                        related_entity_id=booking.id
+                    )
+                except Exception as notification_error:
+                    # Log the notification error but don't fail the booking
+                    current_app.logger.error(f"Failed to create notification: {notification_error}")
+                    # Don't re-raise as the booking was successful
 
                 flash('Your booking has been created successfully! Confirmation # {}'.format(booking.confirmation_code or booking.id), 'success')
                 return redirect(url_for('customer.booking_confirmation', booking_id=booking.id))

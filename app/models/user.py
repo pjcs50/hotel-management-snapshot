@@ -50,6 +50,7 @@ class User(BaseModel, UserMixin):
     
     notifications = db.relationship(
         "Notification", 
+        foreign_keys="Notification.user_id",
         back_populates="user", 
         cascade="all, delete-orphan", 
         order_by="desc(Notification.created_at)",

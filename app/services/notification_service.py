@@ -12,7 +12,7 @@ class NotificationService:
     def __init__(self, db_session):
         self.db_session = db_session
 
-    def create_notification(self, user_id, message, type=None, link_url=None):
+    def create_notification(self, user_id, message, type=None, link_url=None, priority='normal', category='general', channels='web', **kwargs):
         """
         Create a new notification for a user.
 
@@ -21,6 +21,10 @@ class NotificationService:
             message (str): The notification message.
             type (str, optional): The type of notification (e.g., 'booking_update').
             link_url (str, optional): A URL for the notification to link to.
+            priority (str, optional): Priority level ('low', 'normal', 'high', 'urgent'). Defaults to 'normal'.
+            category (str, optional): Category of notification. Defaults to 'general'.
+            channels (str, optional): Delivery channels. Defaults to 'web'.
+            **kwargs: Additional notification fields.
 
         Returns:
             Notification: The created Notification object or None if user not found.
@@ -30,15 +34,25 @@ class NotificationService:
             # Or raise an error, or log: print(f"User with ID {user_id} not found. Cannot create notification.")
             return None 
 
-        notification = Notification(
-            user_id=user_id,
-            message=message,
-            type=type,
-            link_url=link_url
-        )
-        self.db_session.add(notification)
-        self.db_session.commit()
-        return notification
+        try:
+            notification = Notification(
+                user_id=user_id,
+                message=message,
+                type=type,
+                link_url=link_url,
+                priority=priority,
+                category=category,
+                channels=channels,
+                **kwargs
+            )
+            self.db_session.add(notification)
+            self.db_session.commit()
+            return notification
+        except Exception as e:
+            # If there's an error, rollback the transaction
+            self.db_session.rollback()
+            # Re-raise the exception so the caller can handle it
+            raise e
 
     def get_user_notifications(self, user_id, limit=10, include_read=False):
         """
