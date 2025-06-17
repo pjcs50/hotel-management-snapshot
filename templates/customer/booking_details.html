@@ -179,8 +179,8 @@
                     {% if booking.room.room_type.amenities %}
                         <h6>Amenities:</h6>
                         <ul class="list-inline">
-                            {% for amenity in booking.room.room_type.amenities.split(',') %}
-                                <li class="list-inline-item"><span class="badge bg-light text-dark border">{{ amenity.strip() }}</span></li>
+                            {% for amenity in booking.room.room_type.amenities %}
+                                <li class="list-inline-item"><span class="badge bg-light text-dark border">{{ amenity }}</span></li>
                             {% endfor %}
                         </ul>
                     {% endif %}

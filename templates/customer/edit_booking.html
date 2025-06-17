@@ -114,7 +114,7 @@
                                     <p class="card-text"><strong>Capacity:</strong> {{ room_type.capacity }} person(s)</p>
                                     <p class="card-text small"><em>{{ room_type.description }}</em></p>
                                     {% if room_type.amenities %}
-                                    <p class="card-text small"><strong>Amenities:</strong><br>{{ room_type.amenities }}</p>
+                                    <p class="card-text small"><strong>Amenities:</strong><br>{{ room_type.amenities|join(', ') }}</p>
                                     {% endif %}
                                 </div>
                             </div>

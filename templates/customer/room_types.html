@@ -249,7 +249,7 @@
                                 <i class="bi bi-stars" style="color: var(--clean-text-muted);"></i>
                                 Amenities
                             </h4>
-                            <p style="font-size: var(--clean-font-sm); color: var(--clean-text-muted); margin: 0; line-height: 1.5;">{{ room_type.amenities }}</p>
+                            <p style="font-size: var(--clean-font-sm); color: var(--clean-text-muted); margin: 0; line-height: 1.5;">{{ room_type.amenities|join(', ') }}</p>
                         </div>
                         {% endif %}
 

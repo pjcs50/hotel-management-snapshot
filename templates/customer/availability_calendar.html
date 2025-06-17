@@ -138,7 +138,7 @@
                                     <p class="card-text"><strong>Rate:</strong> ${{ room_type.base_rate }}/night</p>
                                     <p class="card-text"><strong>Capacity:</strong> {{ room_type.capacity }} person(s)</p>
                                     <p class="card-text small">{{ room_type.description }}</p>
-                                    <p class="card-text small"><strong>Amenities:</strong><br>{{ room_type.amenities }}</p>
+                                    <p class="card-text small"><strong>Amenities:</strong><br>{{ room_type.amenities|join(', ') }}</p>
                                 </div>
                                 <div class="card-footer bg-white">
                                     <a href="{{ url_for('customer.new_booking') }}" class="btn btn-primary btn-sm w-100">

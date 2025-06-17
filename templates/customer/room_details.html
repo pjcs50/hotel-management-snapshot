@@ -106,7 +106,7 @@
                     </h2>
                 </div>
                 <div class="clean-card-body">
-                    <p style="color: var(--clean-text); line-height: 1.6; margin: 0;">{{ room_type.amenities }}</p>
+                    <p style="color: var(--clean-text); line-height: 1.6; margin: 0;">{{ room_type.amenities|join(', ') }}</p>
                 </div>
             </div>
             {% endif %}
