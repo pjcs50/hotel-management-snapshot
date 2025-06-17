@@ -1,0 +1,272 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}{{ room_type.name }} - Room Details{% endblock %}
+
+{% block content %}
+<div class="clean-container">
+    <!-- Breadcrumb -->
+    <nav style="margin-bottom: var(--clean-space-6);">
+        <ol style="display: flex; list-style: none; padding: 0; margin: 0; gap: var(--clean-space-2); font-size: var(--clean-font-sm); color: var(--clean-text-muted);">
+            <li><a href="{{ url_for('customer.dashboard') }}" style="color: var(--clean-primary); text-decoration: none;">Dashboard</a></li>
+            <li><i class="bi bi-chevron-right"></i></li>
+            <li><a href="{{ url_for('customer.room_types') }}" style="color: var(--clean-primary); text-decoration: none;">Room Types</a></li>
+            <li><i class="bi bi-chevron-right"></i></li>
+            <li style="color: var(--clean-text);">{{ room_type.name }}</li>
+        </ol>
+    </nav>
+
+    <!-- Page Header -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--clean-space-6); gap: var(--clean-space-4);">
+        <div>
+            <h1 style="font-size: var(--clean-font-3xl); font-weight: 700; color: var(--clean-text); margin: 0 0 var(--clean-space-2) 0;">{{ room_type.name }}</h1>
+            <p style="font-size: var(--clean-font-lg); color: var(--clean-text-muted); margin: 0;">{{ room_type.description }}</p>
+        </div>
+        <div style="text-align: right;">
+            <div style="font-size: var(--clean-font-2xl); font-weight: 700; color: var(--clean-text);">${{ "%.0f"|format(room_type.base_rate) }}</div>
+            <div style="font-size: var(--clean-font-sm); color: var(--clean-text-muted);">per night</div>
+        </div>
+    </div>
+
+    <div class="clean-grid clean-lg-grid-cols-3 clean-gap-6">
+        <!-- Main Content -->
+        <div class="clean-lg-col-span-2">
+            <!-- Room Images -->
+            <div class="clean-card" style="margin-bottom: var(--clean-space-6);">
+                <div style="position: relative; height: 400px; overflow: hidden; border-radius: var(--clean-radius) var(--clean-radius) 0 0;">
+                    <img src="{{ room_type.image_main or '/static/images/default-room.jpg' }}" 
+                         style="width: 100%; height: 100%; object-fit: cover;" 
+                         alt="{{ room_type.name }}"
+                         loading="lazy">
+                    
+                    <!-- Availability Badge -->
+                    {% if available_rooms %}
+                    <div style="position: absolute; top: var(--clean-space-4); right: var(--clean-space-4);">
+                        <span class="clean-badge clean-badge-success clean-badge-lg">
+                            <i class="bi bi-check-circle"></i>
+                            {{ available_rooms|length }} Available
+                        </span>
+                    </div>
+                    {% else %}
+                    <div style="position: absolute; top: var(--clean-space-4); right: var(--clean-space-4);">
+                        <span class="clean-badge clean-badge-danger clean-badge-lg">
+                            <i class="bi bi-x-circle"></i>
+                            Unavailable
+                        </span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Room Features -->
+            <div class="clean-card" style="margin-bottom: var(--clean-space-6);">
+                <div class="clean-card-header">
+                    <h2 class="clean-card-title">Room Features</h2>
+                </div>
+                <div class="clean-card-body">
+                    <div class="clean-grid clean-grid-cols-2 clean-gap-4">
+                        <div style="display: flex; align-items: center; gap: var(--clean-space-3); padding: var(--clean-space-3); background: var(--clean-background); border-radius: var(--clean-radius);">
+                            <i class="bi bi-people" style="font-size: var(--clean-font-xl); color: var(--clean-primary);"></i>
+                            <div>
+                                <div style="font-weight: 600; color: var(--clean-text);">{{ room_type.capacity }} Guests</div>
+                                <div style="font-size: var(--clean-font-sm); color: var(--clean-text-muted);">Maximum occupancy</div>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: var(--clean-space-3); padding: var(--clean-space-3); background: var(--clean-background); border-radius: var(--clean-radius);">
+                            <i class="bi bi-rulers" style="font-size: var(--clean-font-xl); color: var(--clean-primary);"></i>
+                            <div>
+                                <div style="font-weight: 600; color: var(--clean-text);">{{ room_type.size or 'Standard' }} m²</div>
+                                <div style="font-size: var(--clean-font-sm); color: var(--clean-text-muted);">Room size</div>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: var(--clean-space-3); padding: var(--clean-space-3); background: var(--clean-background); border-radius: var(--clean-radius);">
+                            <i class="bi bi-door-open" style="font-size: var(--clean-font-xl); color: var(--clean-primary);"></i>
+                            <div>
+                                <div style="font-weight: 600; color: var(--clean-text);">{{ room_type.bed_type or 'Standard Bed' }}</div>
+                                <div style="font-size: var(--clean-font-sm); color: var(--clean-text-muted);">Bed configuration</div>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: var(--clean-space-3); padding: var(--clean-space-3); background: var(--clean-background); border-radius: var(--clean-radius);">
+                            <i class="bi bi-wifi" style="font-size: var(--clean-font-xl); color: var(--clean-primary);"></i>
+                            <div>
+                                <div style="font-weight: 600; color: var(--clean-text);">Free WiFi</div>
+                                <div style="font-size: var(--clean-font-sm); color: var(--clean-text-muted);">High-speed internet</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Amenities -->
+            {% if room_type.amenities %}
+            <div class="clean-card" style="margin-bottom: var(--clean-space-6);">
+                <div class="clean-card-header">
+                    <h2 class="clean-card-title">
+                        <i class="bi bi-stars"></i>
+                        Amenities & Services
+                    </h2>
+                </div>
+                <div class="clean-card-body">
+                    <p style="color: var(--clean-text); line-height: 1.6; margin: 0;">{{ room_type.amenities }}</p>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Sample Rooms -->
+            {% if sample_rooms %}
+            <div class="clean-card">
+                <div class="clean-card-header">
+                    <h2 class="clean-card-title">Available Rooms</h2>
+                </div>
+                <div class="clean-card-body">
+                    <div class="clean-grid clean-gap-3">
+                        {% for room in sample_rooms %}
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: var(--clean-space-3); background: var(--clean-background); border-radius: var(--clean-radius);">
+                            <div style="display: flex; align-items: center; gap: var(--clean-space-3);">
+                                <i class="bi bi-door-closed" style="color: var(--clean-primary);"></i>
+                                <div>
+                                    <div style="font-weight: 600; color: var(--clean-text);">Room {{ room.number }}</div>
+                                    <div style="font-size: var(--clean-font-sm); color: var(--clean-text-muted);">{{ room.room_type.name }}</div>
+                                </div>
+                            </div>
+                            <div>
+                                {% if room.status == 'available' %}
+                                <span class="clean-badge clean-badge-success">Available</span>
+                                {% elif room.status == 'occupied' %}
+                                <span class="clean-badge clean-badge-warning">Occupied</span>
+                                {% elif room.status == 'maintenance' %}
+                                <span class="clean-badge clean-badge-danger">Maintenance</span>
+                                {% else %}
+                                <span class="clean-badge clean-badge-secondary">{{ room.status|title }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div>
+            <!-- Booking Card -->
+            <div class="clean-card" style="margin-bottom: var(--clean-space-6);">
+                <div class="clean-card-header">
+                    <h3 class="clean-card-title">Book This Room</h3>
+                </div>
+                <div class="clean-card-body">
+                    <form method="get" id="availabilityForm">
+                        <div class="clean-form-group" style="margin-bottom: var(--clean-space-4);">
+                            <label for="check_in_date" class="clean-form-label">
+                                <i class="bi bi-calendar-event"></i>
+                                Check-in Date
+                            </label>
+                            <input type="date" class="clean-form-control" id="check_in_date" name="check_in_date"
+                                   value="{{ check_in_date.strftime('%Y-%m-%d') }}" min="{{ today_str }}">
+                        </div>
+                        
+                        <div class="clean-form-group" style="margin-bottom: var(--clean-space-4);">
+                            <label for="check_out_date" class="clean-form-label">
+                                <i class="bi bi-calendar-event"></i>
+                                Check-out Date
+                            </label>
+                            <input type="date" class="clean-form-control" id="check_out_date" name="check_out_date"
+                                   value="{{ check_out_date.strftime('%Y-%m-%d') }}" min="{{ tomorrow_str }}">
+                        </div>
+                        
+                        <button type="submit" class="clean-btn clean-btn-outline clean-w-full" style="margin-bottom: var(--clean-space-4);">
+                            <i class="bi bi-arrow-clockwise"></i>
+                            Update Availability
+                        </button>
+                    </form>
+
+                    <!-- Pricing Summary -->
+                    {% if estimated_price and nights > 0 %}
+                    <div style="background: var(--clean-background); border-radius: var(--clean-radius); padding: var(--clean-space-4); margin-bottom: var(--clean-space-4);">
+                        <h4 style="font-size: var(--clean-font-base); font-weight: 600; color: var(--clean-text); margin: 0 0 var(--clean-space-3) 0;">Pricing Summary</h4>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: var(--clean-space-2);">
+                            <span style="color: var(--clean-text-muted);">${{ "%.0f"|format(room_type.base_rate) }} x {{ nights }} night{{ 's' if nights != 1 }}</span>
+                            <span style="color: var(--clean-text);">${{ "%.2f"|format(estimated_price) }}</span>
+                        </div>
+                        <hr style="border: none; border-top: 1px solid var(--clean-border); margin: var(--clean-space-3) 0;">
+                        <div style="display: flex; justify-content: space-between; font-weight: 600;">
+                            <span style="color: var(--clean-text);">Total</span>
+                            <span style="color: var(--clean-text); font-size: var(--clean-font-lg);">${{ "%.2f"|format(estimated_price) }}</span>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Action Buttons -->
+                    {% if available_rooms %}
+                        <a href="{{ url_for('customer.new_booking', room_type_id=room_type.id, check_in_date=check_in_date, check_out_date=check_out_date) }}" 
+                           class="clean-btn clean-btn-primary clean-w-full" style="margin-bottom: var(--clean-space-3);">
+                            <i class="bi bi-calendar-plus"></i>
+                            Book Now
+                        </a>
+                    {% else %}
+                        <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid var(--clean-danger); border-radius: var(--clean-radius); padding: var(--clean-space-3); margin-bottom: var(--clean-space-3); text-align: center;">
+                            <i class="bi bi-x-circle" style="color: var(--clean-danger); margin-bottom: var(--clean-space-2);"></i>
+                            <div style="font-size: var(--clean-font-sm); color: var(--clean-text);">No rooms available for selected dates</div>
+                        </div>
+                        <a href="{{ url_for('customer.room_types') }}" class="clean-btn clean-btn-outline clean-w-full" style="margin-bottom: var(--clean-space-3);">
+                            <i class="bi bi-arrow-left"></i>
+                            Try Different Dates
+                        </a>
+                    {% endif %}
+                    
+                    <a href="{{ url_for('customer.availability_calendar') }}" class="clean-btn clean-btn-outline clean-w-full">
+                        <i class="bi bi-calendar3"></i>
+                        View Calendar
+                    </a>
+                </div>
+            </div>
+
+            <!-- Quick Info -->
+            <div class="clean-card">
+                <div class="clean-card-header">
+                    <h3 class="clean-card-title">Hotel Information</h3>
+                </div>
+                <div class="clean-card-body">
+                    <div style="display: flex; align-items: center; gap: var(--clean-space-2); margin-bottom: var(--clean-space-3);">
+                        <i class="bi bi-clock" style="color: var(--clean-text-muted);"></i>
+                        <div>
+                            <div style="font-size: var(--clean-font-sm); font-weight: 600; color: var(--clean-text);">Check-in: 3:00 PM</div>
+                            <div style="font-size: var(--clean-font-sm); color: var(--clean-text-muted);">Check-out: 11:00 AM</div>
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: var(--clean-space-2); margin-bottom: var(--clean-space-3);">
+                        <i class="bi bi-telephone" style="color: var(--clean-text-muted);"></i>
+                        <div>
+                            <div style="font-size: var(--clean-font-sm); color: var(--clean-text);">+1-555-1234-5678</div>
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: var(--clean-space-2);">
+                        <i class="bi bi-envelope" style="color: var(--clean-text-muted);"></i>
+                        <div>
+                            <div style="font-size: var(--clean-font-sm); color: var(--clean-text);">contact@horizonhotel.com</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const checkInInput = document.getElementById('check_in_date');
+    const checkOutInput = document.getElementById('check_out_date');
+    
+    // Set minimum dates and validate date selection
+    checkInInput.addEventListener('change', function() {
+        const selectedDate = new Date(this.value);
+        selectedDate.setDate(selectedDate.getDate() + 1);
+        checkOutInput.min = selectedDate.toISOString().split('T')[0];
+        
+        if (checkOutInput.value && checkOutInput.value <= this.value) {
+            checkOutInput.value = selectedDate.toISOString().split('T')[0];
+        }
+    });
+});
+</script>
+{% endblock %} 

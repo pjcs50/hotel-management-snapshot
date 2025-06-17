@@ -1013,6 +1013,74 @@ def room_types():
     )
 
 
+@customer_bp.route('/room-details/<int:room_type_id>')
+@login_required
+@role_required('customer')
+def room_details(room_type_id):
+    """Display detailed information about a specific room type."""
+    # Get the room type
+    room_type = RoomType.query.get_or_404(room_type_id)
+    
+    # Get sample rooms of this type for additional details
+    sample_rooms = Room.query.filter_by(room_type_id=room_type_id).limit(3).all()
+    
+    # Get date parameters for availability check
+    check_in_date_str = request.args.get('check_in_date')
+    check_out_date_str = request.args.get('check_out_date')
+    
+    # Parse date parameters or use defaults
+    today = datetime.now().date()
+    tomorrow = today + timedelta(days=1)
+    
+    try:
+        check_in_date = datetime.strptime(check_in_date_str, '%Y-%m-%d').date() if check_in_date_str else today
+        check_out_date = datetime.strptime(check_out_date_str, '%Y-%m-%d').date() if check_out_date_str else tomorrow
+        
+        # Validate dates
+        if check_in_date < today:
+            check_in_date = today
+        if check_out_date <= check_in_date:
+            check_out_date = check_in_date + timedelta(days=1)
+    except ValueError:
+        check_in_date = today
+        check_out_date = tomorrow
+    
+    # Check availability for this room type
+    booking_service = BookingService(db.session)
+    available_rooms = booking_service.get_available_rooms(
+        room_type_id=room_type_id,
+        check_in_date=check_in_date,
+        check_out_date=check_out_date
+    )
+    
+    # Calculate pricing
+    estimated_price = None
+    nights = (check_out_date - check_in_date).days
+    if available_rooms and nights > 0:
+        try:
+            # Use the first available room for price calculation
+            estimated_price = booking_service.calculate_booking_price(
+                room_id=available_rooms[0].id,
+                check_in_date=check_in_date,
+                check_out_date=check_out_date
+            )
+        except Exception:
+            estimated_price = room_type.base_rate * nights
+    
+    return render_template(
+        'customer/room_details.html',
+        room_type=room_type,
+        sample_rooms=sample_rooms,
+        available_rooms=available_rooms,
+        check_in_date=check_in_date,
+        check_out_date=check_out_date,
+        estimated_price=estimated_price,
+        nights=nights,
+        today_str=today.strftime('%Y-%m-%d'),
+        tomorrow_str=tomorrow.strftime('%Y-%m-%d')
+    )
+
+
 @customer_bp.route('/help')
 @login_required
 @role_required('customer')

@@ -63,6 +63,22 @@ class BookingService:
         """
         return self.db_session.get(Booking, booking_id)
 
+    def get_booking_by_id_and_customer(self, booking_id, customer_id):
+        """
+        Get a booking by ID that belongs to a specific customer.
+
+        Args:
+            booking_id: ID of the booking
+            customer_id: ID of the customer
+
+        Returns:
+            The booking or None if not found or doesn't belong to customer
+        """
+        return self.db_session.query(Booking).filter(
+            Booking.id == booking_id,
+            Booking.customer_id == customer_id
+        ).first()
+
     def is_booking_owned_by_customer(self, booking_id, customer_id):
         """
         Check if a booking is owned by a customer.
