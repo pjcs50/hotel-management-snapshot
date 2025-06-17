@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reservation Receipt - #{{ booking.id }}</title>
+    <style>
+        /* Print-friendly clean design */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            color: #1f2937;
+            line-height: 1.6;
+            background: #ffffff;
+            font-size: 14px;
+        }
+
+        .receipt-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px;
+            background: white;
+        }
+
+        .receipt-header {
+            text-align: center;
+            margin-bottom: 40px;
+            border-bottom: 3px solid #3b82f6;
+            padding-bottom: 24px;
+        }
+
+        .hotel-name {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+
+        .receipt-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #6b7280;
+            margin-bottom: 16px;
+        }
+
+        .booking-id {
+            font-size: 18px;
+            color: #3b82f6;
+            font-weight: 600;
+        }
+
+        .section {
+            margin-bottom: 32px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 16px;
+        }
+
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .detail-item:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: #6b7280;
+            flex-shrink: 0;
+            margin-right: 16px;
+        }
+
+        .detail-value {
+            font-weight: 500;
+            color: #1f2937;
+            text-align: right;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-reserved { background: #dbeafe; color: #1d4ed8; }
+        .status-checked-in { background: #dcfce7; color: #166534; }
+        .status-checked-out { background: #f1f5f9; color: #475569; }
+        .status-cancelled { background: #fee2e2; color: #dc2626; }
+        .status-no-show { background: #fef3c7; color: #d97706; }
+
+        .total-section {
+            background: #f8fafc;
+            padding: 24px;
+            border-radius: 8px;
+            border: 2px solid #e5e7eb;
+        }
+
+        .total-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+        }
+
+        .total-item.final {
+            border-top: 2px solid #3b82f6;
+            margin-top: 16px;
+            padding-top: 16px;
+            font-size: 18px;
+            font-weight: 700;
+            color: #1f2937;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 48px;
+            padding-top: 24px;
+            border-top: 2px solid #e5e7eb;
+            color: #6b7280;
+            font-style: italic;
+        }
+
+        .print-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s;
+        }
+
+        .print-btn:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+            box-shadow: 0 8px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        @media print {
+            .print-btn {
+                display: none !important;
+            }
+
+            body {
+                font-size: 12px;
+            }
+
+            .receipt-container {
+                padding: 0;
+                max-width: none;
+            }
+
+            .section {
+                page-break-inside: avoid;
+                margin-bottom: 24px;
+            }
+
+            .receipt-header {
+                margin-bottom: 32px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .detail-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+
+            .receipt-container {
+                padding: 20px;
+            }
+
+            .hotel-name {
+                font-size: 24px;
+            }
+
+            .receipt-title {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="print-btn" onclick="window.print()">
+        🖨️ Print Receipt
+    </button>
+
+    <div class="receipt-container">
+        <!-- Header -->
+        <div class="receipt-header">
+            <div class="hotel-name">Horizon Hotel</div>
+            <div class="receipt-title">Reservation Receipt</div>
+            <div class="booking-id">Booking #{{ booking.id }}</div>
+        </div>
+
+        <!-- Booking Information -->
+    <div class="section">
+            <h2 class="section-title">📅 Booking Information</h2>
+            <div class="detail-grid">
+                <div>
+                    <div class="detail-item">
+                        <span class="detail-label">Booking ID</span>
+                        <span class="detail-value">#{{ booking.id }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Status</span>
+                        <span class="detail-value">
+                            {% if booking.status == 'Reserved' %}
+                                <span class="status-badge status-reserved">Reserved</span>
+                            {% elif booking.status == 'Checked In' %}
+                                <span class="status-badge status-checked-in">Checked In</span>
+                            {% elif booking.status == 'Checked Out' %}
+                                <span class="status-badge status-checked-out">Checked Out</span>
+                            {% elif booking.status == 'Cancelled' %}
+                                <span class="status-badge status-cancelled">Cancelled</span>
+                            {% elif booking.status == 'No Show' %}
+                                <span class="status-badge status-no-show">No Show</span>
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Length of Stay</span>
+                        <span class="detail-value">{{ booking.nights }} night(s)</span>
+                    </div>
+                </div>
+                <div>
+                    <div class="detail-item">
+                        <span class="detail-label">Check-in Date</span>
+                        <span class="detail-value">{{ booking.check_in_date.strftime('%A, %B %d, %Y') }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Check-out Date</span>
+                        <span class="detail-value">{{ booking.check_out_date.strftime('%A, %B %d, %Y') }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Booking Date</span>
+                        <span class="detail-value">{{ booking.created_at.strftime('%B %d, %Y') }}</span>
+                    </div>
+                </div>
+            </div>
+    </div>
+
+        <!-- Guest Information -->
+    <div class="section">
+            <h2 class="section-title">👤 Guest Information</h2>
+            <div class="detail-grid">
+                <div>
+                    <div class="detail-item">
+                        <span class="detail-label">Guest Name</span>
+                        <span class="detail-value">{{ booking.customer.name }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Email Address</span>
+                        <span class="detail-value">{{ booking.customer.user.email }}</span>
+                    </div>
+                </div>
+                <div>
+                    <div class="detail-item">
+                        <span class="detail-label">Phone Number</span>
+                        <span class="detail-value">{{ booking.customer.phone or 'Not provided' }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Address</span>
+                        <span class="detail-value">{{ booking.customer.address or 'Not provided' }}</span>
+                    </div>
+                </div>
+            </div>
+    </div>
+
+        <!-- Room Information -->
+    <div class="section">
+            <h2 class="section-title">🏨 Room Information</h2>
+            <div class="detail-grid">
+                <div>
+                    <div class="detail-item">
+                        <span class="detail-label">Room Number</span>
+                        <span class="detail-value">{{ booking.room.number }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Room Type</span>
+                        <span class="detail-value">{{ booking.room.room_type.name }}</span>
+                    </div>
+                </div>
+                <div>
+                    <div class="detail-item">
+                        <span class="detail-label">Capacity</span>
+                        <span class="detail-value">{{ booking.room.room_type.capacity }} people</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Nightly Rate</span>
+                        <span class="detail-value">${{ booking.room.room_type.base_rate }}</span>
+                    </div>
+                </div>
+            </div>
+            
+            {% if booking.room.room_type.amenities %}
+            <div class="detail-item">
+                <span class="detail-label">Amenities</span>
+                <span class="detail-value">
+                    {% if booking.room.room_type.amenities is string %}
+                        {{ booking.room.room_type.amenities }}
+                    {% else %}
+                        {{ booking.room.room_type.amenities|join(', ') }}
+                    {% endif %}
+                </span>
+            </div>
+            {% endif %}
+    </div>
+
+        <!-- Pricing Details -->
+    <div class="section">
+            <h2 class="section-title">💰 Pricing Breakdown</h2>
+            <div class="total-section">
+                <div class="total-item">
+                    <span>Base Rate ({{ booking.nights }} night{{ 's' if booking.nights != 1 else '' }})</span>
+                    <span>${{ (booking.room.room_type.base_rate * booking.nights)|round(2) }}</span>
+                </div>
+                
+                {% if booking.early_hours > 0 %}
+                <div class="total-item">
+                    <span>Early Check-in ({{ booking.early_hours }} hours)</span>
+                    <span>${{ (booking.early_hours * 25)|round(2) }}</span>
+                </div>
+                {% endif %}
+                
+                {% if booking.late_hours > 0 %}
+                <div class="total-item">
+                    <span>Late Check-out ({{ booking.late_hours }} hours)</span>
+                    <span>${{ (booking.late_hours * 25)|round(2) }}</span>
+                </div>
+                {% endif %}
+                
+                <div class="total-item final">
+                    <span>Total Amount</span>
+                    <span>${{ booking.total_price|round(2) }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>Thank you for choosing Horizon Hotel!</p>
+            <p>We look forward to welcoming you.</p>
+    </div>
+    </div>
+</body>
+</html> 

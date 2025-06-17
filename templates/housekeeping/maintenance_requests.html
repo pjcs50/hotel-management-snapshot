@@ -1,0 +1,338 @@
+{% extends "dashboard_sidebar_base.html" %}
+
+{% block dashboard_title %}Maintenance{% endblock %}
+{% block sidebar_title %}Housekeeping Panel{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/clean-customer.css') }}">
+{% endblock %}
+
+{% block sidebar_links %}
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('housekeeping.dashboard') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-speedometer2"></i>
+        </div>
+        <span class="sidebar-nav-text">Dashboard</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('housekeeping.rooms_to_clean_view') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-brush"></i>
+        </div>
+        <span class="sidebar-nav-text">Rooms to Clean</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('housekeeping.checkout_rooms_view') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-door-open"></i>
+        </div>
+        <span class="sidebar-nav-text">Check-outs Today</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('housekeeping.cleaning_schedule') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-calendar-check"></i>
+        </div>
+        <span class="sidebar-nav-text">Cleaning Schedule</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('housekeeping.maintenance_requests') }}" class="sidebar-nav-link active">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-tools"></i>
+        </div>
+        <span class="sidebar-nav-text">Maintenance</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('housekeeping.view_lost_and_found') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-search"></i>
+        </div>
+        <span class="sidebar-nav-text">Lost & Found</span>
+    </a>
+</li>
+{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <!-- Clean Professional Header -->
+    <div class="clean-page-header">
+        <h1 class="clean-page-title">Maintenance Requests</h1>
+        <p class="clean-page-subtitle">View and create maintenance requests for hotel rooms</p>
+    </div>
+
+    <!-- Clean Main Container -->
+    <div class="clean-container">
+        <!-- Quick Navigation Links -->
+        <div class="clean-nav-grid">
+            <a href="{{ url_for('housekeeping.dashboard') }}" class="clean-nav-link">
+                <i class="bi bi-speedometer2"></i>
+                Dashboard
+            </a>
+            <a href="{{ url_for('housekeeping.rooms_to_clean_view') }}" class="clean-nav-link">
+                <i class="bi bi-brush"></i>
+                Rooms to Clean
+            </a>
+            <a href="{{ url_for('housekeeping.checkout_rooms_view') }}" class="clean-nav-link">
+                <i class="bi bi-door-open"></i>
+                Check-outs Today
+            </a>
+            <a href="{{ url_for('housekeeping.cleaning_schedule') }}" class="clean-nav-link">
+                <i class="bi bi-calendar-check"></i>
+                Cleaning Schedule
+            </a>
+        </div>
+
+        <!-- Request Statistics -->
+        <div class="clean-metrics-grid">
+            <div class="clean-metric-card">
+                <div class="clean-metric-header">
+                    <span class="clean-metric-label">Open Requests</span>
+                    <i class="bi bi-exclamation-circle clean-metric-icon" style="color: #F59E0B;"></i>
+                </div>
+                <div class="clean-metric-value">{{ requests | selectattr('status', 'eq', 'open') | list | length }}</div>
+                <div class="clean-metric-secondary">Awaiting assignment</div>
+            </div>
+
+            <div class="clean-metric-card">
+                <div class="clean-metric-header">
+                    <span class="clean-metric-label">In Progress</span>
+                    <i class="bi bi-gear clean-metric-icon" style="color: #3B82F6;"></i>
+                </div>
+                <div class="clean-metric-value">{{ requests | selectattr('status', 'eq', 'in_progress') | list | length }}</div>
+                <div class="clean-metric-secondary">Being worked on</div>
+            </div>
+
+            <div class="clean-metric-card">
+                <div class="clean-metric-header">
+                    <span class="clean-metric-label">Resolved</span>
+                    <i class="bi bi-check-circle clean-metric-icon" style="color: #10B981;"></i>
+                </div>
+                <div class="clean-metric-value">{{ requests | selectattr('status', 'eq', 'resolved') | list | length }}</div>
+                <div class="clean-metric-secondary">Completed today</div>
+            </div>
+
+            <div class="clean-metric-card">
+                <div class="clean-metric-header">
+                    <span class="clean-metric-label">High Priority</span>
+                    <i class="bi bi-exclamation-triangle clean-metric-icon" style="color: #EF4444;"></i>
+                </div>
+                <div class="clean-metric-value">{{ requests | selectattr('priority', 'in', ['high', 'urgent']) | list | length }}</div>
+                <div class="clean-metric-secondary">Needs attention</div>
+            </div>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px;">
+            <!-- Create New Request -->
+            <div class="clean-card">
+                <div class="clean-card-header">
+                    <h2 class="clean-card-title">Create New Request</h2>
+                </div>
+                <div class="clean-card-body">
+                    <form method="POST" action="{{ url_for('housekeeping.maintenance_requests') }}">
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; font-size: 14px; font-weight: 500; color: #1F2937; margin-bottom: 8px;">
+                                <i class="bi bi-house-door" style="margin-right: 8px;"></i>
+                                Room
+                            </label>
+                            <select name="room_id" required style="width: 100%; padding: 12px; border: 1px solid #E5E7EB; border-radius: 6px; font-size: 16px; color: #1F2937; background: white;">
+                                <option value="">Select a room</option>
+                                {% for room in rooms %}
+                                    <option value="{{ room.id }}">{{ room.number }} ({{ room.room_type.name }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; font-size: 14px; font-weight: 500; color: #1F2937; margin-bottom: 8px;">
+                                <i class="bi bi-gear" style="margin-right: 8px;"></i>
+                                Issue Type
+                            </label>
+                            <select name="issue_type" required style="width: 100%; padding: 12px; border: 1px solid #E5E7EB; border-radius: 6px; font-size: 16px; color: #1F2937; background: white;">
+                                <option value="">Select issue type</option>
+                                {% for issue_type in issue_types %}
+                                    <option value="{{ issue_type }}">{{ issue_type.replace('_', ' ').title() }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; font-size: 14px; font-weight: 500; color: #1F2937; margin-bottom: 8px;">
+                                <i class="bi bi-flag" style="margin-right: 8px;"></i>
+                                Priority
+                            </label>
+                            <select name="priority" style="width: 100%; padding: 12px; border: 1px solid #E5E7EB; border-radius: 6px; font-size: 16px; color: #1F2937; background: white;">
+                                {% for priority in priorities %}
+                                    <option value="{{ priority }}" {% if priority == 'normal' %}selected{% endif %}>{{ priority.title() }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div style="margin-bottom: 24px;">
+                            <label style="display: block; font-size: 14px; font-weight: 500; color: #1F2937; margin-bottom: 8px;">
+                                <i class="bi bi-file-text" style="margin-right: 8px;"></i>
+                                Description
+                            </label>
+                            <textarea name="description" rows="4" required placeholder="Describe the maintenance issue in detail..." style="width: 100%; padding: 12px; border: 1px solid #E5E7EB; border-radius: 6px; font-size: 16px; color: #1F2937; resize: vertical;"></textarea>
+                        </div>
+                        
+                        <button type="submit" class="clean-btn clean-btn-primary" style="width: 100%;">
+                            <i class="bi bi-plus-circle"></i>
+                            Create Request
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="clean-card">
+                <div class="clean-card-header">
+                    <h2 class="clean-card-title">Quick Actions</h2>
+                </div>
+                <div class="clean-card-body">
+                    <div style="display: grid; gap: 16px;">
+                        <a href="{{ url_for('housekeeping.report_maintenance_issue') }}" class="clean-btn clean-btn-outline" style="padding: 16px; text-align: center; text-decoration: none;">
+                            <i class="bi bi-exclamation-triangle" style="display: block; font-size: 24px; margin-bottom: 8px;"></i>
+                            <span style="font-weight: 500;">Report Issue</span>
+                            <div style="font-size: 12px; color: #6B7280; margin-top: 4px;">Quick report form</div>
+                        </a>
+                        
+                        <a href="{{ url_for('housekeeping.room_status') }}" class="clean-btn clean-btn-outline" style="padding: 16px; text-align: center; text-decoration: none;">
+                            <i class="bi bi-house-door" style="display: block; font-size: 24px; margin-bottom: 8px;"></i>
+                            <span style="font-weight: 500;">Room Status</span>
+                            <div style="font-size: 12px; color: #6B7280; margin-top: 4px;">Check room conditions</div>
+                        </a>
+                        
+                        <a href="{{ url_for('housekeeping.dashboard') }}" class="clean-btn clean-btn-outline" style="padding: 16px; text-align: center; text-decoration: none;">
+                            <i class="bi bi-speedometer2" style="display: block; font-size: 24px; margin-bottom: 8px;"></i>
+                            <span style="font-weight: 500;">Dashboard</span>
+                            <div style="font-size: 12px; color: #6B7280; margin-top: 4px;">Return to main view</div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Maintenance Requests List -->
+        {% if requests %}
+        <div class="clean-card">
+            <div class="clean-card-header">
+                <h2 class="clean-card-title">All Maintenance Requests</h2>
+                <div class="clean-card-controls">
+                    <span class="clean-badge clean-badge-primary">{{ requests | length }} request{% if requests | length != 1 %}s{% endif %}</span>
+                </div>
+            </div>
+            <div class="clean-card-body">
+                <div style="display: grid; gap: 16px;">
+                    {% for request in requests %}
+                    <div class="clean-metric-card" style="border-left: 4px solid {% if request.priority == 'urgent' %}#EF4444{% elif request.priority == 'high' %}#F59E0B{% elif request.priority == 'normal' %}#3B82F6{% else %}#6B7280{% endif %};">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 16px;">
+                            <div>
+                                <h3 style="font-size: 18px; font-weight: 600; color: #1F2937; margin: 0 0 8px 0;">
+                                    Room {{ request.room.number }} - {{ request.issue_type.replace('_', ' ').title() }}
+                                </h3>
+                                <div style="display: flex; gap: 12px; margin-bottom: 8px;">
+                                    <span class="clean-badge {% if request.status == 'open' %}clean-badge-warning{% elif request.status == 'in_progress' %}clean-badge-primary{% elif request.status == 'resolved' %}clean-badge-success{% else %}clean-badge{% endif %}">
+                                        {% if request.status == 'open' %}
+                                            <i class="bi bi-exclamation-circle"></i>
+                                        {% elif request.status == 'in_progress' %}
+                                            <i class="bi bi-gear"></i>
+                                        {% elif request.status == 'resolved' %}
+                                            <i class="bi bi-check-circle"></i>
+                                        {% endif %}
+                                        {{ request.status.replace('_', ' ').title() }}
+                                    </span>
+                                    <span class="clean-badge {% if request.priority == 'urgent' %}clean-badge-danger{% elif request.priority == 'high' %}clean-badge-warning{% else %}clean-badge{% endif %}">
+                                        {% if request.priority == 'urgent' %}
+                                            <i class="bi bi-exclamation-triangle"></i>
+                                        {% elif request.priority == 'high' %}
+                                            <i class="bi bi-exclamation-circle"></i>
+                                        {% endif %}
+                                        {{ request.priority.title() }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div style="text-align: right; font-size: 12px; color: #6B7280;">
+                                <div>Created: {{ request.created_at.strftime('%m/%d %H:%M') }}</div>
+                                {% if request.resolved_at %}
+                                <div>Resolved: {{ request.resolved_at.strftime('%m/%d %H:%M') }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div style="margin-bottom: 12px;">
+                            <p style="color: #6B7280; margin: 0; font-size: 14px;">{{ request.description }}</p>
+                        </div>
+                        
+                        {% if request.notes %}
+                        <div style="margin-bottom: 12px; padding: 12px; background: #F8F9FA; border-radius: 6px;">
+                            <strong style="font-size: 12px; color: #374151;">Notes:</strong>
+                            <p style="color: #6B7280; margin: 4px 0 0 0; font-size: 14px;">{{ request.notes }}</p>
+                        </div>
+                        {% endif %}
+                        
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; font-size: 14px; color: #6B7280;">
+                            <div>
+                                <span style="font-weight: 500;">Reported by:</span><br>
+                                {{ request.reported_by_user.username if request.reported_by_user else 'Unknown' }}
+                            </div>
+                            {% if request.assigned_to %}
+                            <div>
+                                <span style="font-weight: 500;">Assigned to:</span><br>
+                                {{ request.assigned_to_user.username if request.assigned_to_user else 'Unknown' }}
+                            </div>
+                            {% endif %}
+                            <div>
+                                <span style="font-weight: 500;">Issue Type:</span><br>
+                                {{ request.issue_type.replace('_', ' ').title() }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        {% else %}
+        <!-- Empty State -->
+        <div class="clean-empty-state">
+            <div class="clean-empty-icon">
+                <i class="bi bi-tools"></i>
+            </div>
+            <h2 class="clean-empty-title">No Maintenance Requests</h2>
+            <p class="clean-empty-text">There are currently no maintenance requests. Create a new request above to get started.</p>
+            <a href="{{ url_for('housekeeping.report_maintenance_issue') }}" class="clean-btn clean-btn-primary">
+                <i class="bi bi-plus-circle"></i>
+                Report Issue
+            </a>
+        </div>
+        {% endif %}
+
+        <!-- Action Banner -->
+        <div class="clean-action-banner">
+            <div class="clean-banner-content">
+                <h3 class="clean-banner-title">Need urgent maintenance?</h3>
+                <p class="clean-banner-text">Report critical issues immediately for priority handling</p>
+            </div>
+            <a href="{{ url_for('housekeeping.report_maintenance_issue') }}" class="clean-btn clean-btn-primary">
+                <i class="bi bi-exclamation-triangle"></i>
+                Report Urgent Issue
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+@media (max-width: 768px) {
+    .clean-container > div[style*="grid-template-columns: 1fr 1fr"] {
+        grid-template-columns: 1fr !important;
+    }
+}
+</style>
+{% endblock %} 

@@ -37,9 +37,9 @@ class RoomStatusLog(BaseModel):
     notes = db.Column(db.Text, nullable=True)
 
     # Relationships
-    room = db.relationship('Room', backref='status_logs')
-    user = db.relationship('User', backref='room_status_changes')
-    booking = db.relationship('Booking', backref='room_status_changes')
+    room = db.relationship('Room', back_populates='status_logs')
+    user = db.relationship('User', back_populates='room_status_changes')
+    booking = db.relationship('Booking', back_populates='room_status_changes')
 
     def __repr__(self):
         """Provide a readable representation of a RoomStatusLog instance."""

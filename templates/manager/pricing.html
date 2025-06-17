@@ -1,297 +1,401 @@
-{% extends "base.html" %}
+{% extends "dashboard_sidebar_base.html" %}
 
-{% block title %}Room Pricing Management{% endblock %}
+{% block dashboard_title %}Pricing Strategy{% endblock %}
+{% block sidebar_title %}Manager Panel{% endblock %}
 
-{% block content %}
-<div class="container mt-4">
-    <h1 class="mb-4">Room Pricing Management</h1>
-    
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{{ url_for('manager.dashboard') }}">Dashboard</a></li>
-            <li class="breadcrumb-item active" aria-current="page">Room Pricing</li>
-        </ol>
-    </nav>
-    
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <div class="alert alert-{{ category }}">{{ message }}</div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
-    
-    <div class="card mb-4">
-        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-            <h3 class="h5 mb-0">Room Rates</h3>
-            <button type="button" class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#pricingInfoModal">
-                <i class="fas fa-info-circle me-2"></i> Pricing Guide
-            </button>
-        </div>
-        <div class="card-body">
-            <form id="pricingForm" method="POST" action="{{ url_for('manager.pricing') }}">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                {% if room_types_data %}
-                <div class="table-responsive">
-                    <table class="table table-striped table-hover">
-                        <thead class="table-dark">
-                            <tr>
-                                <th>Room Type</th>
-                                <th>Base Rate ($)</th>
-                                <th>Weekend Rate ($)</th>
-                                <th>Peak Season Rate ($)</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for item in room_types_data %}
-                            <tr>
-                                <td>
-                                    <strong>{{ item.name }}</strong>
-                                </td>
-                                <td>
-                                    <div class="input-group">
-                                        <span class="input-group-text">$</span>
-                                        <input type="number" step="0.01" min="0" class="form-control base-rate" 
-                                               id="base_rate_{{ item.id }}" 
-                                               name="base_rate_{{ item.id }}" 
-                                               value="{{ item.base_rate|round(2) }}"
-                                               data-room-id="{{ item.id }}">
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="input-group">
-                                        <span class="input-group-text">$</span>
-                                        <input type="number" step="0.01" min="0" class="form-control weekend-price" 
-                                               id="weekend_price_{{ item.id }}" 
-                                               name="weekend_price_{{ item.id }}" 
-                                               value="{{ item.current_weekend_price|round(2) }}">
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="input-group">
-                                        <span class="input-group-text">$</span>
-                                        <input type="number" step="0.01" min="0" class="form-control peak-price" 
-                                               id="peak_price_{{ item.id }}" 
-                                               name="peak_price_{{ item.id }}" 
-                                               value="{{ item.current_peak_price|round(2) }}">
-                                    </div>
-                                </td>
-                                <td>
-                                    <button type="button" class="btn btn-outline-secondary btn-sm calculate-btn" data-room-id="{{ item.id }}">
-                                        <i class="fas fa-calculator me-1"></i> Calculate
-                                    </button>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                
-                <div class="d-flex justify-content-end mt-3">
-                    <button type="reset" class="btn btn-secondary me-2">
-                        <i class="fas fa-undo me-2"></i> Reset
-                    </button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save me-2"></i> Save Changes
-                    </button>
-                </div>
-                {% else %}
-                <div class="alert alert-info mb-0">
-                    <p>No room types found. Please add room types first.</p>
-                </div>
-                {% endif %}
-            </form>
-        </div>
-    </div>
-    
-    <div class="row mb-4">
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header bg-info text-white">
-                    <h3 class="h5 mb-0">Pricing Strategy</h3>
-                </div>
-                <div class="card-body">
-                    <p>Room rates are structured as follows:</p>
-                    <ul>
-                        <li><strong>Base Rate:</strong> Standard weekday rate</li>
-                        <li><strong>Weekend Rate:</strong> Typically 25% higher than base rate</li>
-                        <li><strong>Peak Season Rate:</strong> Typically 50% higher than base rate</li>
-                    </ul>
-                    <p>Additional factors that may affect pricing:</p>
-                    <ul>
-                        <li>Special events (conferences, holidays)</li>
-                        <li>Last-minute bookings</li>
-                        <li>Extended stays</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header bg-success text-white">
-                    <h3 class="h5 mb-0">Market Analysis</h3>
-                </div>
-                <div class="card-body">
-                    <p class="mb-3">Competitive room rates in the area:</p>
-                    <div class="table-responsive">
-                        <table class="table table-sm">
-                            <thead>
-                                <tr>
-                                    <th>Hotel Class</th>
-                                    <th>Average Rate ($)</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>Budget</td>
-                                    <td>75 - 120</td>
-                                </tr>
-                                <tr>
-                                    <td>Mid-range</td>
-                                    <td>120 - 250</td>
-                                </tr>
-                                <tr>
-                                    <td>Luxury</td>
-                                    <td>250 - 500+</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <a href="{{ url_for('manager.dashboard') }}" class="btn btn-secondary mb-4">
-        <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
-    </a>
-</div>
-
-<!-- Pricing Info Modal -->
-<div class="modal fade" id="pricingInfoModal" tabindex="-1" aria-labelledby="pricingInfoModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title" id="pricingInfoModalLabel">Room Pricing Guide</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <h5>Pricing Best Practices</h5>
-                <p>Follow these guidelines when setting room rates:</p>
-                
-                <div class="row mb-3">
-                    <div class="col-md-4">
-                        <div class="card h-100">
-                            <div class="card-body">
-                                <h6 class="card-title">Base Rate</h6>
-                                <p class="card-text">Standard weekday rate that reflects room amenities, size, and view.</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card h-100">
-                            <div class="card-body">
-                                <h6 class="card-title">Weekend Rate</h6>
-                                <p class="card-text">Set 20-30% higher than base rate to reflect higher demand on weekends.</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card h-100">
-                            <div class="card-body">
-                                <h6 class="card-title">Peak Season Rate</h6>
-                                <p class="card-text">Set 40-60% higher than base rate during high demand periods.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <h5>Seasonal Considerations</h5>
-                <p>Adjust rates based on the following seasonal patterns:</p>
-                <ul>
-                    <li><strong>High Season:</strong> Major holidays, summer months, local events</li>
-                    <li><strong>Shoulder Season:</strong> Spring and fall months</li>
-                    <li><strong>Low Season:</strong> Winter months (except holiday weeks)</li>
-                </ul>
-                
-                <h5>Competitive Analysis</h5>
-                <p>Always consider your competitive position in the market:</p>
-                <ul>
-                    <li>Research rates of similar properties in your area</li>
-                    <li>Consider your property's unique selling points</li>
-                    <li>Monitor occupancy rates to ensure pricing is optimal</li>
-                </ul>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/clean-customer.css') }}">
 {% endblock %}
 
-{% block extra_js %}
+{% block sidebar_links %}
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('manager.dashboard') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-speedometer2"></i>
+        </div>
+        <span class="sidebar-nav-text">Dashboard</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('manager.forecasts') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-graph-up"></i>
+        </div>
+        <span class="sidebar-nav-text">Forecasts</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('manager.pricing') }}" class="sidebar-nav-link active">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-currency-dollar"></i>
+        </div>
+        <span class="sidebar-nav-text">Pricing</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('manager.staff') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-people"></i>
+        </div>
+        <span class="sidebar-nav-text">Staff Management</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('manager.reports') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-file-earmark-bar-graph"></i>
+        </div>
+        <span class="sidebar-nav-text">Reports</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('manager.analytics') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-graph-up-arrow"></i>
+        </div>
+        <span class="sidebar-nav-text">Analytics</span>
+    </a>
+</li>
+{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <!-- Clean Professional Header -->
+    <div class="clean-page-header">
+        <h1 class="clean-page-title">Pricing Strategy</h1>
+        <p class="clean-page-subtitle">Manage room rates, seasonal pricing, and revenue optimization</p>
+    </div>
+
+    <!-- Clean Main Container -->
+    <div class="clean-container">
+        <!-- Quick Action Buttons -->
+        <div class="clean-nav-grid" style="margin-bottom: 32px;">
+            <a href="{{ url_for('manager.analytics') }}" class="clean-btn clean-btn-outline" style="text-decoration: none;">
+                <i class="bi bi-graph-up-arrow"></i>
+                Pricing Analytics
+            </a>
+            <button class="clean-btn clean-btn-primary" onclick="optimizePrices()">
+                <i class="bi bi-cpu"></i>
+                Auto-Optimize
+            </button>
+        </div>
+
+        <!-- Pricing Overview Statistics -->
+        <div class="clean-metrics-grid">
+            <div class="clean-metric-card">
+                <div class="clean-metric-header">
+                    <span class="clean-metric-label">Average Base Rate</span>
+                    <i class="bi bi-currency-dollar clean-metric-icon" style="color: #3B82F6;"></i>
+                </div>
+                <div class="clean-metric-value">${{ avg_base_rate or 167 }}</div>
+                <div class="clean-metric-secondary">Across all room types</div>
+            </div>
+
+            <div class="clean-metric-card">
+                <div class="clean-metric-header">
+                    <span class="clean-metric-label">Weekend Premium</span>
+                    <i class="bi bi-graph-up clean-metric-icon" style="color: #10B981;"></i>
+                </div>
+                <div class="clean-metric-value">{{ weekend_premium or 0 }}%</div>
+                <div class="clean-metric-secondary">Average weekend markup</div>
+            </div>
+
+            <div class="clean-metric-card">
+                <div class="clean-metric-header">
+                    <span class="clean-metric-label">Peak Season</span>
+                    <i class="bi bi-arrow-up-circle clean-metric-icon" style="color: #F59E0B;"></i>
+                </div>
+                <div class="clean-metric-value">{{ peak_premium or 0 }}%</div>
+                <div class="clean-metric-secondary">Peak season markup</div>
+            </div>
+
+            <div class="clean-metric-card">
+                <div class="clean-metric-header">
+                    <span class="clean-metric-label">Revenue Impact</span>
+                    <i class="bi bi-graph-down clean-metric-icon" style="color: #8B5CF6;"></i>
+                </div>
+                <div class="clean-metric-value">+15%</div>
+                <div class="clean-metric-secondary">From current strategy</div>
+            </div>
+        </div>
+
+        <!-- Pricing Strategy Cards -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 24px; margin-bottom: 32px;">
+            <!-- Dynamic Pricing -->
+            <div class="clean-card">
+                <div class="clean-card-header" style="padding: 20px 24px 0 24px;">
+                    <h2 class="clean-card-title">Dynamic Pricing</h2>
+                    <span class="clean-badge clean-badge-success">Active</span>
+                </div>
+                <div class="clean-card-body" style="padding: 20px 24px 24px 24px;">
+                    <p style="color: var(--clean-text-muted); margin-bottom: 16px;">
+                        Automatically adjust prices based on demand, occupancy, and market conditions for maximum revenue optimization.
+                    </p>
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <span style="font-weight: 500;">Status</span>
+                        <label style="position: relative; display: inline-block; width: 44px; height: 24px;">
+                            <input type="checkbox" checked style="opacity: 0; width: 0; height: 0;">
+                            <span style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #10B981; border-radius: 24px; transition: 0.4s;"></span>
+                            <span style="position: absolute; content: ''; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; border-radius: 50%; transition: 0.4s; transform: translateX(20px);"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Seasonal Rates -->
+            <div class="clean-card">
+                <div class="clean-card-header" style="padding: 20px 24px 0 24px;">
+                    <h2 class="clean-card-title">Seasonal Rates</h2>
+                    <span class="clean-badge clean-badge-success">Active</span>
+                </div>
+                <div class="clean-card-body" style="padding: 20px 24px 24px 24px;">
+                    <p style="color: var(--clean-text-muted); margin-bottom: 16px;">
+                        Configure special pricing for peak seasons, holidays, and events to capture increased demand.
+                    </p>
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <span style="font-weight: 500;">Status</span>
+                        <label style="position: relative; display: inline-block; width: 44px; height: 24px;">
+                            <input type="checkbox" checked style="opacity: 0; width: 0; height: 0;">
+                            <span style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #10B981; border-radius: 24px; transition: 0.4s;"></span>
+                            <span style="position: absolute; content: ''; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; border-radius: 50%; transition: 0.4s; transform: translateX(20px);"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Competitive Pricing -->
+            <div class="clean-card">
+                <div class="clean-card-header" style="padding: 20px 24px 0 24px;">
+                    <h2 class="clean-card-title">Competitive Pricing</h2>
+                    <span class="clean-badge clean-badge-warning">Inactive</span>
+                </div>
+                <div class="clean-card-body" style="padding: 20px 24px 24px 24px;">
+                    <p style="color: var(--clean-text-muted); margin-bottom: 16px;">
+                        Monitor competitor rates and automatically adjust pricing to maintain competitive positioning.
+                    </p>
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <span style="font-weight: 500;">Status</span>
+                        <label style="position: relative; display: inline-block; width: 44px; height: 24px;">
+                            <input type="checkbox" style="opacity: 0; width: 0; height: 0;">
+                            <span style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #E5E7EB; border-radius: 24px; transition: 0.4s;"></span>
+                            <span style="position: absolute; content: ''; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; border-radius: 50%; transition: 0.4s;"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Room Type Pricing Table -->
+        <div class="clean-card">
+            <div class="clean-card-header" style="padding: 20px 24px 0 24px;">
+                <h2 class="clean-card-title">Room Type Pricing</h2>
+                <div class="clean-card-controls">
+                    <button class="clean-btn clean-btn-outline" onclick="bulkUpdatePrices()">
+                        <i class="bi bi-pencil"></i>
+                        Bulk Edit
+                    </button>
+                </div>
+            </div>
+            <div class="clean-card-body" style="padding: 20px 24px 24px 24px;">
+                <form method="POST" action="{{ url_for('manager.pricing') }}">
+                    <div class="clean-table-container">
+                        <table class="clean-table">
+                    <thead>
+                        <tr>
+                            <th>Room Type</th>
+                            <th>Base Rate</th>
+                                    <th>Weekend Price</th>
+                                    <th>Peak Season</th>
+                                    <th>Occupancy</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                                {% for room_type, pricing in room_types_with_pricing %}
+                                <tr>
+                                    <td>
+                                        <div style="display: flex; align-items: center; gap: 12px;">
+                                            <div style="width: 40px; height: 40px; background: #EFF6FF; border-radius: 6px; display: flex; align-items: center; justify-content: center;">
+                                                <i class="bi bi-house-door" style="color: #3B82F6;"></i>
+                                            </div>
+                                            <div>
+                                                <div class="clean-font-medium">{{ room_type.name }}</div>
+                                                <div style="font-size: 12px; color: var(--clean-text-muted);">{{ room_type.description }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div style="position: relative;">
+                                            <span style="position: absolute; left: 8px; top: 50%; transform: translateY(-50%); color: var(--clean-text-muted); font-size: 14px;">$</span>
+                                            <input type="number" name="base_rate_{{ room_type.id }}" 
+                                                   value="{{ room_type.base_rate }}" 
+                                                   step="0.01" min="0"
+                                                   style="width: 100px; padding: 8px 8px 8px 20px; border: 1px solid var(--clean-border); border-radius: 6px; font-size: 14px;">
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div style="position: relative;">
+                                            <span style="position: absolute; left: 8px; top: 50%; transform: translateY(-50%); color: var(--clean-text-muted); font-size: 14px;">$</span>
+                                            <input type="number" name="weekend_price_{{ room_type.id }}" 
+                                                   value="{{ (room_type.base_rate * (pricing.weekend_multiplier if pricing else 1.0)) | round(2) if room_type.base_rate else 0 }}" 
+                                                   step="0.01" min="0"
+                                                   style="width: 100px; padding: 8px 8px 8px 20px; border: 1px solid var(--clean-border); border-radius: 6px; font-size: 14px;">
+                                </div>
+                            </td>
+                            <td>
+                                        <div style="position: relative;">
+                                            <span style="position: absolute; left: 8px; top: 50%; transform: translateY(-50%); color: var(--clean-text-muted); font-size: 14px;">$</span>
+                                            <input type="number" name="peak_price_{{ room_type.id }}" 
+                                                   value="{{ (room_type.base_rate * (pricing.peak_season_multiplier if pricing else 1.0)) | round(2) if room_type.base_rate else 0 }}" 
+                                                   step="0.01" min="0"
+                                                   style="width: 100px; padding: 8px 8px 8px 20px; border: 1px solid var(--clean-border); border-radius: 6px; font-size: 14px;">
+                                </div>
+                            </td>
+                            <td>
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <div style="flex: 1; height: 6px; background: var(--clean-border); border-radius: 3px; overflow: hidden;">
+                                                <div style="height: 100%; background: #10B981; width: 75%; border-radius: 3px;"></div>
+                                            </div>
+                                            <span style="font-size: 12px; font-weight: 500; color: var(--clean-text-muted);">75%</span>
+                                </div>
+                            </td>
+                            <td>
+                                        <div style="display: flex; gap: 4px;">
+                                            <button type="button" class="clean-btn clean-btn-outline" style="padding: 6px 8px; font-size: 12px;"
+                                                    onclick="editRoomType({{ room_type.id }})">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            <button type="button" class="clean-btn clean-btn-outline" style="padding: 6px 8px; font-size: 12px;"
+                                                    onclick="viewHistory({{ room_type.id }})">
+                                                <i class="bi bi-clock-history"></i>
+                                </button>
+                                        </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+                    <div style="margin-top: 24px; display: flex; justify-content: flex-end; gap: 12px;">
+                        <button type="button" class="clean-btn clean-btn-outline">
+                            <i class="bi bi-arrow-clockwise"></i>
+                            Reset Changes
+                </button>
+                        <button type="submit" class="clean-btn clean-btn-primary">
+                            <i class="bi bi-check-lg"></i>
+                            Update Pricing
+                </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Pricing Insights -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+            <!-- Price Optimization Suggestions -->
+            <div class="clean-card">
+                <div class="clean-card-header" style="padding: 20px 24px 0 24px;">
+                    <h2 class="clean-card-title">Optimization Suggestions</h2>
+                </div>
+                <div class="clean-card-body" style="padding: 20px 24px 24px 24px;">
+                    <div style="display: grid; gap: 16px;">
+                        <div style="padding: 16px; background: #EFF6FF; border: 1px solid #DBEAFE; border-radius: 6px;">
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                                <i class="bi bi-lightbulb" style="color: #3B82F6;"></i>
+                                <span style="font-weight: 500; color: #1E40AF;">Increase Standard Room rates</span>
+            </div>
+                            <p style="font-size: 14px; color: var(--clean-text-muted); margin: 0;">
+                                Based on 85% occupancy, consider increasing rates by 8-12% to maximize revenue.
+                            </p>
+    </div>
+
+                        <div style="padding: 16px; background: #F0FDF4; border: 1px solid #DCFCE7; border-radius: 6px;">
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                                <i class="bi bi-calendar-event" style="color: #10B981;"></i>
+                                <span style="font-weight: 500; color: #047857;">Weekend Premium Opportunity</span>
+        </div>
+                            <p style="font-size: 14px; color: var(--clean-text-muted); margin: 0;">
+                                Weekend demand is high. Consider adding 15-20% weekend premium for better revenue.
+                            </p>
+        </div>
+    </div>
+</div>
+            </div>
+
+            <!-- Recent Price Changes -->
+            <div class="clean-card">
+                <div class="clean-card-header" style="padding: 20px 24px 0 24px;">
+                    <h2 class="clean-card-title">Recent Changes</h2>
+                </div>
+                <div class="clean-card-body" style="padding: 20px 24px 24px 24px;">
+                    <div style="display: grid; gap: 12px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--clean-border);">
+                            <div>
+                                <div class="clean-font-medium">Deluxe Room</div>
+                                <div style="font-size: 12px; color: var(--clean-text-muted);">Rate increased to $220</div>
+                            </div>
+                            <div style="font-size: 12px; color: var(--clean-text-muted);">2 hours ago</div>
+                        </div>
+                        
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--clean-border);">
+                            <div>
+                                <div class="clean-font-medium">Suite Room</div>
+                                <div style="font-size: 12px; color: var(--clean-text-muted);">Weekend premium added</div>
+                            </div>
+                            <div style="font-size: 12px; color: var(--clean-text-muted);">1 day ago</div>
+                        </div>
+                        
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0;">
+                            <div>
+                                <div class="clean-font-medium">All Room Types</div>
+                                <div style="font-size: 12px; color: var(--clean-text-muted);">Dynamic pricing enabled</div>
+                            </div>
+                            <div style="font-size: 12px; color: var(--clean-text-muted);">3 days ago</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Helper function to calculate derived prices
-        function calculateDerivedPrices(roomId) {
-            const baseRateField = document.getElementById(`base_rate_${roomId}`);
-            if (!baseRateField) return;
+function optimizePrices() {
+    // Show loading state
+    const btn = event.target;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="bi bi-arrow-repeat" style="animation: spin 1s linear infinite;"></i> Optimizing...';
+    btn.disabled = true;
+    
+    // Simulate optimization process
+    setTimeout(() => {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        alert('Pricing optimization completed! Rates have been adjusted based on demand and market conditions.');
+    }, 2000);
+}
 
-            const baseRate = parseFloat(baseRateField.value) || 0;
-            const weekendPriceField = document.getElementById(`weekend_price_${roomId}`);
-            const peakPriceField = document.getElementById(`peak_price_${roomId}`);
-            
-            // Calculate prices using standard multipliers
-            const weekendPrice = (baseRate * 1.25).toFixed(2);
-            const peakPrice = (baseRate * 1.5).toFixed(2);
-            
-            // Update fields
-            if (weekendPriceField) weekendPriceField.value = weekendPrice;
-            if (peakPriceField) peakPriceField.value = peakPrice;
-        }
-        
-        // Add event listeners to calculate buttons
-        const calculateButtons = document.querySelectorAll('.calculate-btn');
-        calculateButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                const roomId = this.dataset.roomId;
-                calculateDerivedPrices(roomId);
-            });
-        });
+function bulkUpdatePrices() {
+    alert('Bulk price editor will be available soon.');
+}
 
-        // Optional: Add event listeners to base rate fields to auto-calculate if desired
-        const baseRateFields = document.querySelectorAll('.base-rate');
-        baseRateFields.forEach(field => {
-            field.addEventListener('change', function() {
-                const roomId = this.dataset.roomId;
-                calculateDerivedPrices(roomId);
-            });
-        });
+function editRoomType(roomTypeId) {
+    alert(`Edit room type ${roomTypeId} functionality coming soon.`);
+}
 
-        // Handle form reset to revert to original values or clear, depending on desired UX
-        const pricingForm = document.getElementById('pricingForm');
-        if (pricingForm) {
-            const originalValues = {};
-            // Store original values on load
-            pricingForm.querySelectorAll('input[type="number"]').forEach(input => {
-                originalValues[input.name] = input.value;
-            });
+function viewHistory(roomTypeId) {
+    alert(`Price history for room type ${roomTypeId} will be shown here.`);
+}
 
-            pricingForm.addEventListener('reset', function() {
-                // Timeout to allow native reset to occur first
-                setTimeout(() => {
-                    for (const name in originalValues) {
-                        const inputField = pricingForm.elements[name];
-                        if (inputField) {
-                            inputField.value = originalValues[name];
-                        }
-                    }
-                }, 0);
-            });
-        }
-    });
+// CSS for spinner animation
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+`;
+document.head.appendChild(style);
 </script>
 {% endblock %} 

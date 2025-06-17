@@ -82,7 +82,7 @@ class FolioItem(BaseModel):
     reference = db.Column(db.String(50), nullable=True)  # Reference number for the charge
 
     # Relationships
-    booking = db.relationship('Booking', backref='folio_items')
+    booking = db.relationship('Booking', back_populates='folio_items')
     staff = db.relationship('User', backref='posted_charges')
 
     def __repr__(self):

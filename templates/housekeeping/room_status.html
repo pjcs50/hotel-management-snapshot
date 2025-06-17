@@ -1,97 +1,219 @@
-{% extends "dashboard_base.html" %}
+{% extends "dashboard_sidebar_base.html" %}
 
-{% block dashboard_title %}Room Status Overview{% endblock %}
-{% block dashboard_heading %}Room Status Overview{% endblock %}
+{% block dashboard_title %}Room Status{% endblock %}
+{% block sidebar_title %}Housekeeping Panel{% endblock %}
 
-{% block dashboard_content %}
-<div class="row mb-4">
-    <div class="col-md-6">
-        <div class="card shadow mb-4">
-            <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary">Update Room Status</h6>
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/clean-customer.css') }}">
+{% endblock %}
+
+{% block sidebar_links %}
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('housekeeping.dashboard') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-speedometer2"></i>
+        </div>
+        <span class="sidebar-nav-text">Dashboard</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('housekeeping.rooms_to_clean_view') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-brush"></i>
+        </div>
+        <span class="sidebar-nav-text">Rooms to Clean</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('housekeeping.checkout_rooms_view') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-door-open"></i>
+        </div>
+        <span class="sidebar-nav-text">Check-outs Today</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('housekeeping.cleaning_schedule') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-calendar-check"></i>
+        </div>
+        <span class="sidebar-nav-text">Cleaning Schedule</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('housekeeping.maintenance_requests') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-tools"></i>
+        </div>
+        <span class="sidebar-nav-text">Maintenance</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('housekeeping.view_lost_and_found') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-search"></i>
+        </div>
+        <span class="sidebar-nav-text">Lost & Found</span>
+    </a>
+</li>
+{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <!-- Clean Professional Header -->
+    <div class="clean-page-header">
+        <h1 class="clean-page-title">Room Status</h1>
+        <p class="clean-page-subtitle">Update room cleaning status and view recent changes</p>
+    </div>
+
+    <!-- Clean Main Container -->
+    <div class="clean-container">
+        <!-- Quick Navigation Links -->
+        <div class="clean-nav-grid">
+            <a href="{{ url_for('housekeeping.dashboard') }}" class="clean-nav-link">
+                <i class="bi bi-speedometer2"></i>
+                Dashboard
+            </a>
+            <a href="{{ url_for('housekeeping.rooms_to_clean_view') }}" class="clean-nav-link">
+                <i class="bi bi-brush"></i>
+                Rooms to Clean
+            </a>
+            <a href="{{ url_for('housekeeping.checkout_rooms_view') }}" class="clean-nav-link">
+                <i class="bi bi-door-open"></i>
+                Check-outs Today
+            </a>
+            <a href="{{ url_for('housekeeping.cleaning_schedule') }}" class="clean-nav-link">
+                <i class="bi bi-calendar-check"></i>
+                Cleaning Schedule
+            </a>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px;">
+            <!-- Update Room Status -->
+            <div class="clean-card">
+                <div class="clean-card-header">
+                    <h2 class="clean-card-title">Update Room Status</h2>
+                </div>
+                <div class="clean-card-body">
+                    <form method="POST" action="{{ url_for('housekeeping.room_status') }}">
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; font-size: 14px; font-weight: 500; color: #1F2937; margin-bottom: 8px;">
+                                <i class="bi bi-house-door" style="margin-right: 8px;"></i>
+                                Room
+                            </label>
+                            <select name="room_id" required style="width: 100%; padding: 12px; border: 1px solid #E5E7EB; border-radius: 6px; font-size: 16px; color: #1F2937; background: white;">
+                                <option value="">Select a room</option>
+                                {% for room in rooms %}
+                                    <option value="{{ room.id }}" {% if request.args.get('room_id', type=int) == room.id %}selected{% endif %}>
+                                        {{ room.number }} ({{ room.room_type.name }}) - {{ room.status|title }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; font-size: 14px; font-weight: 500; color: #1F2937; margin-bottom: 8px;">
+                                <i class="bi bi-check-circle" style="margin-right: 8px;"></i>
+                                New Status
+                            </label>
+                            <select name="new_status" required style="width: 100%; padding: 12px; border: 1px solid #E5E7EB; border-radius: 6px; font-size: 16px; color: #1F2937; background: white;">
+                                <option value="">Select status</option>
+                                {% for status in statuses %}
+                                    <option value="{{ status }}">{{ status|title }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div style="margin-bottom: 24px;">
+                            <label style="display: block; font-size: 14px; font-weight: 500; color: #1F2937; margin-bottom: 8px;">
+                                <i class="bi bi-file-text" style="margin-right: 8px;"></i>
+                                Notes (optional)
+                            </label>
+                            <textarea name="notes" rows="3" placeholder="Add any additional notes..." style="width: 100%; padding: 12px; border: 1px solid #E5E7EB; border-radius: 6px; font-size: 16px; color: #1F2937; resize: vertical;"></textarea>
+                        </div>
+                        
+                        <button type="submit" class="clean-btn clean-btn-primary" style="width: 100%;">
+                            <i class="bi bi-check-circle"></i>
+                            Update Status
+                        </button>
+                    </form>
+                </div>
             </div>
-            <div class="card-body">
-                <form method="POST" action="{{ url_for('housekeeping.room_status') }}">
-                    <div class="mb-3">
-                        <label for="room_id" class="form-label">Room</label>
-                        <select class="form-select" id="room_id" name="room_id" required>
-                            <option value="">Select a room</option>
-                            {% for room in rooms %}
-                                <option value="{{ room.id }}" {% if request.args.get('room_id', type=int) == room.id %}selected{% endif %}>{{ room.number }} ({{ room.room_type.name }}) - {{ room.status|title }}</option>
-                            {% endfor %}
-                        </select>
+
+            <!-- Recent Status Changes -->
+            <div class="clean-card">
+                <div class="clean-card-header">
+                    <h2 class="clean-card-title">Recent Status Changes</h2>
+                </div>
+                <div class="clean-card-body">
+                    {% if recent_changes %}
+                    <div class="clean-table-container">
+                        <table class="clean-table">
+                            <thead>
+                                <tr>
+                                    <th>Room</th>
+                                    <th>Old Status</th>
+                                    <th>New Status</th>
+                                    <th>Changed By</th>
+                                    <th>Time</th>
+                                    <th>Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for log in recent_changes %}
+                                <tr>
+                                    <td class="clean-table-emphasis">{{ log.room.number }}</td>
+                                    <td>
+                                        <span class="clean-badge" style="background: #FEE2E2; color: #991B1B;">
+                                            {{ log.old_status|title }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="clean-badge clean-badge-success">
+                                            {{ log.new_status|title }}
+                                        </span>
+                                    </td>
+                                    <td>{{ log.changed_by }}</td>
+                                    <td>{{ log.created_at.strftime('%m/%d %H:%M') }}</td>
+                                    <td>{{ log.notes or '-' }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
                     </div>
-                    <div class="mb-3">
-                        <label for="new_status" class="form-label">New Status</label>
-                        <select class="form-select" id="new_status" name="new_status" required>
-                            <option value="">Select status</option>
-                            {% for status in statuses %}
-                                <option value="{{ status }}">{{ status|title }}</option>
-                            {% endfor %}
-                        </select>
+                    {% else %}
+                    <div class="clean-empty-state" style="padding: 48px 24px;">
+                        <div class="clean-empty-icon" style="font-size: 48px;">
+                            <i class="bi bi-clock-history"></i>
+                        </div>
+                        <h3 class="clean-empty-title" style="font-size: 18px;">No Recent Changes</h3>
+                        <p class="clean-empty-text">No recent status changes to display.</p>
                     </div>
-                    <div class="mb-3">
-                        <label for="notes" class="form-label">Notes (optional)</label>
-                        <textarea class="form-control" id="notes" name="notes" rows="2"></textarea>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Update Status</button>
-                </form>
+                    {% endif %}
+                </div>
             </div>
         </div>
-    </div>
-    <div class="col-md-6">
-        <div class="card shadow mb-4">
-            <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-info">Recent Status Changes</h6>
+
+        <!-- Action Banner -->
+        <div class="clean-action-banner">
+            <div class="clean-banner-content">
+                <h3 class="clean-banner-title">Need to clean a room?</h3>
+                <p class="clean-banner-text">Check which rooms need cleaning and get started</p>
             </div>
-            <div class="card-body">
-                {% if recent_changes %}
-                <div class="table-responsive">
-                    <table class="table table-bordered table-hover">
-                        <thead>
-                            <tr>
-                                <th>Room #</th>
-                                <th>Old Status</th>
-                                <th>New Status</th>
-                                <th>Changed By</th>
-                                <th>Time</th>
-                                <th>Notes</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for log in recent_changes %}
-                            <tr>
-                                <td>{{ log.room.number }}</td>
-                                <td>{{ log.old_status|title }}</td>
-                                <td>{{ log.new_status|title }}</td>
-                                <td>{{ log.changed_by }}</td>
-                                <td>{{ log.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
-                                <td>{{ log.notes }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                {% else %}
-                <p>No recent status changes.</p>
-                {% endif %}
-            </div>
+            <a href="{{ url_for('housekeeping.rooms_to_clean_view') }}" class="clean-btn clean-btn-primary">
+                <i class="bi bi-brush"></i>
+                View Rooms to Clean
+            </a>
         </div>
     </div>
 </div>
-{% endblock %}
 
-{% block quick_links %}
-<a href="{{ url_for('housekeeping.dashboard') }}" class="list-group-item list-group-item-action">
-    <i class="bi bi-speedometer2 me-2"></i> Dashboard
-</a>
-<a href="{{ url_for('housekeeping.rooms_to_clean_view') }}" class="list-group-item list-group-item-action">
-    <i class="bi bi-brush me-2"></i> Rooms to Clean
-</a>
-<a href="{{ url_for('housekeeping.tasks') }}" class="list-group-item list-group-item-action">
-    <i class="bi bi-check2-square me-2"></i> My Tasks
-</a>
-<a href="{{ url_for('housekeeping.maintenance_requests') }}" class="list-group-item list-group-item-action">
-    <i class="bi bi-tools me-2"></i> Maintenance Requests
-</a>
+<style>
+@media (max-width: 768px) {
+    .clean-container > div[style*="grid-template-columns: 1fr 1fr"] {
+        grid-template-columns: 1fr !important;
+    }
+}
+</style>
 {% endblock %} 

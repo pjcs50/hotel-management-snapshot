@@ -47,11 +47,10 @@ class Customer(BaseModel):
         TIER_PLATINUM
     ]
 
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, unique=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False, unique=True)
     name = db.Column(db.String(100), nullable=False)
     phone = db.Column(db.String(20), nullable=True)
     address = db.Column(db.Text, nullable=True)
-    email = db.Column(db.String(120), nullable=True)
     emergency_contact = db.Column(db.Text, nullable=True)
     profile_complete = db.Column(db.Boolean, default=False)
     
@@ -67,9 +66,44 @@ class Customer(BaseModel):
     stay_count = db.Column(db.Integer, default=0)  # Number of completed stays
     total_spent = db.Column(db.Float, default=0.0)  # Lifetime spend
 
-    # Relationships
-    user = db.relationship('User', back_populates='customer_profile', uselist=False)
+    # Relationships with proper cascade settings
+    user = db.relationship(
+        'User', 
+        back_populates='customer_profile',
+        passive_deletes=True
+    )
     
+    bookings = db.relationship(
+        'Booking', 
+        back_populates='customer',
+        cascade="all, delete-orphan",
+        passive_deletes=True
+    )
+    
+    loyalty_transactions = db.relationship(
+        'LoyaltyLedger',
+        foreign_keys='LoyaltyLedger.customer_id',
+        back_populates='customer',
+        cascade="all, delete-orphan",
+        passive_deletes=True
+    )
+    
+    loyalty_redemptions = db.relationship(
+        'LoyaltyRedemption',
+        foreign_keys='LoyaltyRedemption.customer_id',
+        back_populates='customer',
+        cascade="all, delete-orphan",
+        passive_deletes=True
+    )
+    
+    waitlist_entries = db.relationship(
+        'Waitlist',
+        foreign_keys='Waitlist.customer_id',
+        back_populates='customer',
+        cascade="all, delete-orphan",
+        passive_deletes=True
+    )
+
     __table_args__ = (
         db.Index('idx_customers_loyalty', 'loyalty_tier', 'loyalty_points'),
     )
@@ -77,6 +111,11 @@ class Customer(BaseModel):
     def __repr__(self):
         """Provide a readable representation of a Customer instance."""
         return f'<Customer {self.id}, {self.name}>'
+    
+    @property
+    def email(self):
+        """Get email from the associated User model."""
+        return self.user.email if self.user else None
     
     @property
     def is_profile_complete(self):
@@ -125,36 +164,27 @@ class Customer(BaseModel):
         """Set customer document information from a dictionary."""
         self.documents_json = json.dumps(docs_dict)
     
-    def add_loyalty_points(self, points, reason=None):
+    def add_loyalty_points(self, points, reason=None, booking_id=None, staff_id=None):
         """
-        Add loyalty points to the customer's balance.
+        Add loyalty points through the ledger system.
         
         Args:
             points: Number of points to add
             reason: Reason for adding points
+            booking_id: Optional booking ID associated with the transaction
+            staff_id: Optional staff ID for manual adjustments
             
         Returns:
-            New points balance
+            The created ledger transaction or None
         """
-        self.loyalty_points += points
-        
-        # Update loyalty tier based on new points balance
-        self.update_loyalty_tier()
-        
-        # Log points transaction if LoyaltyLedger is available
-        try:
-            from app.models.loyalty_ledger import LoyaltyLedger
-            ledger = LoyaltyLedger(
-                customer_id=self.id,
-                points=points,
-                reason=reason or 'Points added',
-                txn_dt=datetime.utcnow()
-            )
-            db.session.add(ledger)
-        except (ImportError, AttributeError):
-            pass  # LoyaltyLedger not available
-        
-        return self.loyalty_points
+        from app.models.loyalty_ledger import LoyaltyLedger
+        return LoyaltyLedger.earn_points(
+            customer_id=self.id,
+            points=points,
+            reason=reason,
+            booking_id=booking_id,
+            staff_id=staff_id
+        )
     
     def update_loyalty_tier(self):
         """
@@ -193,7 +223,13 @@ class Customer(BaseModel):
         # Add loyalty points (10 points per dollar spent)
         if booking.total_price:
             points_earned = int(booking.total_price * 10)
-            self.add_loyalty_points(points_earned, f"Stay #{self.stay_count}")
+            from app.models.loyalty_ledger import LoyaltyLedger
+            LoyaltyLedger.earn_points(
+                customer_id=self.id,
+                points=points_earned,
+                reason=f"Stay #{self.stay_count}",
+                booking_id=booking.id
+            )
             
         return self
     
@@ -261,4 +297,4 @@ class Customer(BaseModel):
             'profile_complete': self.profile_complete,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
-        } 
+        }

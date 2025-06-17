@@ -1,9 +1,229 @@
-{% extends "base.html" %}
+{% extends "dashboard_sidebar_base.html" %}
 {% from "_form_macros.html" import render_field %}
 
 {% block title %}Feedback - Horizon Hotel{% endblock %}
+{% block page_title %}Leave Feedback{% endblock %}
+{% block sidebar_title %}Customer Menu{% endblock %}
+
+{% block sidebar_links %}
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('customer.dashboard') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-speedometer2"></i>
+        </div>
+        <span class="sidebar-nav-text">Dashboard</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('customer.bookings') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-calendar-check"></i>
+        </div>
+        <span class="sidebar-nav-text">My Bookings</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('customer.new_booking') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-calendar-plus"></i>
+        </div>
+        <span class="sidebar-nav-text">New Booking</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('customer.room_types') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-building"></i>
+        </div>
+        <span class="sidebar-nav-text">Room Types</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('customer.profile') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-person-gear"></i>
+        </div>
+        <span class="sidebar-nav-text">Edit Profile</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('customer.loyalty_history') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-award"></i>
+        </div>
+        <span class="sidebar-nav-text">Loyalty Program</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('customer.feedback') }}" class="sidebar-nav-link active">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-star"></i>
+        </div>
+        <span class="sidebar-nav-text">Leave Feedback</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('customer.help_page') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-question-circle"></i>
+        </div>
+        <span class="sidebar-nav-text">Help & FAQs</span>
+    </a>
+</li>
+{% endblock %}
 
 {% block content %}
+<div class="fade-in">
+    <!-- Header Section -->
+    <div class="dashboard-header-compact">
+        <h2 class="dashboard-title-compact">Leave Feedback</h2>
+        <p class="dashboard-subtitle-compact">Share your thoughts and help us improve our services</p>
+    </div>
+
+    <div class="dashboard-container-optimized">
+        <div class="dashboard-row">
+            <!-- Submit Feedback -->
+            <div class="dashboard-section-compact">
+                <div class="card dashboard-card-compact">
+                    <div class="card-header">
+                        <h3 class="mb-0">Submit Feedback</h3>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted mb-3">We value your feedback and are committed to continuously improving our services. Please share your thoughts with us.</p>
+                        
+                        <form method="POST" action="{{ url_for('customer.feedback') }}">
+                            {{ form.csrf_token }}
+                            
+                            <div class="mb-3">
+                                <label for="{{ form.category.id }}" class="form-label">{{ form.category.label.text }}</label>
+                                {{ form.category(class="form-select") }}
+                                {% if form.category.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.category.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="{{ form.message.id }}" class="form-label">{{ form.message.label.text }}</label>
+                                {{ form.message(class="form-control", rows="4", placeholder="Please provide specific details to help us better understand your feedback") }}
+                                {% if form.message.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.message.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                                <div class="form-text">Please provide specific details to help us better understand your feedback.</div>
+                            </div>
+                            
+                            <div class="d-grid">
+                                {{ form.submit(class="btn btn-primary") }}
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Feedback History -->
+            <div class="dashboard-section-compact">
+                <div class="card dashboard-card-compact">
+                    <div class="card-header">
+                        <h3 class="mb-0">Your Feedback History</h3>
+                    </div>
+                    <div class="card-body">
+                        {% if feedback_list %}
+                            <div class="feedback-timeline">
+                                {% for item in feedback_list %}
+                                    <div class="feedback-item mb-3">
+                                        <div class="d-flex">
+                                            <div class="feedback-icon me-3">
+                                                <i class="bi bi-chat-dots"></i>
+                                            </div>
+                                            <div class="feedback-content w-100">
+                                                <div class="card border-0 shadow-sm">
+                                                    <div class="card-header bg-light py-2">
+                                                        <div class="d-flex justify-content-between align-items-center">
+                                                            <span class="badge {{ 'badge-primary' if item.status == 'Submitted' else 'badge-success' if item.status == 'Responded' else 'badge-info' }}">
+                                                                {{ item.status }}
+                                                            </span>
+                                                            <small class="text-muted">{{ item.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                                                        </div>
+                                                    </div>
+                                                    <div class="card-body py-2">
+                                                        <h6 class="mb-1">{{ dict(form.category.choices).get(item.category) }}</h6>
+                                                        <p class="mb-0 small">{{ item.message }}</p>
+                                                    </div>
+                                                    {% if item.status == 'Responded' and item.response %}
+                                                        <div class="card-footer bg-light border-top py-2">
+                                                            <small class="text-muted">Staff Response:</small>
+                                                            <p class="mb-0 small">{{ item.response }}</p>
+                                                        </div>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <div class="status-icon-compact mx-auto mb-3" style="width: 4rem; height: 4rem;">
+                                    <i class="bi bi-chat-square-text" style="font-size: 2rem;"></i>
+                                </div>
+                                <h4>No feedback submitted yet</h4>
+                                <p class="text-muted">Your submitted feedback will appear here.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.feedback-timeline {
+    position: relative;
+}
+
+.feedback-item {
+    position: relative;
+}
+
+.feedback-icon {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background-color: hsl(var(--secondary));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.feedback-icon i {
+    font-size: 0.875rem;
+    color: hsl(var(--primary));
+}
+
+.feedback-content {
+    flex: 1;
+}
+
+.feedback-item:not(:last-child):before {
+    content: '';
+    position: absolute;
+    left: 0.95rem;
+    top: 2rem;
+    height: calc(100% - 1rem);
+    width: 2px;
+    background-color: hsl(var(--border));
+}
+</style>
+{% endblock %} 
 <div class="container mt-4">
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
@@ -115,4 +335,3 @@
         display: none;
     }
 </style>
-{% endblock %} 

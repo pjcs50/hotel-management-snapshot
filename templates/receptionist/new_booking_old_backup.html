@@ -1,0 +1,887 @@
+{% extends "dashboard_sidebar_base.html" %}
+{% from '_form_macros.html' import render_field %}
+
+{% block title %}New Booking - Horizon Hotel Management{% endblock %}
+{% block sidebar_title %}Horizon{% endblock %}
+{% block page_title %}New Booking{% endblock %}
+
+{% block sidebar_links %}
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('receptionist.dashboard') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-speedometer2"></i>
+        </div>
+        <span class="sidebar-nav-text">Dashboard</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('receptionist.new_booking') }}" class="sidebar-nav-link active">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-plus-circle"></i>
+        </div>
+        <span class="sidebar-nav-text">New Booking</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('receptionist.bookings') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-calendar-check"></i>
+        </div>
+        <span class="sidebar-nav-text">Bookings</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('receptionist.check_in') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-box-arrow-in-right"></i>
+        </div>
+        <span class="sidebar-nav-text">Check-in</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('receptionist.check_out') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-box-arrow-right"></i>
+        </div>
+        <span class="sidebar-nav-text">Check-out</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('receptionist.guest_list') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-people"></i>
+        </div>
+        <span class="sidebar-nav-text">Guest List</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('receptionist.room_inventory') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-building"></i>
+        </div>
+        <span class="sidebar-nav-text">Room Status</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('receptionist.room_availability') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-calendar3"></i>
+        </div>
+        <span class="sidebar-nav-text">Availability</span>
+    </a>
+</li>
+{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <!-- Header Section -->
+    <div class="dashboard-header-compact">
+        <h2 class="dashboard-title-compact">Create New Booking</h2>
+        <p class="dashboard-subtitle-compact">Book a room for your guests with our streamlined process</p>
+    </div>
+
+    <!-- Main Booking Form -->
+    <div class="booking-container">
+        <form method="post" action="{{ url_for('receptionist.new_booking') }}" id="newBookingForm">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            {{ form.status(type="hidden") }}
+
+            <div class="booking-steps">
+                <!-- Step 1: Guest Information -->
+                <div class="booking-step-card">
+                    <div class="card-header">
+                        <div class="step-indicator">
+                            <div class="step-number">1</div>
+                            <h3>Guest Information</h3>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-lg-6">
+                                <div class="guest-search-section">
+                                    <div class="form-group">
+                                        <label class="form-label">Search Existing Guest</label>
+                                        <input type="text" class="form-control" id="customer_search" 
+                                               placeholder="Search by name, email, or phone">
+                                        <div id="customerSearchResults" class="search-results" style="display: none;"></div>
+                                    </div>
+                                    
+                                    {{ form.customer_id(type="hidden", id="selected_customer_id") }}
+                                    
+                                    <div id="selectedCustomerInfo" class="selected-guest-card" style="display: none;">
+                                        <div class="guest-info-header">
+                                            <div class="guest-avatar" id="selectedGuestAvatar"></div>
+                                            <div class="guest-details">
+                                                <h5 id="selectedCustomerName"></h5>
+                                                <p class="guest-email" id="selectedCustomerEmail"></p>
+                                                <p class="guest-phone" id="selectedCustomerPhone"></p>
+                                            </div>
+                                            <button type="button" class="btn-clear" id="clearCustomerBtn">
+                                                <i class="bi bi-x"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-lg-6">
+                                <div id="newCustomerForm" class="new-guest-section">
+                                    <h5 class="section-title">Or Create New Guest</h5>
+                                    
+                                    <div class="form-group">
+                                        <label class="form-label">Guest Name *</label>
+                                        <input type="text" class="form-control" id="guest_name" name="guest_name">
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label class="form-label">Email Address</label>
+                                        <input type="email" class="form-control" id="guest_email" name="guest_email">
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label class="form-label">Phone Number</label>
+                                        <input type="tel" class="form-control" id="guest_phone" name="guest_phone">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Stay Details -->
+                <div class="booking-step-card">
+                    <div class="card-header">
+                        <div class="step-indicator">
+                            <div class="step-number">2</div>
+                            <h3>Stay Details</h3>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-lg-8">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label class="form-label">Check-in Date</label>
+                                            <input type="date" class="form-control" id="check_in_date" name="check_in_date" 
+                                                   value="{{ form.check_in_date.data }}" min="{{ today }}">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label class="form-label">Check-out Date</label>
+                                            <input type="date" class="form-control" id="check_out_date" name="check_out_date" 
+                                                   value="{{ form.check_out_date.data }}" min="{{ tomorrow }}">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label class="form-label">Number of Guests</label>
+                                    <div class="guest-counter">
+                                        <button type="button" class="counter-btn" id="decreaseGuests">
+                                            <i class="bi bi-dash"></i>
+                                        </button>
+                                        <div class="counter-value" id="guestCountValue">{{ form.num_guests.data or 1 }}</div>
+                                        <button type="button" class="counter-btn" id="increaseGuests">
+                                            <i class="bi bi-plus"></i>
+                                        </button>
+                                        <input type="hidden" name="num_guests" id="num_guests" value="{{ form.num_guests.data or 1 }}">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-lg-4">
+                                <div class="form-group">
+                                    <label class="form-label">Special Requests</label>
+                                    <textarea class="form-control" name="special_requests" rows="6" 
+                                              placeholder="Any special requests or preferences...">{{ form.special_requests.data or '' }}</textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3: Room Selection -->
+                <div class="booking-step-card">
+                    <div class="card-header">
+                        <div class="step-indicator">
+                            <div class="step-number">3</div>
+                            <h3>Room Selection</h3>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="roomSelectionContainer">
+                            <div class="empty-state">
+                                <i class="bi bi-calendar3"></i>
+                                <p>Please select check-in and check-out dates to view available rooms</p>
+                            </div>
+                        </div>
+                        <input type="hidden" name="room_id" id="selected_room_id" value="{{ form.room_id.data or '' }}">
+                    </div>
+                </div>
+
+                <!-- Pricing Summary -->
+                <div id="pricingSummary" class="pricing-card" style="display: none;">
+                    <div class="card-header">
+                        <h3><i class="bi bi-calculator me-2"></i>Booking Summary</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="pricing-details">
+                            <div class="pricing-row">
+                                <span>Room Rate (per night)</span>
+                                <span id="roomRateDisplay">$0.00</span>
+                            </div>
+                            <div class="pricing-row">
+                                <span>Number of Nights</span>
+                                <span id="nightsDisplay">0</span>
+                            </div>
+                            <div class="pricing-row">
+                                <span>Subtotal</span>
+                                <span id="subtotalDisplay">$0.00</span>
+                            </div>
+                            <div class="pricing-row total">
+                                <span>Total Amount</span>
+                                <span id="totalDisplay">$0.00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="action-buttons">
+                    <a href="{{ url_for('receptionist.bookings') }}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left me-2"></i>Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary" id="submitBooking">
+                        <i class="bi bi-check-circle me-2"></i>Create Booking
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+/* New Booking Page Styles */
+.booking-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.booking-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.booking-step-card,
+.pricing-card {
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.card-header {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid hsl(var(--border));
+    background: hsl(var(--muted) / 0.3);
+}
+
+.step-indicator {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.step-number {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: hsl(var(--accent));
+    color: hsl(var(--accent-foreground));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 1.125rem;
+}
+
+.card-header h3 {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: hsl(var(--foreground));
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: hsl(var(--foreground));
+    font-size: 0.875rem;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+    background: hsl(var(--background));
+    color: hsl(var(--foreground));
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: hsl(var(--accent));
+    box-shadow: 0 0 0 2px hsl(var(--accent) / 0.2);
+}
+
+.guest-search-section {
+    position: relative;
+}
+
+.search-results {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    border-top: none;
+    border-radius: 0 0 var(--radius) var(--radius);
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.search-result-item {
+    padding: 0.75rem;
+    border-bottom: 1px solid hsl(var(--border));
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.search-result-item:hover {
+    background: hsl(var(--muted) / 0.5);
+}
+
+.search-result-item:last-child {
+    border-bottom: none;
+}
+
+.selected-guest-card {
+    background: hsl(var(--muted) / 0.3);
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    padding: 1rem;
+    margin-top: 1rem;
+}
+
+.guest-info-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.guest-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: hsl(var(--accent));
+    color: hsl(var(--accent-foreground));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 1.125rem;
+}
+
+.guest-details {
+    flex: 1;
+}
+
+.guest-details h5 {
+    margin: 0 0 0.25rem 0;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.guest-email,
+.guest-phone {
+    margin: 0;
+    font-size: 0.75rem;
+    color: hsl(var(--muted-foreground));
+}
+
+.btn-clear {
+    background: none;
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: hsl(var(--muted-foreground));
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-clear:hover {
+    background: hsl(var(--destructive));
+    color: hsl(var(--destructive-foreground));
+    border-color: hsl(var(--destructive));
+}
+
+.new-guest-section {
+    padding-left: 1.5rem;
+    border-left: 1px solid hsl(var(--border));
+}
+
+.section-title {
+    margin: 0 0 1rem 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: hsl(var(--muted-foreground));
+}
+
+.guest-counter {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    max-width: 200px;
+}
+
+.counter-btn {
+    width: 36px;
+    height: 36px;
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    background: hsl(var(--background));
+    color: hsl(var(--foreground));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.counter-btn:hover {
+    background: hsl(var(--muted));
+}
+
+.counter-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.counter-value {
+    font-weight: 600;
+    min-width: 40px;
+    text-align: center;
+    font-size: 1rem;
+}
+
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+    text-align: center;
+    color: hsl(var(--muted-foreground));
+}
+
+.empty-state i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.pricing-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.pricing-row {
+    display: flex;
+    justify-content: between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid hsl(var(--border));
+}
+
+.pricing-row.total {
+    border-bottom: none;
+    border-top: 2px solid hsl(var(--border));
+    padding-top: 1rem;
+    margin-top: 0.5rem;
+    font-weight: 600;
+    font-size: 1.125rem;
+}
+
+.action-buttons {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius);
+    font-weight: 500;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background: hsl(var(--accent));
+    color: hsl(var(--accent-foreground));
+    border-color: hsl(var(--accent));
+}
+
+.btn-primary:hover {
+    background: hsl(var(--accent) / 0.9);
+}
+
+.btn-secondary {
+    background: hsl(var(--muted));
+    color: hsl(var(--muted-foreground));
+    border-color: hsl(var(--border));
+}
+
+.btn-secondary:hover {
+    background: hsl(var(--muted) / 0.8);
+}
+
+/* Room Selection Grid */
+.room-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.room-option {
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    padding: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.room-option:hover {
+    border-color: hsl(var(--accent));
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.room-option.selected {
+    border-color: hsl(var(--accent));
+    background: hsl(var(--accent) / 0.05);
+}
+
+.room-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.room-number {
+    font-weight: 600;
+    font-size: 1.125rem;
+}
+
+.room-price {
+    font-weight: 600;
+    color: hsl(var(--accent));
+}
+
+.room-type {
+    color: hsl(var(--muted-foreground));
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+}
+
+.room-features {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.room-feature {
+    background: hsl(var(--muted));
+    color: hsl(var(--muted-foreground));
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .booking-container {
+        padding: 0 1rem;
+    }
+    
+    .new-guest-section {
+        padding-left: 0;
+        border-left: none;
+        border-top: 1px solid hsl(var(--border));
+        padding-top: 1.5rem;
+        margin-top: 1.5rem;
+    }
+    
+    .action-buttons {
+        flex-direction: column-reverse;
+    }
+    
+    .btn {
+        width: 100%;
+    }
+    
+    .room-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Guest counter functionality
+    const decreaseBtn = document.getElementById('decreaseGuests');
+    const increaseBtn = document.getElementById('increaseGuests');
+    const guestCountValue = document.getElementById('guestCountValue');
+    const guestCountInput = document.getElementById('num_guests');
+    
+    let guestCount = parseInt(guestCountInput.value) || 1;
+    
+    decreaseBtn.addEventListener('click', function() {
+        if (guestCount > 1) {
+            guestCount--;
+            updateGuestCount();
+        }
+    });
+    
+    increaseBtn.addEventListener('click', function() {
+        if (guestCount < 10) {
+            guestCount++;
+            updateGuestCount();
+        }
+    });
+    
+    function updateGuestCount() {
+        guestCountValue.textContent = guestCount;
+        guestCountInput.value = guestCount;
+        decreaseBtn.disabled = guestCount <= 1;
+        increaseBtn.disabled = guestCount >= 10;
+    }
+    
+    updateGuestCount();
+    
+    // Customer search functionality
+    const customerSearch = document.getElementById('customer_search');
+    const searchResults = document.getElementById('customerSearchResults');
+    const selectedCustomerInfo = document.getElementById('selectedCustomerInfo');
+    const clearCustomerBtn = document.getElementById('clearCustomerBtn');
+    
+    let searchTimeout;
+    
+    customerSearch.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        const query = this.value.trim();
+        
+        if (query.length >= 2) {
+            searchTimeout = setTimeout(() => {
+                searchCustomers(query);
+            }, 300);
+        } else {
+            searchResults.style.display = 'none';
+        }
+    });
+    
+    function searchCustomers(query) {
+        fetch(`{{ url_for('receptionist.search_customers') }}?q=${encodeURIComponent(query)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.customers && data.customers.length > 0) {
+                    displaySearchResults(data.customers);
+                } else {
+                    searchResults.style.display = 'none';
+                }
+            })
+            .catch(error => {
+                console.error('Error searching customers:', error);
+                searchResults.style.display = 'none';
+            });
+    }
+    
+    function displaySearchResults(customers) {
+        searchResults.innerHTML = '';
+        customers.forEach(customer => {
+            const item = document.createElement('div');
+            item.className = 'search-result-item';
+            item.innerHTML = `
+                <div><strong>${customer.name}</strong></div>
+                <div class="text-muted">${customer.email || 'No email'}</div>
+                <div class="text-muted">${customer.phone || 'No phone'}</div>
+            `;
+            item.addEventListener('click', () => selectCustomer(customer));
+            searchResults.appendChild(item);
+        });
+        searchResults.style.display = 'block';
+    }
+    
+    function selectCustomer(customer) {
+        document.getElementById('selected_customer_id').value = customer.id;
+        document.getElementById('selectedGuestAvatar').textContent = customer.name.substring(0, 2).toUpperCase();
+        document.getElementById('selectedCustomerName').textContent = customer.name;
+        document.getElementById('selectedCustomerEmail').textContent = customer.email || 'No email';
+        document.getElementById('selectedCustomerPhone').textContent = customer.phone || 'No phone';
+        
+        selectedCustomerInfo.style.display = 'block';
+        searchResults.style.display = 'none';
+        customerSearch.value = customer.name;
+        
+        // Clear new customer form
+        clearNewCustomerForm();
+    }
+    
+    clearCustomerBtn.addEventListener('click', function() {
+        document.getElementById('selected_customer_id').value = '';
+        selectedCustomerInfo.style.display = 'none';
+        customerSearch.value = '';
+    });
+    
+    function clearNewCustomerForm() {
+        document.getElementById('guest_name').value = '';
+        document.getElementById('guest_email').value = '';
+        document.getElementById('guest_phone').value = '';
+    }
+    
+    // Date change functionality
+    const checkInDate = document.getElementById('check_in_date');
+    const checkOutDate = document.getElementById('check_out_date');
+    
+    checkInDate.addEventListener('change', updateRoomAvailability);
+    checkOutDate.addEventListener('change', updateRoomAvailability);
+    
+    function updateRoomAvailability() {
+        const checkIn = checkInDate.value;
+        const checkOut = checkOutDate.value;
+        
+        if (checkIn && checkOut && checkIn < checkOut) {
+            fetchAvailableRooms(checkIn, checkOut);
+        }
+    }
+    
+    function fetchAvailableRooms(checkIn, checkOut) {
+        const formData = new FormData();
+        formData.append('action', 'update_options');
+        formData.append('check_in_date', checkIn);
+        formData.append('check_out_date', checkOut);
+        
+        fetch('{{ url_for("receptionist.new_booking") }}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                displayAvailableRooms(data.room_options);
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching rooms:', error);
+        });
+    }
+    
+    function displayAvailableRooms(rooms) {
+        const container = document.getElementById('roomSelectionContainer');
+        
+        if (rooms && rooms.length > 0) {
+            container.innerHTML = `
+                <div class="room-grid">
+                    ${rooms.map(room => `
+                        <div class="room-option" data-room-id="${room.value}" data-room-rate="${room.rate}">
+                            <div class="room-header">
+                                <div class="room-number">Room ${room.room_number}</div>
+                                <div class="room-price">$${room.rate}/night</div>
+                            </div>
+                            <div class="room-type">${room.room_type}</div>
+                            <div class="room-features">
+                                <span class="room-feature">Capacity: ${room.capacity}</span>
+                                ${room.amenities ? `<span class="room-feature">${room.amenities}</span>` : ''}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            
+            // Add click handlers for room selection
+            container.querySelectorAll('.room-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    // Remove previous selection
+                    container.querySelectorAll('.room-option').forEach(o => o.classList.remove('selected'));
+                    
+                    // Select this room
+                    this.classList.add('selected');
+                    document.getElementById('selected_room_id').value = this.dataset.roomId;
+                    
+                    // Update pricing
+                    updatePricing(this.dataset.roomRate);
+                });
+            });
+        } else {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="bi bi-exclamation-circle"></i>
+                    <p>No rooms available for the selected dates</p>
+                </div>
+            `;
+        }
+    }
+    
+    function updatePricing(roomRate) {
+        const checkIn = new Date(checkInDate.value);
+        const checkOut = new Date(checkOutDate.value);
+        const nights = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
+        const subtotal = roomRate * nights;
+        
+        document.getElementById('roomRateDisplay').textContent = `$${roomRate}`;
+        document.getElementById('nightsDisplay').textContent = nights;
+        document.getElementById('subtotalDisplay').textContent = `$${subtotal}`;
+        document.getElementById('totalDisplay').textContent = `$${subtotal}`;
+        
+        document.getElementById('pricingSummary').style.display = 'block';
+    }
+    
+    console.log('New Booking page initialized successfully');
+});
+</script>
+{% endblock %}

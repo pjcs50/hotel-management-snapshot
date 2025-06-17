@@ -36,7 +36,7 @@ class UserService:
 
     def change_password(self, user_id, current_password, new_password):
         """
-        Change a user's password.
+        Change a user's password with enhanced security validation.
 
         Args:
             user_id: The ID of the user.
@@ -48,30 +48,50 @@ class UserService:
 
         Raises:
             ValueError: If the user is not found or current password does not match.
+            PasswordStrengthError: If the new password doesn't meet security requirements.
+            PasswordRateLimitError: If too many password change attempts.
         """
+        from app.utils.password_security import PasswordStrengthError, PasswordRateLimitError
+        
         user = self.db_session.get(User, user_id)
         if not user:
             raise ValueError("User not found.")
 
-        if not user.check_password(current_password):
-            raise ValueError("Current password does not match.")
-
-        user.set_password(new_password)
         try:
+            # Check current password with rate limiting
+            if not user.check_password(current_password):
+                raise ValueError("Current password does not match.")
+
+            # Set new password (will validate strength automatically)
+            user.set_password(new_password)
             self.db_session.commit()
             return True
+            
+        except PasswordRateLimitError:
+            # Re-raise rate limit errors
+            raise
+            
+        except PasswordStrengthError:
+            # Re-raise password strength errors
+            raise
+            
         except IntegrityError:
             self.db_session.rollback()
             raise # Re-raise for further handling if necessary
-            
-    def create_user(self, username, email, password, role="customer"):
+        
+        except Exception as e:
+            self.db_session.rollback()
+            raise ValueError(f"Password change failed: {str(e)}")
+    
+    def create_user(self, username, email, password=None, password_hash=None, role="customer"):
         """
         Create a new user.
         
         Args:
             username: Unique username
             email: Unique email address
-            password: Plain text password to hash
+            password: Plain text password to hash (deprecated, use password_hash)
+            password_hash: Pre-hashed password (preferred for security)
             role: User role (default: customer)
             
         Returns:
@@ -80,7 +100,11 @@ class UserService:
         Raises:
             DuplicateEmailError: If a user with the given email already exists
             DuplicateUsernameError: If a user with the given username already exists
+            ValueError: If neither password nor password_hash is provided
         """
+        if not password and not password_hash:
+            raise ValueError("Either password or password_hash must be provided")
+        
         # Check for existing email or username
         if self.db_session.execute(select(User).filter_by(email=email)).scalar_one_or_none():
             raise DuplicateEmailError(f"User with email {email} already exists")
@@ -94,7 +118,12 @@ class UserService:
             email=email,
             role=role
         )
-        user.set_password(password)
+        
+        # Set password - prefer pre-hashed for security
+        if password_hash:
+            user.password_hash = password_hash
+        else:
+            user.set_password(password)
         
         try:
             self.db_session.add(user)
@@ -109,15 +138,17 @@ class UserService:
                 raise DuplicateUsernameError(f"User with username {username} already exists")
             raise  # Re-raise if it's another kind of integrity error
     
-    def create_staff(self, username, email, password, role_requested):
+    def create_staff(self, username, email, password=None, password_hash=None, role_requested=None, requires_admin_approval=False):
         """
-        Create a staff user with pending status.
+        Create a staff user with enhanced security and optional admin approval.
         
         Args:
             username: Unique username
             email: Unique email address
-            password: Plain text password to hash
+            password: Plain text password to hash (deprecated, use password_hash)
+            password_hash: Pre-hashed password (preferred for security)
             role_requested: Role requested by the user
+            requires_admin_approval: Whether the user requires admin approval
             
         Returns:
             The newly created user
@@ -130,29 +161,42 @@ class UserService:
         transaction = self.db_session.begin_nested()
         
         try:
-            # Create inactive user with temporary role
-            user = self.create_user(
-                username=username,
-                email=email,
-                password=password,
-                role="pending"  # Temporary role
-            )
+            # Create user with enhanced security
+            if requires_admin_approval:
+                # Create inactive user with temporary role
+                user = self.create_user(
+                    username=username,
+                    email=email,
+                    password=password,
+                    password_hash=password_hash,
+                    role="pending"  # Temporary role
+                )
+            
+                # Set user as inactive and record requested role
+                user.is_active = False
+                user.role_requested = role_requested
+            
+                # Create staff request
+                staff_request = StaffRequest(
+                    user_id=user.id,
+                    role_requested=role_requested,
+                    status="pending",
+                    notes="Staff registration request"
+                )
+            
+                self.db_session.add(staff_request)
+            else:
+                # Create active user with requested role (for low-privilege roles)
+                user = self.create_user(
+                    username=username,
+                    email=email,
+                    password=password,
+                    password_hash=password_hash,
+                    role=role_requested or "receptionist"
+                )
+                user.is_active = True
         
-            # Set user as inactive and record requested role
-            user.is_active = False
-            user.role_requested = role_requested
-        
-            # Create staff request - don't set create_at as it has a default value
-            staff_request = StaffRequest(
-                user_id=user.id,
-                role_requested=role_requested,
-                status="pending",
-                notes="Staff registration request"
-            )
-        
-            self.db_session.add(staff_request)
             self.db_session.commit()
-        
             return user
             
         except Exception as e:

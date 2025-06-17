@@ -42,9 +42,9 @@ class MaintenanceRequest(BaseModel):
     notes = db.Column(db.Text, nullable=True)
     
     # Relationships
-    room = db.relationship('Room', backref='maintenance_requests')
-    reporter = db.relationship('User', foreign_keys=[reported_by], backref='reported_maintenance')
-    assignee = db.relationship('User', foreign_keys=[assigned_to], backref='assigned_maintenance')
+    room = db.relationship('Room', back_populates='maintenance_requests')
+    reporter = db.relationship('User', foreign_keys=[reported_by], back_populates='reported_maintenance')
+    assignee = db.relationship('User', foreign_keys=[assigned_to], back_populates='assigned_maintenance')
     
     # Add indexes for efficient querying
     __table_args__ = (

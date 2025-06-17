@@ -8,6 +8,7 @@ import json
 from datetime import datetime, timedelta
 from db import db
 from app.models import BaseModel
+import logging
 
 
 class Booking(BaseModel):
@@ -66,8 +67,8 @@ class Booking(BaseModel):
         PAYMENT_REFUNDED
     ]
 
-    room_id = db.Column(db.Integer, db.ForeignKey('rooms.id'), nullable=False)
-    customer_id = db.Column(db.Integer, db.ForeignKey('customers.id'), nullable=False, index=True)
+    room_id = db.Column(db.Integer, db.ForeignKey('rooms.id', ondelete='RESTRICT'), nullable=False)
+    customer_id = db.Column(db.Integer, db.ForeignKey('customers.id', ondelete='CASCADE'), nullable=False, index=True)
     check_in_date = db.Column(db.Date, nullable=False)
     check_out_date = db.Column(db.Date, nullable=False)
     status = db.Column(db.String(20), nullable=False, default=STATUS_RESERVED)
@@ -91,14 +92,78 @@ class Booking(BaseModel):
     
     # Cancellation details
     cancellation_reason = db.Column(db.Text, nullable=True)
-    cancelled_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)  # User who cancelled
+    cancelled_by = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='SET NULL'), nullable=True)  # User who cancelled
     cancellation_date = db.Column(db.DateTime, nullable=True)
     cancellation_fee = db.Column(db.Float, default=0.0)
 
-    # Relationships
-    room = db.relationship('Room', backref='bookings')
-    customer = db.relationship('Customer', backref='bookings')
-    cancelling_user = db.relationship('User', foreign_keys=[cancelled_by], backref='cancelled_bookings')
+    # Relationships with proper cascade settings
+    room = db.relationship(
+        'Room', 
+        back_populates='bookings',
+        passive_deletes=True
+    )
+    
+    customer = db.relationship(
+        'Customer', 
+        back_populates='bookings',
+        passive_deletes=True
+    )
+    
+    cancelling_user = db.relationship(
+        'User', 
+        foreign_keys=[cancelled_by],
+        passive_deletes=True
+    )
+    
+    # Related records that should be deleted with booking
+    payments = db.relationship(
+        'Payment',
+        foreign_keys='Payment.booking_id',
+        back_populates='booking',
+        cascade="all, delete-orphan",
+        passive_deletes=True
+    )
+    
+    loyalty_transactions = db.relationship(
+        'LoyaltyLedger',
+        foreign_keys='LoyaltyLedger.booking_id',
+        back_populates='booking',
+        cascade="all, delete-orphan",
+        passive_deletes=True
+    )
+    
+    booking_logs = db.relationship(
+        'BookingLog',
+        foreign_keys='BookingLog.booking_id',
+        back_populates='booking',
+        cascade="all, delete-orphan",
+        passive_deletes=True
+    )
+    
+    folio_items = db.relationship(
+        'FolioItem',
+        foreign_keys='FolioItem.booking_id',
+        back_populates='booking',
+        cascade="all, delete-orphan",
+        passive_deletes=True
+    )
+    
+    # Records that should set booking_id to NULL when booking deleted
+    loyalty_redemptions = db.relationship(
+        'LoyaltyRedemption',
+        foreign_keys='LoyaltyRedemption.booking_id',
+        back_populates='booking',
+        cascade="save-update, merge",
+        passive_deletes=True
+    )
+    
+    room_status_changes = db.relationship(
+        'RoomStatusLog',
+        foreign_keys='RoomStatusLog.booking_id',
+        back_populates='booking',
+        cascade="save-update, merge",
+        passive_deletes=True
+    )
 
     __table_args__ = (
         # Index for efficiently querying bookings by date range
@@ -216,7 +281,8 @@ class Booking(BaseModel):
     
     def calculate_price(self, save=True):
         """
-        Calculate the total price for this booking.
+        Calculate the total price for this booking using the atomic price calculation service.
+        This method delegates to BookingService to ensure consistency.
         
         Args:
             save: Whether to save the calculated price to the booking
@@ -224,87 +290,46 @@ class Booking(BaseModel):
         Returns:
             The calculated total price
         """
-        from app.models.seasonal_rate import SeasonalRate
+        # Import here to avoid circular imports
+        from app.services.booking_service import BookingService
         
-        # Check if room and room_type are available
-        if not self.room:
-            # Try to load room if it was lazy-loaded
-            try:
-                self.room = db.session.get('Room', self.room_id)
-            except Exception:
-                return 0  # Return 0 if room can't be loaded
-                
-        if not self.room or not hasattr(self.room, 'room_type') or not self.room.room_type:
-            # Try to load room_type directly if accessible
-            try:
-                from app.models.room_type import RoomType
-                if hasattr(self.room, 'room_type_id') and self.room.room_type_id:
-                    room_type_id = self.room.room_type_id
-                else:
-                    print(f"Room {self.room_id} has no room_type_id attribute or it's None")
-                    return 0
-                    
-                room_type = db.session.get(RoomType, room_type_id)
-                if room_type:
-                    base_rate = room_type.base_rate
-                else:
-                    print(f"No room type found for ID: {room_type_id}")
-                    return 0
-            except Exception as e:
-                print(f"Error loading room type: {str(e)}")
-                return 0  # Return 0 if room type can't be loaded
-        else:
-            base_rate = self.room.room_type.base_rate
+        # Create service instance with current db session
+        booking_service = BookingService(db.session)
         
-        # Calculate price for each night considering seasonal rates
         try:
-            if hasattr(self.room, 'room_type_id') and self.room.room_type_id:
-                room_type_id = self.room.room_type_id
-                print(f"Using room_type_id: {room_type_id} for seasonal price calculation")
-                total_price = SeasonalRate.calculate_stay_price(
-                    room_type_id,
-                    self.check_in_date,
-                    self.check_out_date,
-                    base_rate
-                )
-            else:
-                raise ValueError(f"Missing room_type_id for room {self.room_id}")
+            # Use the atomic price calculation method for consistency
+            total_price = booking_service.calculate_booking_price_atomic(
+                self.room_id,
+                self.check_in_date,
+                self.check_out_date,
+                self.early_hours or 0,  # Handle None values
+                self.late_hours or 0    # Handle None values
+            )
+            
+            # Convert Decimal to float for storage
+            total_price_float = float(total_price)
+            
+            # Apply loyalty discount if applicable
+            if hasattr(self, 'customer') and self.customer:
+                if hasattr(self.customer, 'loyalty_tier'):
+                    if self.customer.loyalty_tier == self.customer.TIER_GOLD:
+                        total_price_float *= 0.95  # 5% discount
+                    elif self.customer.loyalty_tier == self.customer.TIER_PLATINUM:
+                        total_price_float *= 0.9   # 10% discount
+            
+            # Round to 2 decimal places
+            total_price_float = round(total_price_float, 2)
+            
+            if save:
+                self.total_price = total_price_float
+                
+            return total_price_float
+            
         except Exception as e:
-            print(f"Error calculating seasonal price: {str(e)}")
-            # Fallback to basic calculation
-            nights = (self.check_out_date - self.check_in_date).days
-            total_price = base_rate * nights
-            print(f"Using fallback price calculation: {nights} nights * ${base_rate} = ${total_price}")
-        
-        # Add early check-in fee (if applicable)
-        if self.early_hours:
-            # Simple calculation: 10% of the daily rate per early hour
-            early_fee = (base_rate * 0.1) * self.early_hours
-            total_price += early_fee
-        
-        # Add late check-out fee (if applicable)
-        if self.late_hours:
-            # Simple calculation: 10% of the daily rate per late hour
-            late_fee = (base_rate * 0.1) * self.late_hours
-            total_price += late_fee
-            
-        # Store the original price for discount calculation
-        self._base_price = total_price
-        
-        # Apply loyalty discount if applicable
-        if hasattr(self, 'customer') and self.customer:
-            if self.customer.loyalty_tier == self.customer.TIER_GOLD:
-                total_price *= 0.95  # 5% discount
-            elif self.customer.loyalty_tier == self.customer.TIER_PLATINUM:
-                total_price *= 0.9   # 10% discount
-        
-        # Round to 2 decimal places
-        total_price = round(total_price, 2)
-        
-        if save:
-            self.total_price = total_price
-            
-        return total_price
+            # Log error but don't fail the booking operation
+            logger = logging.getLogger(__name__)
+            logger.error(f"Error calculating price for booking {self.id}: {str(e)}")
+            return None
     
     def generate_confirmation_code(self):
         """Generate a unique confirmation code for this booking."""
@@ -373,6 +398,31 @@ class Booking(BaseModel):
         self.cancellation_reason = reason
         self.cancelled_by = cancelled_by
         self.cancellation_date = datetime.utcnow()
+        
+        # Apply cancellation fee if applicable
+        if apply_fee:
+            # Calculate fee based on proximity to check-in date
+            days_until_checkin = (self.check_in_date - datetime.now().date()).days
+            
+            if days_until_checkin <= 1:  # Last-minute cancellation
+                self.cancellation_fee = self.total_price * 0.5  # 50% fee
+            elif days_until_checkin <= 7:  # Within a week
+                self.cancellation_fee = self.total_price * 0.2  # 20% fee
+            else:
+                self.cancellation_fee = 0  # No fee
+        
+        # Create a payment record for cancellation fee
+        from app.models.payment import Payment
+        payment = Payment(
+            booking_id=self.id,
+            amount=self.cancellation_fee,
+            payment_type='cancellation',
+            reference='auto-generated'
+        )
+        db.session.add(payment)
+        
+        # Update the booking payment amount
+        self.payment_amount += self.cancellation_fee
         
         # Apply cancellation fee if applicable
         if apply_fee:

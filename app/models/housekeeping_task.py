@@ -44,9 +44,9 @@ class HousekeepingTask(BaseModel):
     notes = db.Column(db.Text, nullable=True)
     
     # Relationships
-    room = db.relationship('Room', backref='housekeeping_tasks')
-    assignee = db.relationship('User', foreign_keys=[assigned_to], backref='assigned_tasks')
-    verifier = db.relationship('User', foreign_keys=[verified_by], backref='verified_tasks')
+    room = db.relationship('Room', back_populates='housekeeping_tasks')
+    assignee = db.relationship('User', foreign_keys=[assigned_to], back_populates='assigned_tasks')
+    verifier = db.relationship('User', foreign_keys=[verified_by], back_populates='verified_tasks')
     
     # Add indexes for efficient querying
     __table_args__ = (

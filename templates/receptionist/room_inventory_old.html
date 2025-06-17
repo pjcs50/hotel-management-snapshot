@@ -1,0 +1,431 @@
+{% extends "dashboard_base.html" %}
+
+{% block dashboard_title %}Room Inventory{% endblock %}
+{% block dashboard_heading %}Room Inventory{% endblock %}
+
+{% block dashboard_navigation %}
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <a href="{{ url_for('receptionist.dashboard') }}" class="text-decoration-none">
+            <div class="card bg-secondary text-white h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-speedometer2 display-4"></i>
+                    <h5 class="mt-2">Dashboard</h5>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3 mb-3">
+        <a href="{{ url_for('receptionist.bookings') }}" class="text-decoration-none">
+            <div class="card bg-success text-white h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-calendar-check display-4"></i>
+                    <h5 class="mt-2">Bookings</h5>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3 mb-3">
+        <a href="{{ url_for('receptionist.guest_list') }}" class="text-decoration-none">
+            <div class="card bg-info text-white h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-people display-4"></i>
+                    <h5 class="mt-2">Guests</h5>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3 mb-3">
+        <a href="{{ url_for('receptionist.room_inventory') }}" class="text-decoration-none">
+            <div class="card bg-primary text-white h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-house-door display-4"></i>
+                    <h5 class="mt-2">Room Inventory</h5>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Room Inventory Management</h5>
+        <div>
+            <a href="{{ url_for('receptionist.room_availability') }}" class="btn btn-sm btn-light">
+                <i class="bi bi-calendar-week"></i> Availability Calendar
+            </a>
+        </div>
+    </div>
+    <div class="card-body">
+        <ul class="nav nav-tabs" id="roomTypeTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="all-rooms-tab" data-bs-toggle="tab" data-bs-target="#all-rooms" type="button" role="tab" aria-controls="all-rooms" aria-selected="true">All Rooms</button>
+            </li>
+            {% for room_type_id, data in room_types.items() %}
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="type-{{ room_type_id }}-tab" data-bs-toggle="tab" data-bs-target="#type-{{ room_type_id }}" type="button" role="tab" aria-controls="type-{{ room_type_id }}" aria-selected="false">{{ data.type.name }}</button>
+            </li>
+            {% endfor %}
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="recent-changes-tab" data-bs-toggle="tab" data-bs-target="#recent-changes" type="button" role="tab" aria-controls="recent-changes" aria-selected="false">Recent Changes</button>
+            </li>
+        </ul>
+        
+        <div class="tab-content p-3" id="roomTypeTabContent">
+            <div class="tab-pane fade show active" id="all-rooms" role="tabpanel" aria-labelledby="all-rooms-tab">
+                <h5 class="mb-3">All Rooms (Status Filter):</h5>
+                <div class="btn-group mb-3 room-status-filters">
+                    <button type="button" class="btn btn-outline-secondary active" data-status="all">All</button>
+                    <button type="button" class="btn btn-outline-success" data-status="Available">Available</button>
+                    <button type="button" class="btn btn-outline-danger" data-status="Occupied">Occupied</button>
+                    <button type="button" class="btn btn-outline-warning" data-status="Needs Cleaning">Cleaning</button>
+                    <button type="button" class="btn btn-outline-info" data-status="Booked">Booked</button>
+                    <button type="button" class="btn btn-outline-dark" data-status="Under Maintenance">Maintenance</button>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-sm table-striped table-bordered">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Room Number</th>
+                                <th>Type</th>
+                                <th>Status</th>
+                                <th>Last Cleaned</th>
+                                <th>Current Guest</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for room_type_id, data in room_types.items() %}
+                                {% for room in data.rooms %}
+                                <tr class="room-row" data-status="{{ room.status }}">
+                                    <td>{{ room.number }}</td>
+                                    <td>{{ data.type.name }}</td>
+                                    <td>
+                                        <span class="badge 
+                                            {% if room.status == 'Available' %}bg-success
+                                            {% elif room.status == 'Occupied' %}bg-danger
+                                            {% elif room.status == 'Needs Cleaning' %}bg-warning
+                                            {% elif room.status == 'Booked' %}bg-info
+                                            {% elif room.status == 'Under Maintenance' %}bg-dark
+                                            {% else %}bg-secondary{% endif %}">
+                                            {{ room.status }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if room.last_cleaned %}
+                                        {{ room.last_cleaned.strftime('%Y-%m-%d %H:%M') }}
+                                        {% else %}
+                                        <span class="text-muted">Not recorded</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if room.id in bookings %}
+                                        {{ bookings[room.id].customer.name }}
+                                        <br>
+                                        <small class="text-muted">
+                                            {% if bookings[room.id].status == 'Checked In' %}
+                                            Until {{ bookings[room.id].check_out_date.strftime('%Y-%m-%d') }}
+                                            {% else %}
+                                            Arriving {{ bookings[room.id].check_in_date.strftime('%Y-%m-%d') }}
+                                            {% endif %}
+                                        </small>
+                                        {% else %}
+                                        <span class="text-muted">—</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                Actions
+                                            </button>
+                                            <ul class="dropdown-menu">
+                                                {% if room.status == 'Needs Cleaning' %}
+                                                <li><a class="dropdown-item" href="{{ url_for('receptionist.mark_room_clean', room_id=room.id) }}">Mark as Clean</a></li>
+                                                {% endif %}
+                                                
+                                                {% if room.status != 'Under Maintenance' %}
+                                                <li><a class="dropdown-item" href="{{ url_for('receptionist.mark_room_maintenance', room_id=room.id) }}">Mark for Maintenance</a></li>
+                                                {% else %}
+                                                <li><a class="dropdown-item" href="{{ url_for('receptionist.mark_room_available', room_id=room.id) }}">Mark as Available</a></li>
+                                                {% endif %}
+                                                
+                                                {% if room.status == 'Available' %}
+                                                <li><a class="dropdown-item" href="{{ url_for('receptionist.new_booking', room_id=room.id) }}">Create Booking</a></li>
+                                                {% endif %}
+                                                
+                                                {% if room.id in bookings %}
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li><a class="dropdown-item" href="{{ url_for('receptionist.view_booking', booking_id=bookings[room.id].id) }}">View Booking</a></li>
+                                                {% if bookings[room.id].status == 'Reserved' %}
+                                                <li><a class="dropdown-item" href="{{ url_for('receptionist.check_in_guest', booking_id=bookings[room.id].id) }}">Check In Guest</a></li>
+                                                {% elif bookings[room.id].status == 'Checked In' %}
+                                                <li><a class="dropdown-item" href="{{ url_for('receptionist.check_out_guest', booking_id=bookings[room.id].id) }}">Check Out Guest</a></li>
+                                                {% endif %}
+                                                {% endif %}
+                                                
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li><a class="dropdown-item" href="{{ url_for('receptionist.room_history', room_id=room.id) }}">View History</a></li>
+                                            </ul>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            {% for room_type_id, data in room_types.items() %}
+            <div class="tab-pane fade" id="type-{{ room_type_id }}" role="tabpanel" aria-labelledby="type-{{ room_type_id }}-tab">
+                <h5 class="mb-3">{{ data.type.name }} Rooms</h5>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-body">
+                                <h6 class="card-title">Room Type Details</h6>
+                                <dl class="row">
+                                    <dt class="col-sm-4">Description</dt>
+                                    <dd class="col-sm-8">{{ data.type.description or 'No description available' }}</dd>
+                                    
+                                    <dt class="col-sm-4">Base Rate</dt>
+                                    <dd class="col-sm-8">${{ data.type.base_rate }}</dd>
+                                    
+                                    <dt class="col-sm-4">Capacity</dt>
+                                    <dd class="col-sm-8">{{ data.type.capacity }} persons</dd>
+                                    
+                                    <dt class="col-sm-4">Total Rooms</dt>
+                                    <dd class="col-sm-8">{{ data.rooms|length }}</dd>
+                                    
+                                    <dt class="col-sm-4">Available Rooms</dt>
+                                    <dd class="col-sm-8">{{ data.rooms|selectattr('status', 'equalto', 'Available')|list|length }}</dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-body">
+                                <h6 class="card-title">Room Status Summary</h6>
+                                <canvas id="roomTypeChart-{{ room_type_id }}" height="200"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-sm table-striped table-bordered">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Room Number</th>
+                                <th>Status</th>
+                                <th>Last Cleaned</th>
+                                <th>Current Guest</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for room in data.rooms %}
+                            <tr>
+                                <td>{{ room.number }}</td>
+                                <td>
+                                    <span class="badge 
+                                        {% if room.status == 'Available' %}bg-success
+                                        {% elif room.status == 'Occupied' %}bg-danger
+                                        {% elif room.status == 'Needs Cleaning' %}bg-warning
+                                        {% elif room.status == 'Booked' %}bg-info
+                                        {% elif room.status == 'Under Maintenance' %}bg-dark
+                                        {% else %}bg-secondary{% endif %}">
+                                        {{ room.status }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if room.last_cleaned %}
+                                    {{ room.last_cleaned.strftime('%Y-%m-%d %H:%M') }}
+                                    {% else %}
+                                    <span class="text-muted">Not recorded</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if room.id in bookings %}
+                                    {{ bookings[room.id].customer.name }}
+                                    <br>
+                                    <small class="text-muted">
+                                        {% if bookings[room.id].status == 'Checked In' %}
+                                        Until {{ bookings[room.id].check_out_date.strftime('%Y-%m-%d') }}
+                                        {% else %}
+                                        Arriving {{ bookings[room.id].check_in_date.strftime('%Y-%m-%d') }}
+                                        {% endif %}
+                                    </small>
+                                    {% else %}
+                                    <span class="text-muted">—</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            Actions
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            {% if room.status == 'Needs Cleaning' %}
+                                            <li><a class="dropdown-item" href="{{ url_for('receptionist.mark_room_clean', room_id=room.id) }}">Mark as Clean</a></li>
+                                            {% endif %}
+                                            
+                                            {% if room.status != 'Under Maintenance' %}
+                                            <li><a class="dropdown-item" href="{{ url_for('receptionist.mark_room_maintenance', room_id=room.id) }}">Mark for Maintenance</a></li>
+                                            {% else %}
+                                            <li><a class="dropdown-item" href="{{ url_for('receptionist.mark_room_available', room_id=room.id) }}">Mark as Available</a></li>
+                                            {% endif %}
+                                            
+                                            {% if room.status == 'Available' %}
+                                            <li><a class="dropdown-item" href="{{ url_for('receptionist.new_booking', room_id=room.id) }}">Create Booking</a></li>
+                                            {% endif %}
+                                            
+                                            {% if room.id in bookings %}
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li><a class="dropdown-item" href="{{ url_for('receptionist.view_booking', booking_id=bookings[room.id].id) }}">View Booking</a></li>
+                                            {% if bookings[room.id].status == 'Reserved' %}
+                                            <li><a class="dropdown-item" href="{{ url_for('receptionist.check_in_guest', booking_id=bookings[room.id].id) }}">Check In Guest</a></li>
+                                            {% elif bookings[room.id].status == 'Checked In' %}
+                                            <li><a class="dropdown-item" href="{{ url_for('receptionist.check_out_guest', booking_id=bookings[room.id].id) }}">Check Out Guest</a></li>
+                                            {% endif %}
+                                            {% endif %}
+                                            
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li><a class="dropdown-item" href="{{ url_for('receptionist.room_history', room_id=room.id) }}">View History</a></li>
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endfor %}
+            
+            <div class="tab-pane fade" id="recent-changes" role="tabpanel" aria-labelledby="recent-changes-tab">
+                <h5 class="mb-3">Recent Room Status Changes</h5>
+                <div class="table-responsive">
+                    <table class="table table-sm table-striped table-bordered">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Time</th>
+                                <th>Room</th>
+                                <th>Status Change</th>
+                                <th>Changed By</th>
+                                <th>Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log in room_logs %}
+                            <tr>
+                                <td>{{ log.change_time.strftime('%Y-%m-%d %H:%M') }}</td>
+                                <td>
+                                    {{ log.room.number }}
+                                    <br>
+                                    <small class="text-muted">{{ log.room.room_type.name }}</small>
+                                </td>
+                                <td>
+                                    <span class="badge {% if log.old_status == 'Available' %}bg-success{% elif log.old_status == 'Occupied' %}bg-danger{% elif log.old_status == 'Needs Cleaning' %}bg-warning{% else %}bg-secondary{% endif %}">
+                                        {{ log.old_status or 'N/A' }}
+                                    </span>
+                                    <i class="bi bi-arrow-right"></i>
+                                    <span class="badge {% if log.new_status == 'Available' %}bg-success{% elif log.new_status == 'Occupied' %}bg-danger{% elif log.new_status == 'Needs Cleaning' %}bg-warning{% else %}bg-secondary{% endif %}">
+                                        {{ log.new_status }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if log.user %}
+                                    {{ log.user.username }}
+                                    {% else %}
+                                    <span class="text-muted">System</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ log.notes or '' }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block dashboard_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Room status filter functionality
+        const filterButtons = document.querySelectorAll('.room-status-filters button');
+        const roomRows = document.querySelectorAll('.room-row');
+        
+        filterButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                // Update active button
+                filterButtons.forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+                
+                const status = this.dataset.status;
+                
+                // Filter rows
+                roomRows.forEach(row => {
+                    if (status === 'all' || row.dataset.status === status) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+        });
+        
+        // Initialize room type charts
+        {% for room_type_id, data in room_types.items() %}
+        (function() {
+            // Count rooms by status
+            const roomsByStatus = {};
+            {% for status in room_statuses %}
+            roomsByStatus['{{ status }}'] = {{ data.rooms|selectattr('status', 'equalto', status)|list|length }};
+            {% endfor %}
+            
+            // Set chart colors
+            const statusColors = {
+                'Available': '#198754', // green
+                'Occupied': '#dc3545', // red
+                'Needs Cleaning': '#ffc107', // yellow
+                'Booked': '#0dcaf0', // info
+                'Under Maintenance': '#212529' // dark
+            };
+            
+            // Get canvas context
+            const ctx = document.getElementById('roomTypeChart-{{ room_type_id }}');
+            if (ctx) {
+                new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: Object.keys(roomsByStatus),
+                        datasets: [{
+                            data: Object.values(roomsByStatus),
+                            backgroundColor: Object.keys(roomsByStatus).map(status => statusColors[status] || '#6c757d')
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'right',
+                            }
+                        }
+                    }
+                });
+            }
+        })();
+        {% endfor %}
+    });
+</script>
+{% endblock %} 

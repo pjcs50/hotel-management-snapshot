@@ -16,7 +16,7 @@ class Waitlist(BaseModel):
     
     Attributes:
         id: Primary key
-        customer_id: Foreign key to the User model
+        customer_id: Foreign key to the Customer model
         room_type_id: Foreign key to the RoomType model
         requested_date_start: Requested check-in date
         requested_date_end: Requested check-out date
@@ -28,7 +28,7 @@ class Waitlist(BaseModel):
 
     __tablename__ = 'waitlist'
 
-    customer_id = db.Column(db.Integer, ForeignKey('users.id'), nullable=False)
+    customer_id = db.Column(db.Integer, ForeignKey('customers.id'), nullable=False)
     room_type_id = db.Column(db.Integer, ForeignKey('room_types.id'), nullable=False)
     requested_date_start = db.Column(db.Date, nullable=False)
     requested_date_end = db.Column(db.Date, nullable=False)
@@ -38,7 +38,7 @@ class Waitlist(BaseModel):
     notes = db.Column(db.Text, nullable=True)
     
     # Relationships
-    customer = db.relationship('User', backref='waitlist_entries')
+    customer = db.relationship('Customer', back_populates='waitlist_entries')
     room_type = db.relationship('RoomType', backref='waitlist_entries')
     
     # Add indexes for efficient querying

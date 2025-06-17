@@ -1,97 +1,206 @@
-{% extends "base.html" %}
+{% extends 'dashboard_sidebar_base.html' %}
 
-{% block title %}Role Management{% endblock %}
+{% block title %}Role Management - Admin Dashboard{% endblock %}
+{% block page_title %}Role Management{% endblock %}
+{% block sidebar_title %}Admin Panel{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/clean-admin.css') }}">
+{% endblock %}
+
+{% block sidebar_links %}
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('admin.dashboard') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-speedometer2"></i>
+        </div>
+        <span class="sidebar-nav-text">Dashboard</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('admin.users') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-people"></i>
+        </div>
+        <span class="sidebar-nav-text">Manage Users</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('admin.roles') }}" class="sidebar-nav-link active">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-shield-check"></i>
+        </div>
+        <span class="sidebar-nav-text">User Roles</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('admin.guests') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-people-fill"></i>
+        </div>
+        <span class="sidebar-nav-text">Guest Management</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('admin.reservations') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-calendar-check"></i>
+        </div>
+        <span class="sidebar-nav-text">Reservations</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('admin.reports') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-graph-up"></i>
+        </div>
+        <span class="sidebar-nav-text">Reports</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('admin.logs') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-journal-text"></i>
+        </div>
+        <span class="sidebar-nav-text">System Logs</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('admin.backup') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-cloud-arrow-up"></i>
+        </div>
+        <span class="sidebar-nav-text">Backup & Restore</span>
+    </a>
+</li>
+{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Role Management</h1>
-        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-secondary">
-            <i class="bi bi-arrow-left"></i> Back to Dashboard
-        </a>
+<div class="clean-page">
+    <!-- Clean Header -->
+    <div class="clean-header">
+        <h1 class="clean-page-title">Role Management</h1>
+        <p class="clean-page-subtitle">Manage user roles, permissions, and role requests</p>
     </div>
 
-    <div class="row mb-4">
-        <div class="col-md-6">
-            <div class="card h-100">
-                <div class="card-header bg-primary text-white">
-                    <h2 class="h5 mb-0">Role Distribution</h2>
+    <!-- Two Column Layout -->
+    <div class="clean-grid clean-grid-2">
+        <!-- Role Distribution Card -->
+        <div class="clean-card">
+            <div class="clean-card-header">
+                <h3 class="clean-card-title">Role Distribution</h3>
+            </div>
+            <div class="clean-card-body">
+                <div class="clean-table-container">
+                    <table class="clean-table">
+                        <thead>
+                            <tr>
+                                <th>Role</th>
+                                <th>Count</th>
+                                <th class="clean-text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for role, count in role_stats.items() %}
+                            <tr>
+                                <td>
+                                    {% if role == 'admin' %}
+                                        <span class="clean-badge clean-badge-danger">Admin</span>
+                                    {% elif role == 'manager' %}
+                                        <span class="clean-badge clean-badge-info">Manager</span>
+                                    {% elif role == 'receptionist' %}
+                                        <span class="clean-badge clean-badge-primary">Receptionist</span>
+                                    {% elif role == 'housekeeping' %}
+                                        <span class="clean-badge clean-badge-warning">Housekeeping</span>
+                                    {% else %}
+                                        <span class="clean-badge clean-badge-secondary">{{ role | title }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="clean-font-medium">{{ count }}</td>
+                                <td class="clean-text-center">
+                                    <a href="{{ url_for('admin.users', role=role) }}" class="clean-btn clean-btn-outline clean-btn-sm">
+                                        <i class="bi bi-eye"></i> View Users
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-striped">
-                            <thead>
-                                <tr>
-                                    <th>Role</th>
-                                    <th>Count</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for role, count in role_stats.items() %}
-                                <tr>
-                                    <td>
-                                        <span class="badge bg-{{ 'success' if role in ['admin', 'manager', 'receptionist', 'housekeeping'] else 'secondary' }}">
-                                            {{ role | title }}
-                                        </span>
-                                    </td>
-                                    <td>{{ count }}</td>
-                                    <td>
-                                        <a href="{{ url_for('admin.users', role=role) }}" class="btn btn-sm btn-info">
-                                            View Users
-                                        </a>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+            </div>
+        </div>
+
+        <!-- Role Permissions Card -->
+        <div class="clean-card">
+            <div class="clean-card-header">
+                <h3 class="clean-card-title">Role Permissions</h3>
+            </div>
+            <div class="clean-card-body">
+                <div class="clean-permissions-grid">
+                    <div class="clean-permission-item">
+                        <div class="clean-permission-icon">
+                            <i class="bi bi-shield-fill-check"></i>
+                        </div>
+                        <div class="clean-permission-content">
+                            <h5>Admin</h5>
+                            <p>Full system access. Can manage all users, settings, and data.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="clean-permission-item">
+                        <div class="clean-permission-icon" style="background: rgba(139, 92, 246, 0.1); color: var(--clean-info);">
+                            <i class="bi bi-briefcase"></i>
+                        </div>
+                        <div class="clean-permission-content">
+                            <h5>Manager</h5>
+                            <p>Can view all bookings, manage rates, and view reports.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="clean-permission-item">
+                        <div class="clean-permission-icon" style="background: rgba(59, 130, 246, 0.1); color: var(--clean-primary);">
+                            <i class="bi bi-person-badge"></i>
+                        </div>
+                        <div class="clean-permission-content">
+                            <h5>Receptionist</h5>
+                            <p>Can create and manage bookings, and handle check-ins/check-outs.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="clean-permission-item">
+                        <div class="clean-permission-icon" style="background: rgba(245, 158, 11, 0.1); color: var(--clean-warning);">
+                            <i class="bi bi-house"></i>
+                        </div>
+                        <div class="clean-permission-content">
+                            <h5>Housekeeping</h5>
+                            <p>Can update room status and view cleaning schedules.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="clean-permission-item">
+                        <div class="clean-permission-icon" style="background: rgba(107, 114, 128, 0.1); color: var(--clean-text-muted);">
+                            <i class="bi bi-person"></i>
+                        </div>
+                        <div class="clean-permission-content">
+                            <h5>Customer</h5>
+                            <p>Can make and manage their own bookings.</p>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-        
-        <div class="col-md-6">
-            <div class="card h-100">
-                <div class="card-header bg-info text-white">
-                    <h2 class="h5 mb-0">Role Permissions</h2>
-                </div>
-                <div class="card-body">
-                    <div class="list-group">
-                        <div class="list-group-item">
-                            <h5 class="mb-1">Admin</h5>
-                            <p class="mb-1">Full system access. Can manage all users, settings, and data.</p>
-                        </div>
-                        <div class="list-group-item">
-                            <h5 class="mb-1">Manager</h5>
-                            <p class="mb-1">Can view all bookings, manage rates, and view reports.</p>
-                        </div>
-                        <div class="list-group-item">
-                            <h5 class="mb-1">Receptionist</h5>
-                            <p class="mb-1">Can create and manage bookings, and handle check-ins/check-outs.</p>
-                        </div>
-                        <div class="list-group-item">
-                            <h5 class="mb-1">Housekeeping</h5>
-                            <p class="mb-1">Can update room status and view cleaning schedules.</p>
-                        </div>
-                        <div class="list-group-item">
-                            <h5 class="mb-1">Customer</h5>
-                            <p class="mb-1">Can make and manage their own bookings.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
 
-    <div class="card">
-        <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
-            <h2 class="h5 mb-0">Pending Role Requests</h2>
-            <span class="badge bg-dark">{{ pending_requests|length }} requests</span>
+    <!-- Pending Role Requests Card -->
+    <div class="clean-card">
+        <div class="clean-card-header clean-flex clean-justify-between clean-items-center">
+            <h3 class="clean-card-title clean-mb-0">Pending Role Requests</h3>
+            <span class="clean-count-badge" style="background: var(--clean-warning);">{{ pending_requests|length }} requests</span>
         </div>
-        <div class="card-body">
+        <div class="clean-card-body">
             {% if pending_requests %}
-            <div class="table-responsive">
-                <table class="table table-striped">
+            <div class="clean-table-container">
+                <table class="clean-table">
                     <thead>
                         <tr>
                             <th>Username</th>
@@ -99,25 +208,41 @@
                             <th>Current Role</th>
                             <th>Requested Role</th>
                             <th>Requested Date</th>
-                            <th>Actions</th>
+                            <th class="clean-text-center">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for request in pending_requests %}
                         <tr>
-                            <td>{{ request.user.username }}</td>
+                            <td class="clean-font-medium">{{ request.user.username }}</td>
                             <td>{{ request.user.email }}</td>
                             <td>
-                                <span class="badge bg-secondary">
-                                    {{ request.user.role | title }}
-                                </span>
+                                {% if request.user.role == 'admin' %}
+                                    <span class="clean-badge clean-badge-danger">Admin</span>
+                                {% elif request.user.role == 'manager' %}
+                                    <span class="clean-badge clean-badge-info">Manager</span>
+                                {% elif request.user.role == 'receptionist' %}
+                                    <span class="clean-badge clean-badge-primary">Receptionist</span>
+                                {% elif request.user.role == 'housekeeping' %}
+                                    <span class="clean-badge clean-badge-warning">Housekeeping</span>
+                                {% else %}
+                                    <span class="clean-badge clean-badge-secondary">{{ request.user.role | title }}</span>
+                                {% endif %}
                             </td>
                             <td>
-                                <span class="badge bg-info">
-                                    {{ request.role_requested | title }}
-                                </span>
+                                {% if request.role_requested == 'admin' %}
+                                    <span class="clean-badge clean-badge-danger">Admin</span>
+                                {% elif request.role_requested == 'manager' %}
+                                    <span class="clean-badge clean-badge-info">Manager</span>
+                                {% elif request.role_requested == 'receptionist' %}
+                                    <span class="clean-badge clean-badge-primary">Receptionist</span>
+                                {% elif request.role_requested == 'housekeeping' %}
+                                    <span class="clean-badge clean-badge-warning">Housekeeping</span>
+                                {% else %}
+                                    <span class="clean-badge clean-badge-secondary">{{ request.role_requested | title }}</span>
+                                {% endif %}
                             </td>
-                            <td>
+                            <td class="clean-text-muted">
                                 {% if hasattr(request, 'created_at') %}
                                     {{ request.created_at.strftime('%Y-%m-%d') }}
                                 {% else %}
@@ -125,11 +250,19 @@
                                 {% endif %}
                             </td>
                             <td>
-                                <div class="btn-group" role="group">
+                                <div class="clean-action-group">
                                     <a href="{{ url_for('admin.approve_role', user_id=request.user_id) }}" 
-                                       class="btn btn-sm btn-success">Approve</a>
+                                       class="clean-btn clean-btn-outline clean-btn-sm" 
+                                       style="color: var(--clean-success); border-color: var(--clean-success);"
+                                       title="Approve Role">
+                                        <i class="bi bi-check-circle"></i>
+                                    </a>
                                     <a href="{{ url_for('admin.deny_role', user_id=request.user_id) }}" 
-                                       class="btn btn-sm btn-danger">Deny</a>
+                                       class="clean-btn clean-btn-outline clean-btn-sm"
+                                       style="color: var(--clean-danger); border-color: var(--clean-danger);"
+                                       title="Deny Role">
+                                        <i class="bi bi-x-circle"></i>
+                                    </a>
                                 </div>
                             </td>
                         </tr>
@@ -138,8 +271,12 @@
                 </table>
             </div>
             {% else %}
-            <div class="alert alert-info">
-                No pending role requests at this time.
+            <div class="clean-empty-state">
+                <div class="clean-empty-icon">
+                    <i class="bi bi-shield-check"></i>
+                </div>
+                <h4 class="clean-empty-title">No Pending Requests</h4>
+                <p class="clean-empty-text">All role requests have been processed.</p>
             </div>
             {% endif %}
         </div>

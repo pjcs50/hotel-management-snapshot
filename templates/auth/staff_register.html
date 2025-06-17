@@ -2,66 +2,244 @@
 
 {% block title %}Staff Registration - Horizon Hotel{% endblock %}
 
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/clean-auth.css') }}" rel="stylesheet">
+{% endblock %}
+
 {% block content %}
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-8 col-lg-6">
-            <div class="card shadow-sm">
-                <div class="card-header bg-secondary text-white text-center">
-                    <h4 class="mb-0">Staff Registration</h4>
-                </div>
-                <div class="card-body">
-                    <div class="alert alert-info">
-                        <i class="bi bi-info-circle"></i> Staff accounts require approval from a manager before activation.
+<div class="clean-auth-container">
+    <div class="clean-auth-card">
+        <!-- Clean Header -->
+        <div class="clean-auth-header">
+            <h1 class="clean-auth-title">Join Our Team</h1>
+            <p class="clean-auth-subtitle">Create your staff account at Horizon Hotel</p>
+        </div>
+        
+        <!-- Clean Form Body -->
+        <div class="clean-auth-body">
+            <!-- Information Alert -->
+            <div class="clean-alert clean-alert-info">
+                <i class="bi bi-info-circle"></i>
+                Staff accounts require manager approval before activation. You'll receive an email notification once your account is approved.
+            </div>
+            
+            <form method="POST" action="{{ url_for('auth.staff_register') }}" class="clean-auth-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                
+                <!-- Username and Email Grid -->
+                <div class="clean-grid clean-grid-2">
+                    <!-- Username Field -->
+                    <div class="clean-form-group">
+                        <label for="username" class="clean-form-label">
+                            <i class="bi bi-person-badge"></i>
+                            Staff Username
+                        </label>
+                        <input type="text" 
+                               class="clean-form-control" 
+                               id="username" 
+                               name="username" 
+                               placeholder="Enter your username" 
+                               required>
                     </div>
                     
-                    <form method="POST" action="{{ url_for('auth.staff_register') }}">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        
-                        <div class="mb-3">
-                            <label for="username" class="form-label">Username</label>
-                            <input type="text" class="form-control" id="username" name="username" required>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="email" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="email" name="email" required>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="role_requested" class="form-label">Role</label>
-                            <select class="form-select" id="role_requested" name="role_requested" required>
-                                <option value="" selected disabled>Select a role</option>
-                                {% for role in roles %}
-                                <option value="{{ role }}">{{ role|title }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="password" class="form-label">Password</label>
-                            <input type="password" class="form-control" id="password" name="password" required>
-                            <small class="form-text text-muted">Password must be at least 8 characters</small>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="confirm_password" class="form-label">Confirm Password</label>
-                            <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
-                        </div>
-                        
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-secondary">Register</button>
-                        </div>
-                    </form>
+                    <!-- Email Field -->
+                    <div class="clean-form-group">
+                        <label for="email" class="clean-form-label">
+                            <i class="bi bi-envelope"></i>
+                            Work Email
+                        </label>
+                        <input type="email" 
+                               class="clean-form-control" 
+                               id="email" 
+                               name="email" 
+                               placeholder="your@horizonhotel.com" 
+                               required>
+                    </div>
                 </div>
-                <div class="card-footer text-center">
-                    <p class="mb-0">Already have an account? <a href="{{ url_for('auth.login') }}" class="text-decoration-none">Login</a></p>
-                    <hr>
-                    <p class="mb-0">Are you a guest?</p>
-                    <a href="{{ url_for('auth.register') }}" class="btn btn-outline-primary mt-2">Guest Registration</a>
+                
+                <!-- Role Selection -->
+                <div class="clean-form-group">
+                    <label for="role_requested" class="clean-form-label">
+                        <i class="bi bi-briefcase"></i>
+                        Requested Role
+                    </label>
+                    <select class="clean-form-select" id="role_requested" name="role_requested" required>
+                        <option value="" selected disabled>Select your role</option>
+                        {% for role in roles %}
+                        <option value="{{ role }}">
+                            {% if role == 'receptionist' %}
+                                🏨 {{ role|title }} - Front desk operations and guest services
+                            {% elif role == 'housekeeping' %}
+                                🧹 {{ role|title }} - Room cleaning and maintenance
+                            {% elif role == 'manager' %}
+                                👔 {{ role|title }} - Hotel operations and staff management
+                            {% elif role == 'admin' %}
+                                ⚙️ {{ role|title }} - System administration and oversight
+                            {% else %}
+                                📋 {{ role|title }}
+                            {% endif %}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <small class="clean-form-text">Choose the role that best matches your position</small>
                 </div>
+                
+                <!-- Password Fields Grid -->
+                <div class="clean-grid clean-grid-2">
+                    <!-- Password Field -->
+                    <div class="clean-form-group">
+                        <label for="password" class="clean-form-label">
+                            <i class="bi bi-lock"></i>
+                            Password
+                        </label>
+                        <div class="clean-password-field">
+                            <input type="password" 
+                                   class="clean-form-control" 
+                                   id="password" 
+                                   name="password" 
+                                   placeholder="Create secure password" 
+                                   required>
+                            <button type="button" class="clean-password-toggle" onclick="togglePassword('password')">
+                                <i id="passwordToggle" class="bi bi-eye"></i>
+                            </button>
+                        </div>
+                        <small class="clean-form-text">Minimum 8 characters with uppercase, lowercase, and numbers</small>
+                    </div>
+                    
+                    <!-- Confirm Password Field -->
+                    <div class="clean-form-group">
+                        <label for="confirm_password" class="clean-form-label">
+                            <i class="bi bi-shield-check"></i>
+                            Confirm Password
+                        </label>
+                        <div class="clean-password-field">
+                            <input type="password" 
+                                   class="clean-form-control" 
+                                   id="confirm_password" 
+                                   name="confirm_password" 
+                                   placeholder="Confirm your password" 
+                                   required>
+                            <button type="button" class="clean-password-toggle" onclick="togglePassword('confirm_password')">
+                                <i id="confirmPasswordToggle" class="bi bi-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Password Strength Indicator -->
+                <div>
+                    <div class="clean-password-strength">
+                        <div class="clean-strength-bar" id="strength1"></div>
+                        <div class="clean-strength-bar" id="strength2"></div>
+                        <div class="clean-strength-bar" id="strength3"></div>
+                        <div class="clean-strength-bar" id="strength4"></div>
+                    </div>
+                    <small id="passwordStrengthText" class="clean-form-text">Password strength will appear here</small>
+                </div>
+                
+                <!-- Terms Agreement -->
+                <div class="clean-checkbox-wrapper" style="background: rgba(59, 130, 246, 0.05); padding: 16px; border-radius: 8px; border: 1px solid rgba(59, 130, 246, 0.1);">
+                    <input type="checkbox" class="clean-checkbox" id="terms" name="terms" required>
+                    <label class="clean-checkbox-label" for="terms">
+                        I agree to the <a href="#" class="clean-link">Staff Code of Conduct</a> and understand that my account requires management approval
+                    </label>
+                </div>
+                
+                <!-- Submit Button -->
+                <button type="submit" class="clean-btn clean-btn-primary clean-btn-full">
+                    <i class="bi bi-person-plus"></i>
+                    Submit Application
+                </button>
+            </form>
+        </div>
+        
+        <!-- Clean Footer -->
+        <div class="clean-auth-footer">
+            <div class="clean-auth-link">
+                Already have an account? <a href="{{ url_for('auth.login') }}" class="clean-link">Sign in here</a>
+            </div>
+            
+            <div class="clean-auth-divider">
+                Are you a guest?
+            </div>
+            
+            <div class="clean-auth-actions">
+                <a href="{{ url_for('auth.register') }}" class="clean-btn clean-btn-outline">
+                    <i class="bi bi-person-plus"></i>
+                    Guest Registration
+                </a>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+function togglePassword(fieldId) {
+    const passwordField = document.getElementById(fieldId);
+    const toggleIcon = document.getElementById(fieldId === 'password' ? 'passwordToggle' : 'confirmPasswordToggle');
+    
+    if (passwordField.type === 'password') {
+        passwordField.type = 'text';
+        toggleIcon.className = 'bi bi-eye-slash';
+    } else {
+        passwordField.type = 'password';
+        toggleIcon.className = 'bi bi-eye';
+    }
+}
+
+function checkPasswordStrength(password) {
+    let strength = 0;
+    let text = '';
+    
+    if (password.length >= 8) strength++;
+    if (/[a-z]/.test(password)) strength++;
+    if (/[A-Z]/.test(password)) strength++;
+    if (/[0-9]/.test(password)) strength++;
+    if (/[^A-Za-z0-9]/.test(password)) strength++;
+    
+    const bars = document.querySelectorAll('.clean-strength-bar');
+    bars.forEach(bar => bar.className = 'clean-strength-bar');
+    
+    if (password.length === 0) {
+        text = 'Password strength will appear here';
+    } else if (strength <= 2) {
+        text = 'Weak password - Add more complexity';
+        bars[0].classList.add('weak');
+    } else if (strength === 3) {
+        text = 'Fair password - Consider adding special characters';
+        bars[0].classList.add('fair');
+        bars[1].classList.add('fair');
+    } else if (strength === 4) {
+        text = 'Good password - Strong and secure';
+        bars[0].classList.add('good');
+        bars[1].classList.add('good');
+        bars[2].classList.add('good');
+    } else {
+        text = 'Excellent password - Very secure';
+        bars.forEach(bar => bar.classList.add('strong'));
+    }
+    
+    document.getElementById('passwordStrengthText').textContent = text;
+}
+
+// Password strength checker and form interactions
+document.addEventListener('DOMContentLoaded', function() {
+    const passwordField = document.getElementById('password');
+    passwordField.addEventListener('input', function() {
+        checkPasswordStrength(this.value);
+    });
+    
+    // Smooth focus animations
+    const inputs = document.querySelectorAll('.clean-form-control, .clean-form-select');
+    inputs.forEach(input => {
+        input.addEventListener('focus', function() {
+            this.parentElement.style.transform = 'scale(1.01)';
+        });
+        
+        input.addEventListener('blur', function() {
+            this.parentElement.style.transform = 'scale(1)';
+        });
+    });
+});
+</script>
 {% endblock %} 

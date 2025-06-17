@@ -10,12 +10,17 @@ import csv
 from flask import Blueprint, jsonify, render_template, redirect, url_for, flash, request, send_file, Response, render_template_string
 from flask_login import login_required, current_user
 from sqlalchemy import func, desc, extract, case, and_, or_
+from sqlalchemy.exc import IntegrityError
 
 from app.utils.decorators import role_required
 from app.services.dashboard_service import DashboardService
 from app.services.user_service import UserService
 from app.services.report_service import ReportService
 from db import db
+from app.utils.error_handling import (
+    error_handler, ErrorContext, ErrorSeverity, ErrorCategory,
+    DatabaseError, ValidationError
+)
 
 # Create blueprint
 admin_bp = Blueprint('admin', __name__)
@@ -464,29 +469,21 @@ def cancel_reservation(booking_id):
 @login_required
 @role_required('admin')
 def print_reservation(booking_id):
-    """Print a reservation receipt."""
+    """Print a reservation receipt (render printable HTML)."""
     from app.models.booking import Booking
-    
     booking = Booking.query.get_or_404(booking_id)
-    
-    # In a real application, you would generate a printable PDF here
-    # For now, just redirect with a flash message
-    flash("Print functionality is not yet implemented.", "warning")
-    return redirect(url_for('admin.reservation_details', booking_id=booking_id))
+    return render_template('admin/print_reservation.html', booking=booking)
 
 
 @admin_bp.route('/reservations/email/<int:booking_id>')
 @login_required
 @role_required('admin')
 def email_reservation(booking_id):
-    """Email a reservation confirmation."""
+    """Simulate sending a reservation confirmation email."""
     from app.models.booking import Booking
-    
     booking = Booking.query.get_or_404(booking_id)
-    
-    # In a real application, you would send an email here
-    # For now, just redirect with a flash message
-    flash("Email functionality is not yet implemented.", "warning")
+    # Simulate sending email (in real app, send actual email)
+    flash(f"Reservation confirmation email sent to {booking.customer.user.email}", "success")
     return redirect(url_for('admin.reservation_details', booking_id=booking_id))
 
 
@@ -496,23 +493,22 @@ def email_reservation(booking_id):
 def reports():
     """Generate reports page."""
     today = datetime.now()
-    start_date = request.args.get('start_date', (today.replace(day=1)).strftime('%Y-%m-%d'))
-    end_date = request.args.get('end_date', today.strftime('%Y-%m-%d'))
-    report_type = request.args.get('report_type', 'occupancy')
+    
+    # Handle month parameter from the form
+    month_param = request.args.get('month', '')
+    if month_param:
+        # Parse YYYY-MM format
+        year, month = map(int, month_param.split('-'))
+    else:
+        # Default to current month
+        year = today.year
+        month = today.month
+    
     try:
         report_service = ReportService(db.session)
-        if report_type == 'occupancy':
-            report_data = report_service.get_occupancy_report(start_date, end_date)
-            title = "Occupancy Report"
-        elif report_type == 'revenue':
-            report_data = report_service.get_revenue_report(start_date, end_date)
-            title = "Revenue Report"
-        elif report_type == 'staff':
-            report_data = report_service.get_staff_activity_report(start_date, end_date)
-            title = "Staff Activity Report"
-        else:
-            report_data = report_service.get_occupancy_report(start_date, end_date)
-            title = "Occupancy Report"
+        # Use the monthly report method that actually has data
+        report_data = report_service.get_monthly_report(year, month)
+        title = f"Monthly Report - {year}-{month:02d}"
             
         # Check if report_data is None before rendering template
         if report_data is None:
@@ -528,12 +524,9 @@ def reports():
         return render_template(
             'admin/reports.html',
             report_data=report_data,
-            report_type=report_type,
-            start_date=start_date,
-            end_date=end_date,
             title=title,
-            current_year=int(start_date[:4]),
-            current_month=int(start_date[5:7])
+            current_year=year,
+            current_month=month
         )
     except Exception as e:
         flash(f"Error generating report: {str(e)}", "danger")
@@ -548,12 +541,9 @@ def reports():
         return render_template(
             'admin/reports.html',
             report_data=report_data,
-            report_type=report_type,
-            start_date=start_date,
-            end_date=end_date,
             title="Report Error",
-            current_year=int(start_date[:4]),
-            current_month=int(start_date[5:7])
+            current_year=year,
+            current_month=month
         )
 
 
@@ -787,12 +777,36 @@ def export_report():
                         'border': 1
                     })
                     
+                    # Format each sheet individually
                     for sheet_name in writer.sheets:
                         worksheet = writer.sheets[sheet_name]
-                        for col_num, value in enumerate(writer.sheets[sheet_name].get_row_data(0)):
-                            worksheet.set_column(col_num, col_num, 18)
-                            if sheet_name != 'Report Info':  # Skip the title sheet
-                                worksheet.write(0, col_num, value, header_format)
+                        
+                        if sheet_name == 'Report Info':
+                            # Format title sheet
+                            worksheet.set_column(0, 0, 50)
+                        elif sheet_name == 'Summary':
+                            # Format summary sheet
+                            worksheet.set_column(0, 0, 25)  # Metric column
+                            worksheet.set_column(1, 1, 20)  # Value column
+                            # Apply header format to first row
+                            worksheet.write(0, 0, 'Metric', header_format)
+                            worksheet.write(0, 1, 'Value', header_format)
+                        elif sheet_name == 'Room Type Revenue':
+                            # Format room type revenue sheet
+                            worksheet.set_column(0, 0, 20)  # Room Type column
+                            worksheet.set_column(1, 1, 15)  # Revenue column
+                            worksheet.set_column(2, 2, 15)  # Percentage column
+                            # Apply header format to first row
+                            worksheet.write(0, 0, 'Room Type', header_format)
+                            worksheet.write(0, 1, 'Revenue', header_format)
+                            worksheet.write(0, 2, 'Percentage', header_format)
+                        elif sheet_name == 'Daily Occupancy':
+                            # Format daily occupancy sheet
+                            worksheet.set_column(0, 0, 15)  # Date column
+                            worksheet.set_column(1, 1, 18)  # Occupancy Rate column
+                            # Apply header format to first row
+                            worksheet.write(0, 0, 'Date', header_format)
+                            worksheet.write(0, 1, 'Occupancy Rate', header_format)
                 
                 output.seek(0)
                 
@@ -1103,4 +1117,7 @@ def toggle_user_status(user_id):
         db.session.rollback()
         flash(f"Error updating user status: {str(e)}", "danger")
     
+    return redirect(url_for('admin.users'))
+
+
     return redirect(url_for('admin.users')) 

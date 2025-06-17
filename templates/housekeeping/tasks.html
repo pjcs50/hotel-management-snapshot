@@ -1,0 +1,326 @@
+{% extends "dashboard_sidebar_base.html" %}
+
+{% block dashboard_title %}My Tasks{% endblock %}
+{% block sidebar_title %}Housekeeping Panel{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/clean-customer.css') }}">
+{% endblock %}
+
+{% block sidebar_links %}
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('housekeeping.dashboard') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-speedometer2"></i>
+        </div>
+        <span class="sidebar-nav-text">Dashboard</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('housekeeping.rooms_to_clean_view') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-brush"></i>
+        </div>
+        <span class="sidebar-nav-text">Rooms to Clean</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('housekeeping.checkout_rooms_view') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-door-open"></i>
+        </div>
+        <span class="sidebar-nav-text">Check-outs Today</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('housekeeping.cleaning_schedule') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-calendar-check"></i>
+        </div>
+        <span class="sidebar-nav-text">Cleaning Schedule</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('housekeeping.maintenance_requests') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-tools"></i>
+        </div>
+        <span class="sidebar-nav-text">Maintenance</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('housekeeping.view_lost_and_found') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-search"></i>
+        </div>
+        <span class="sidebar-nav-text">Lost & Found</span>
+    </a>
+</li>
+{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <!-- Clean Professional Header -->
+    <div class="clean-page-header">
+        <h1 class="clean-page-title">My Tasks</h1>
+        <p class="clean-page-subtitle">View and manage your assigned cleaning tasks</p>
+    </div>
+
+    <!-- Clean Main Container -->
+    <div class="clean-container">
+        <!-- Quick Navigation Links -->
+        <div class="clean-nav-grid">
+            <a href="{{ url_for('housekeeping.dashboard') }}" class="clean-nav-link">
+                <i class="bi bi-speedometer2"></i>
+                Dashboard
+            </a>
+            <a href="{{ url_for('housekeeping.rooms_to_clean_view') }}" class="clean-nav-link">
+                <i class="bi bi-brush"></i>
+                Rooms to Clean
+            </a>
+            <a href="{{ url_for('housekeeping.checkout_rooms_view') }}" class="clean-nav-link">
+                <i class="bi bi-door-open"></i>
+                Check-outs Today
+            </a>
+            <a href="{{ url_for('housekeeping.cleaning_schedule') }}" class="clean-nav-link">
+                <i class="bi bi-calendar-check"></i>
+                Cleaning Schedule
+            </a>
+        </div>
+
+        <!-- Task Statistics -->
+        <div class="clean-metrics-grid">
+            <div class="clean-metric-card">
+                <div class="clean-metric-header">
+                    <span class="clean-metric-label">Pending Tasks</span>
+                    <i class="bi bi-clock clean-metric-icon" style="color: #F59E0B;"></i>
+                </div>
+                <div class="clean-metric-value">{{ tasks | selectattr('status', 'eq', 'pending') | list | length }}</div>
+                <div class="clean-metric-secondary">Awaiting start</div>
+            </div>
+
+            <div class="clean-metric-card">
+                <div class="clean-metric-header">
+                    <span class="clean-metric-label">In Progress</span>
+                    <i class="bi bi-play-circle clean-metric-icon" style="color: #3B82F6;"></i>
+                </div>
+                <div class="clean-metric-value">{{ tasks | selectattr('status', 'eq', 'in_progress') | list | length }}</div>
+                <div class="clean-metric-secondary">Currently working</div>
+            </div>
+
+            <div class="clean-metric-card">
+                <div class="clean-metric-header">
+                    <span class="clean-metric-label">Completed</span>
+                    <i class="bi bi-check-circle clean-metric-icon" style="color: #10B981;"></i>
+                </div>
+                <div class="clean-metric-value">{{ tasks | selectattr('status', 'eq', 'completed') | list | length }}</div>
+                <div class="clean-metric-secondary">Finished today</div>
+            </div>
+
+            <div class="clean-metric-card">
+                <div class="clean-metric-header">
+                    <span class="clean-metric-label">High Priority</span>
+                    <i class="bi bi-exclamation-triangle clean-metric-icon" style="color: #EF4444;"></i>
+                </div>
+                <div class="clean-metric-value">{{ tasks | selectattr('priority', 'in', ['high', 'urgent']) | list | length }}</div>
+                <div class="clean-metric-secondary">Needs attention</div>
+            </div>
+        </div>
+
+        <!-- Filter Options -->
+        <div class="clean-card">
+            <div class="clean-card-header">
+                <h2 class="clean-card-title">Filter Tasks</h2>
+            </div>
+            <div class="clean-card-body">
+                <form method="GET" action="{{ url_for('housekeeping.tasks') }}">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 16px;">
+                        <div>
+                            <label style="display: block; font-size: 14px; font-weight: 500; color: #1F2937; margin-bottom: 8px;">Status</label>
+                            <select name="status" style="width: 100%; padding: 8px; border: 1px solid #E5E7EB; border-radius: 6px; font-size: 14px;">
+                                <option value="">All Statuses</option>
+                                {% for status in statuses %}
+                                    <option value="{{ status }}" {% if filters.status == status %}selected{% endif %}>{{ status.replace('_', ' ').title() }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 14px; font-weight: 500; color: #1F2937; margin-bottom: 8px;">Priority</label>
+                            <select name="priority" style="width: 100%; padding: 8px; border: 1px solid #E5E7EB; border-radius: 6px; font-size: 14px;">
+                                <option value="">All Priorities</option>
+                                {% for priority in priorities %}
+                                    <option value="{{ priority }}" {% if filters.priority == priority %}selected{% endif %}>{{ priority.title() }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 14px; font-weight: 500; color: #1F2937; margin-bottom: 8px;">Task Type</label>
+                            <select name="task_type" style="width: 100%; padding: 8px; border: 1px solid #E5E7EB; border-radius: 6px; font-size: 14px;">
+                                <option value="">All Types</option>
+                                {% for task_type in task_types %}
+                                    <option value="{{ task_type }}" {% if filters.task_type == task_type %}selected{% endif %}>{{ task_type.replace('_', ' ').title() }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div style="display: flex; align-items: end;">
+                            <button type="submit" class="clean-btn clean-btn-primary" style="width: 100%;">
+                                <i class="bi bi-funnel"></i>
+                                Apply Filters
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Tasks List -->
+        {% if tasks %}
+        <div class="clean-card">
+            <div class="clean-card-header">
+                <h2 class="clean-card-title">My Tasks</h2>
+                <div class="clean-card-controls">
+                    <span class="clean-badge clean-badge-primary">{{ tasks | length }} task{% if tasks | length != 1 %}s{% endif %}</span>
+                </div>
+            </div>
+            <div class="clean-card-body">
+                <div style="display: grid; gap: 16px;">
+                    {% for task in tasks %}
+                    <div class="clean-metric-card" style="border-left: 4px solid {% if task.priority == 'urgent' %}#EF4444{% elif task.priority == 'high' %}#F59E0B{% elif task.priority == 'normal' %}#3B82F6{% else %}#6B7280{% endif %};">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 16px;">
+                            <div>
+                                <h3 style="font-size: 18px; font-weight: 600; color: #1F2937; margin: 0 0 8px 0;">
+                                    Room {{ task.room.number }} - {{ task.task_type.replace('_', ' ').title() }}
+                                </h3>
+                                <div style="display: flex; gap: 12px; margin-bottom: 8px;">
+                                    <span class="clean-badge {% if task.status == 'pending' %}clean-badge-warning{% elif task.status == 'in_progress' %}clean-badge-primary{% elif task.status == 'completed' %}clean-badge-success{% else %}clean-badge{% endif %}">
+                                        {% if task.status == 'pending' %}
+                                            <i class="bi bi-clock"></i>
+                                        {% elif task.status == 'in_progress' %}
+                                            <i class="bi bi-play-circle"></i>
+                                        {% elif task.status == 'completed' %}
+                                            <i class="bi bi-check-circle"></i>
+                                        {% endif %}
+                                        {{ task.status.replace('_', ' ').title() }}
+                                    </span>
+                                    <span class="clean-badge {% if task.priority == 'urgent' %}clean-badge-danger{% elif task.priority == 'high' %}clean-badge-warning{% else %}clean-badge{% endif %}">
+                                        {% if task.priority == 'urgent' %}
+                                            <i class="bi bi-exclamation-triangle"></i>
+                                        {% elif task.priority == 'high' %}
+                                            <i class="bi bi-exclamation-circle"></i>
+                                        {% endif %}
+                                        {{ task.priority.title() }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 8px;">
+                                {% if task.status == 'pending' %}
+                                <form method="POST" action="{{ url_for('housekeeping.task_detail', task_id=task.id) }}" style="display: inline;">
+                                    <input type="hidden" name="action" value="start">
+                                    <button type="submit" class="clean-btn clean-btn-primary" style="padding: 6px 12px; font-size: 12px;">
+                                        <i class="bi bi-play"></i>
+                                        Start
+                                    </button>
+                                </form>
+                                {% elif task.status == 'in_progress' %}
+                                <form method="POST" action="{{ url_for('housekeeping.task_detail', task_id=task.id) }}" style="display: inline;">
+                                    <input type="hidden" name="action" value="complete">
+                                    <button type="submit" class="clean-btn clean-btn-primary" style="padding: 6px 12px; font-size: 12px;">
+                                        <i class="bi bi-check"></i>
+                                        Complete
+                                    </button>
+                                </form>
+                                {% endif %}
+                                <a href="{{ url_for('housekeeping.task_detail', task_id=task.id) }}" class="clean-btn clean-btn-outline" style="padding: 6px 12px; font-size: 12px;">
+                                    <i class="bi bi-eye"></i>
+                                    View
+                                </a>
+                            </div>
+                        </div>
+                        
+                        {% if task.description %}
+                        <div style="margin-bottom: 12px;">
+                            <p style="color: #6B7280; margin: 0; font-size: 14px;">{{ task.description }}</p>
+                        </div>
+                        {% endif %}
+                        
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; font-size: 14px; color: #6B7280;">
+                            {% if task.due_date %}
+                            <div>
+                                <span style="font-weight: 500;">Due Date:</span><br>
+                                {{ task.due_date.strftime('%m/%d/%Y %H:%M') }}
+                            </div>
+                            {% endif %}
+                            {% if task.created_at %}
+                            <div>
+                                <span style="font-weight: 500;">Created:</span><br>
+                                {{ task.created_at.strftime('%m/%d/%Y %H:%M') }}
+                            </div>
+                            {% endif %}
+                            {% if task.estimated_duration %}
+                            <div>
+                                <span style="font-weight: 500;">Estimated Duration:</span><br>
+                                {{ task.estimated_duration }} minutes
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        {% if pagination and pagination.pages > 1 %}
+        <div class="clean-card">
+            <div class="clean-card-body" style="text-align: center;">
+                <div style="display: inline-flex; gap: 8px; align-items: center;">
+                    {% if pagination.has_prev %}
+                        <a href="{{ url_for('housekeeping.tasks', page=pagination.prev_num, **filters) }}" class="clean-btn clean-btn-outline">
+                            <i class="bi bi-chevron-left"></i>
+                            Previous
+                        </a>
+                    {% endif %}
+                    
+                    <span style="color: #6B7280; font-size: 14px;">
+                        Page {{ pagination.page }} of {{ pagination.pages }}
+                    </span>
+                    
+                    {% if pagination.has_next %}
+                        <a href="{{ url_for('housekeeping.tasks', page=pagination.next_num, **filters) }}" class="clean-btn clean-btn-outline">
+                            Next
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% else %}
+        <!-- Empty State -->
+        <div class="clean-empty-state">
+            <div class="clean-empty-icon">
+                <i class="bi bi-list-task"></i>
+            </div>
+            <h2 class="clean-empty-title">No Tasks Assigned</h2>
+            <p class="clean-empty-text">You don't have any tasks assigned at the moment. Check back later or contact your supervisor.</p>
+            <a href="{{ url_for('housekeeping.dashboard') }}" class="clean-btn clean-btn-primary">
+                Return to Dashboard
+            </a>
+        </div>
+        {% endif %}
+
+        <!-- Action Banner -->
+        <div class="clean-action-banner">
+            <div class="clean-banner-content">
+                <h3 class="clean-banner-title">Need help with a task?</h3>
+                <p class="clean-banner-text">Contact your supervisor or check the room status for more information</p>
+            </div>
+            <a href="{{ url_for('housekeeping.room_status') }}" class="clean-btn clean-btn-primary">
+                <i class="bi bi-house-door"></i>
+                Room Status
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %} 

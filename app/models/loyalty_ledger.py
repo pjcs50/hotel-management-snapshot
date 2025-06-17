@@ -48,9 +48,9 @@ class LoyaltyLedger(BaseModel):
     staff_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)  # For manual adjustments
 
     # Relationships
-    customer = db.relationship('Customer', backref='loyalty_transactions')
-    booking = db.relationship('Booking', backref='loyalty_transactions')
-    staff = db.relationship('User', backref='loyalty_adjustments')
+    customer = db.relationship('Customer', back_populates='loyalty_transactions')
+    booking = db.relationship('Booking', back_populates='loyalty_transactions')
+    staff = db.relationship('User', back_populates='loyalty_adjustments')
 
     def __repr__(self):
         """Provide a readable representation of a LoyaltyLedger instance."""

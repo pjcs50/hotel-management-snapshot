@@ -1,184 +1,311 @@
-{% extends "dashboard_base.html" %}
+{% extends "dashboard_sidebar_base.html" %}
 
-{% block dashboard_title %}Lost and Found Items{% endblock %}
-{% block dashboard_heading %}Lost and Found Items{% endblock %}
+{% block dashboard_title %}Lost & Found{% endblock %}
+{% block sidebar_title %}Housekeeping Panel{% endblock %}
 
-{% block dashboard_navigation %}
-<div class="row mb-4">
-    <div class="col-md-3 mb-3">
-        <a href="{{ url_for('housekeeping.dashboard') }}" class="text-decoration-none">
-            <div class="card bg-primary text-white h-100 dashboard-card">
-                <div class="card-body text-center">
-                    <i class="bi bi-speedometer2 display-4"></i>
-                    <h5 class="mt-2">Dashboard</h5>
-                </div>
-            </div>
-        </a>
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/clean-customer.css') }}">
+{% endblock %}
+
+{% block sidebar_links %}
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('housekeeping.dashboard') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-speedometer2"></i>
+        </div>
+        <span class="sidebar-nav-text">Dashboard</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('housekeeping.rooms_to_clean_view') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-brush"></i>
+        </div>
+        <span class="sidebar-nav-text">Rooms to Clean</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('housekeeping.checkout_rooms_view') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-door-open"></i>
+        </div>
+        <span class="sidebar-nav-text">Check-outs Today</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('housekeeping.cleaning_schedule') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-calendar-check"></i>
+        </div>
+        <span class="sidebar-nav-text">Cleaning Schedule</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('housekeeping.maintenance_requests') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-tools"></i>
+        </div>
+        <span class="sidebar-nav-text">Maintenance</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('housekeeping.view_lost_and_found') }}" class="sidebar-nav-link active">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-search"></i>
+        </div>
+        <span class="sidebar-nav-text">Lost & Found</span>
+    </a>
+</li>
+{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <!-- Clean Professional Header -->
+    <div class="clean-page-header">
+        <h1 class="clean-page-title">Lost & Found</h1>
+        <p class="clean-page-subtitle">Manage and track lost items found in hotel rooms</p>
     </div>
-    <div class="col-md-3 mb-3">
-        <a href="{{ url_for('housekeeping.rooms_to_clean_view') }}" class="text-decoration-none">
-            <div class="card bg-info text-white h-100 dashboard-card">
-                <div class="card-body text-center">
-                    <i class="bi bi-brush display-4"></i>
-                    <h5 class="mt-2">Rooms to Clean</h5>
+
+    <!-- Clean Main Container -->
+    <div class="clean-container">
+        <!-- Quick Navigation Links -->
+        <div class="clean-nav-grid">
+            <a href="{{ url_for('housekeeping.dashboard') }}" class="clean-nav-link">
+                <i class="bi bi-speedometer2"></i>
+                Dashboard
+            </a>
+            <a href="{{ url_for('housekeeping.rooms_to_clean_view') }}" class="clean-nav-link">
+                <i class="bi bi-brush"></i>
+                Rooms to Clean
+            </a>
+            <a href="{{ url_for('housekeeping.checkout_rooms_view') }}" class="clean-nav-link">
+                <i class="bi bi-door-open"></i>
+                Check-outs Today
+            </a>
+            <a href="{{ url_for('housekeeping.cleaning_schedule') }}" class="clean-nav-link">
+                <i class="bi bi-calendar-check"></i>
+                Cleaning Schedule
+            </a>
+        </div>
+
+        <!-- Lost & Found Statistics -->
+        <div class="clean-metrics-grid">
+            <div class="clean-metric-card">
+                <div class="clean-metric-header">
+                    <span class="clean-metric-label">Total Items</span>
+                    <i class="bi bi-search clean-metric-icon" style="color: #3B82F6;"></i>
                 </div>
+                <div class="clean-metric-value">{{ lost_items | length }}</div>
+                <div class="clean-metric-secondary">All found items</div>
             </div>
-        </a>
-    </div>
-    <div class="col-md-3 mb-3">
-        <a href="{{ url_for('housekeeping.tasks') }}" class="text-decoration-none">
-            <div class="card bg-warning text-white h-100 dashboard-card">
-                <div class="card-body text-center">
-                    <i class="bi bi-check2-square display-4"></i>
-                    <h5 class="mt-2">My Tasks</h5>
+
+            <div class="clean-metric-card">
+                <div class="clean-metric-header">
+                    <span class="clean-metric-label">Unclaimed</span>
+                    <i class="bi bi-exclamation-circle clean-metric-icon" style="color: #F59E0B;"></i>
                 </div>
+                <div class="clean-metric-value">{{ lost_items | selectattr('status', 'eq', 'unclaimed') | list | length }}</div>
+                <div class="clean-metric-secondary">Awaiting pickup</div>
             </div>
-        </a>
-    </div>
-    <div class="col-md-3 mb-3">
-        <a href="{{ url_for('housekeeping.view_lost_and_found') }}" class="text-decoration-none">
-            <div class="card bg-success text-white h-100 dashboard-card active">
-                <div class="card-body text-center">
-                    <i class="bi bi-search display-4"></i>
-                    <h5 class="mt-2">Lost & Found</h5>
+
+            <div class="clean-metric-card">
+                <div class="clean-metric-header">
+                    <span class="clean-metric-label">Claimed</span>
+                    <i class="bi bi-check-circle clean-metric-icon" style="color: #10B981;"></i>
                 </div>
+                <div class="clean-metric-value">{{ lost_items | selectattr('status', 'eq', 'claimed') | list | length }}</div>
+                <div class="clean-metric-secondary">Returned to guests</div>
             </div>
+
+            <div class="clean-metric-card">
+                <div class="clean-metric-header">
+                    <span class="clean-metric-label">This Week</span>
+                    <i class="bi bi-calendar-week clean-metric-icon" style="color: #8B5CF6;"></i>
+                </div>
+                <div class="clean-metric-value">{{ lost_items | length }}</div>
+                <div class="clean-metric-secondary">Items found</div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="clean-card">
+            <div class="clean-card-header">
+                <h2 class="clean-card-title">Quick Actions</h2>
+            </div>
+            <div class="clean-card-body">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+                    <button class="clean-btn clean-btn-primary" onclick="showAddItemModal()" style="padding: 16px; text-align: center;">
+                        <i class="bi bi-plus-circle" style="display: block; font-size: 24px; margin-bottom: 8px;"></i>
+                        <span style="font-weight: 500;">Add Found Item</span>
+                        <div style="font-size: 12px; color: rgba(255,255,255,0.8); margin-top: 4px;">Report new find</div>
+                    </button>
+                    
+                    <button class="clean-btn clean-btn-outline" onclick="filterItems('unclaimed')" style="padding: 16px; text-align: center;">
+                        <i class="bi bi-funnel" style="display: block; font-size: 24px; margin-bottom: 8px;"></i>
+                        <span style="font-weight: 500;">View Unclaimed</span>
+                        <div style="font-size: 12px; color: #6B7280; margin-top: 4px;">Items awaiting pickup</div>
+                    </button>
+                    
+                    <button class="clean-btn clean-btn-outline" onclick="searchItems()" style="padding: 16px; text-align: center;">
+                        <i class="bi bi-search" style="display: block; font-size: 24px; margin-bottom: 8px;"></i>
+                        <span style="font-weight: 500;">Search Items</span>
+                        <div style="font-size: 12px; color: #6B7280; margin-top: 4px;">Find specific item</div>
+                    </button>
+                    
+                    <a href="{{ url_for('housekeeping.maintenance_requests') }}" class="clean-btn clean-btn-outline" style="padding: 16px; text-align: center; text-decoration: none;">
+                        <i class="bi bi-tools" style="display: block; font-size: 24px; margin-bottom: 8px;"></i>
+                        <span style="font-weight: 500;">Maintenance</span>
+                        <div style="font-size: 12px; color: #6B7280; margin-top: 4px;">Report issues</div>
         </a>
     </div>
 </div>
-{% endblock %}
+        </div>
 
-{% block dashboard_content %}
-<div class="row">
-    <div class="col-lg-12">
-        <div class="card shadow mb-4">
-            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                <h6 class="m-0 font-weight-bold text-primary">Lost and Found Items</h6>
-                <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addItemModal">
-                    <i class="bi bi-plus-circle"></i> Add New Item
-                </button>
+        <!-- Lost Items List -->
+        {% if lost_items %}
+        <div class="clean-card">
+            <div class="clean-card-header">
+                <h2 class="clean-card-title">All Lost & Found Items</h2>
+                <div class="clean-card-controls">
+                    <span class="clean-badge clean-badge-primary">{{ lost_items | length }} item{% if lost_items | length != 1 %}s{% endif %}</span>
+                </div>
             </div>
-            <div class="card-body">
-                {% if lost_items %}
-                <div class="table-responsive">
-                    <table class="table table-bordered" id="lostItemsTable" width="100%" cellspacing="0">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Item</th>
-                                <th>Room</th>
-                                <th>Found Date</th>
-                                <th>Found By</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
+            <div class="clean-card-body">
+                <div style="display: grid; gap: 16px;">
                             {% for item in lost_items %}
-                            <tr>
-                                <td>{{ item.id }}</td>
-                                <td>{{ item.name }}</td>
-                                <td>{{ item.room }}</td>
-                                <td>{{ item.found_date }}</td>
-                                <td>{{ item.found_by }}</td>
-                                <td>
-                                    <span class="badge {% if item.status == 'unclaimed' %}bg-warning{% else %}bg-success{% endif %}">
-                                        {{ item.status|title }}
+                    <div class="clean-metric-card" style="border-left: 4px solid {% if item.status == 'unclaimed' %}#F59E0B{% elif item.status == 'claimed' %}#10B981{% else %}#6B7280{% endif %};">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 16px;">
+                            <div>
+                                <h3 style="font-size: 18px; font-weight: 600; color: #1F2937; margin: 0 0 8px 0;">
+                                    {{ item.name }}
+                                </h3>
+                                <div style="display: flex; gap: 12px; margin-bottom: 8px;">
+                                    <span class="clean-badge {% if item.status == 'unclaimed' %}clean-badge-warning{% elif item.status == 'claimed' %}clean-badge-success{% else %}clean-badge{% endif %}">
+                                        {% if item.status == 'unclaimed' %}
+                                            <i class="bi bi-exclamation-circle"></i>
+                                        {% elif item.status == 'claimed' %}
+                                            <i class="bi bi-check-circle"></i>
+                                        {% endif %}
+                                        {{ item.status.title() }}
                                     </span>
-                                </td>
-                                <td>
-                                    <button type="button" class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#viewItemModal{{ item.id }}">
-                                        <i class="bi bi-eye"></i>
-                                    </button>
+                                    <span class="clean-badge clean-badge-primary">
+                                        <i class="bi bi-door-closed"></i>
+                                        Room {{ item.room }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 8px;">
                                     {% if item.status == 'unclaimed' %}
-                                    <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#markClaimedModal{{ item.id }}">
-                                        <i class="bi bi-check-circle"></i>
+                                <button onclick="markAsClaimed({{ item.id }})" class="clean-btn clean-btn-primary" style="padding: 6px 12px; font-size: 12px;">
+                                    <i class="bi bi-check"></i>
+                                    Mark Claimed
                                     </button>
                                     {% endif %}
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                                <button onclick="editItem({{ item.id }})" class="clean-btn clean-btn-outline" style="padding: 6px 12px; font-size: 12px;">
+                                    <i class="bi bi-pencil"></i>
+                                    Edit
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; font-size: 14px; color: #6B7280;">
+                            <div>
+                                <span style="font-weight: 500;">Found Date:</span><br>
+                                {{ item.found_date }}
+                            </div>
+                            <div>
+                                <span style="font-weight: 500;">Found By:</span><br>
+                                {{ item.found_by }}
+                            </div>
+                            <div>
+                                <span style="font-weight: 500;">Location:</span><br>
+                                Room {{ item.room }}
                 </div>
-                {% else %}
-                <div class="alert alert-info">
-                    <i class="bi bi-info-circle"></i> There are no lost and found items at the moment.
+                            {% if item.status == 'claimed' %}
+                            <div>
+                                <span style="font-weight: 500;">Status:</span><br>
+                                <span style="color: #10B981; font-weight: 500;">Returned to Guest</span>
                 </div>
                 {% endif %}
             </div>
+                    </div>
+                    {% endfor %}
         </div>
     </div>
 </div>
 
-<!-- Add Item Modal -->
-<div class="modal fade" id="addItemModal" tabindex="-1" aria-labelledby="addItemModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="addItemModalLabel">Add Lost and Found Item</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        {% else %}
+        <!-- Empty State -->
+        <div class="clean-empty-state">
+            <div class="clean-empty-icon">
+                <i class="bi bi-search"></i>
             </div>
-            <div class="modal-body">
-                <form id="addItemForm">
-                    <div class="mb-3">
-                        <label for="itemName" class="form-label">Item Name</label>
-                        <input type="text" class="form-control" id="itemName" required>
+            <h2 class="clean-empty-title">No Lost Items</h2>
+            <p class="clean-empty-text">No lost and found items have been reported. Items found during cleaning will appear here.</p>
+            <button onclick="showAddItemModal()" class="clean-btn clean-btn-primary">
+                <i class="bi bi-plus-circle"></i>
+                Report Found Item
+            </button>
                     </div>
-                    <div class="mb-3">
-                        <label for="roomNumber" class="form-label">Room Number</label>
-                        <input type="text" class="form-control" id="roomNumber" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="description" class="form-label">Description</label>
-                        <textarea class="form-control" id="description" rows="3"></textarea>
-                    </div>
-                </form>
+        {% endif %}
+
+        <!-- Action Banner -->
+        <div class="clean-action-banner">
+            <div class="clean-banner-content">
+                <h3 class="clean-banner-title">Found something during cleaning?</h3>
+                <p class="clean-banner-text">Report lost items immediately to help guests recover their belongings</p>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary">Save Item</button>
-            </div>
+            <button onclick="showAddItemModal()" class="clean-btn clean-btn-primary">
+                <i class="bi bi-plus-circle"></i>
+                Report Found Item
+            </button>
         </div>
     </div>
 </div>
 
-<!-- Item Detail Modals -->
-{% for item in lost_items %}
-<div class="modal fade" id="viewItemModal{{ item.id }}" tabindex="-1" aria-labelledby="viewItemModalLabel{{ item.id }}" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="viewItemModalLabel{{ item.id }}">Item Details: {{ item.name }}</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p><strong>Item:</strong> {{ item.name }}</p>
-                <p><strong>Room:</strong> {{ item.room }}</p>
-                <p><strong>Found Date:</strong> {{ item.found_date }}</p>
-                <p><strong>Found By:</strong> {{ item.found_by }}</p>
-                <p><strong>Status:</strong> {{ item.status|title }}</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            </div>
-        </div>
+<!-- Add Item Modal (placeholder for future implementation) -->
+<div id="addItemModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
+    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 24px; border-radius: 8px; min-width: 400px;">
+        <h3 style="margin: 0 0 16px 0;">Report Found Item</h3>
+        <p style="color: #6B7280; margin-bottom: 16px;">This feature will be implemented to add new lost and found items.</p>
+        <button onclick="hideAddItemModal()" class="clean-btn clean-btn-outline">Close</button>
     </div>
 </div>
-{% endfor %}
-{% endblock %}
 
-{% block quick_links %}
-<a href="{{ url_for('housekeeping.dashboard') }}" class="list-group-item list-group-item-action">
-    <i class="bi bi-speedometer2 me-2"></i> Dashboard
-</a>
-<a href="{{ url_for('housekeeping.rooms_to_clean_view') }}" class="list-group-item list-group-item-action">
-    <i class="bi bi-brush me-2"></i> Rooms to Clean
-</a>
-<a href="{{ url_for('housekeeping.tasks') }}" class="list-group-item list-group-item-action">
-    <i class="bi bi-check2-square me-2"></i> My Tasks
-</a>
-<a href="{{ url_for('housekeeping.maintenance_requests') }}" class="list-group-item list-group-item-action">
-    <i class="bi bi-tools me-2"></i> Maintenance Requests
-</a>
+<script>
+function showAddItemModal() {
+    document.getElementById('addItemModal').style.display = 'block';
+}
+
+function hideAddItemModal() {
+    document.getElementById('addItemModal').style.display = 'none';
+}
+
+function markAsClaimed(itemId) {
+    // Placeholder for marking item as claimed
+    alert('This feature will be implemented to mark item as claimed. Item ID: ' + itemId);
+}
+
+function editItem(itemId) {
+    // Placeholder for editing item
+    alert('This feature will be implemented to edit item details. Item ID: ' + itemId);
+}
+
+function filterItems(status) {
+    // Placeholder for filtering items
+    alert('This feature will be implemented to filter items by status: ' + status);
+}
+
+function searchItems() {
+    // Placeholder for searching items
+    alert('This feature will be implemented to search items by name, room, or finder.');
+}
+
+// Close modal when clicking outside
+document.getElementById('addItemModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        hideAddItemModal();
+    }
+});
+</script>
 {% endblock %}

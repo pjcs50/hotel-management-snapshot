@@ -1,158 +1,257 @@
-{% extends "dashboard_base.html" %}
+{% extends "dashboard_sidebar_base.html" %}
 
-{% block dashboard_title %}Bookings Management{% endblock %}
-{% block dashboard_heading %}Bookings Management{% endblock %}
+{% block title %}Bookings Management - Horizon Hotel Management{% endblock %}
+{% block sidebar_title %}Horizon{% endblock %}
+{% block page_title %}Bookings{% endblock %}
 
-{% block dashboard_navigation %}
-<div class="row mb-4">
-    <div class="col-md-3 mb-3">
-        <a href="{{ url_for('receptionist.dashboard') }}" class="text-decoration-none">
-            <div class="card bg-secondary text-white h-100">
-                <div class="card-body text-center">
-                    <i class="bi bi-speedometer2 display-4"></i>
-                    <h5 class="mt-2">Dashboard</h5>
-                </div>
-            </div>
-        </a>
-    </div>
-    <div class="col-md-3 mb-3">
-        <a href="{{ url_for('receptionist.bookings') }}" class="text-decoration-none">
-            <div class="card bg-primary text-white h-100">
-                <div class="card-body text-center">
-                    <i class="bi bi-calendar-check display-4"></i>
-                    <h5 class="mt-2">Bookings</h5>
-                </div>
-            </div>
-        </a>
-    </div>
-    <div class="col-md-3 mb-3">
-        <a href="{{ url_for('receptionist.guest_list') }}" class="text-decoration-none">
-            <div class="card bg-info text-white h-100">
-                <div class="card-body text-center">
-                    <i class="bi bi-people display-4"></i>
-                    <h5 class="mt-2">Guests</h5>
-                </div>
-            </div>
-        </a>
-    </div>
-    <div class="col-md-3 mb-3">
-        <a href="{{ url_for('receptionist.room_availability') }}" class="text-decoration-none">
-            <div class="card bg-warning text-dark h-100">
-                <div class="card-body text-center">
-                    <i class="bi bi-house-door display-4"></i>
-                    <h5 class="mt-2">Availability</h5>
-                </div>
-            </div>
-        </a>
-    </div>
-</div>
+{% block sidebar_links %}
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('receptionist.dashboard') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-speedometer2"></i>
+        </div>
+        <span class="sidebar-nav-text">Dashboard</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('receptionist.new_booking') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-plus-circle"></i>
+        </div>
+        <span class="sidebar-nav-text">New Booking</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('receptionist.bookings') }}" class="sidebar-nav-link active">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-calendar-check"></i>
+        </div>
+        <span class="sidebar-nav-text">Bookings</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('receptionist.check_in') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-box-arrow-in-right"></i>
+        </div>
+        <span class="sidebar-nav-text">Check-in</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('receptionist.check_out') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-box-arrow-right"></i>
+        </div>
+        <span class="sidebar-nav-text">Check-out</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('receptionist.guest_list') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-people"></i>
+        </div>
+        <span class="sidebar-nav-text">Guest List</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('receptionist.room_inventory') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-building"></i>
+        </div>
+        <span class="sidebar-nav-text">Room Status</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('receptionist.room_availability') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-calendar3"></i>
+        </div>
+        <span class="sidebar-nav-text">Availability</span>
+    </a>
+</li>
 {% endblock %}
 
-{% block dashboard_content %}
-<div class="row">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                <h3 class="h5 mb-0">All Bookings</h3>
-                <a href="{{ url_for('receptionist.new_booking') }}" class="btn btn-sm btn-light">
-                    <i class="bi bi-plus-circle"></i> New Booking
-                </a>
+{% block content %}
+<div class="fade-in">
+    <!-- Header Section -->
+    <div class="dashboard-header-compact">
+        <h2 class="dashboard-title-compact">Booking Management</h2>
+        <p class="dashboard-subtitle-compact">View and manage all hotel reservations</p>
+    </div>
+
+    <!-- Stats Overview -->
+    <div class="bookings-stats">
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="bi bi-calendar-check"></i>
             </div>
-            <div class="card-body">
-                <!-- Search and filters form -->
-                <form method="get" action="{{ url_for('receptionist.bookings') }}">
-                    <div class="row mb-3">
-                        <div class="col-md-3">
-                            <div class="mb-2">
-                                <label class="form-label small">Status</label>
-                                <select name="status" class="form-select form-select-sm">
-                                    <option value="">All Statuses</option>
-                                    {% for status_value, status_label in statuses %}
-                                    <option value="{{ status_value }}" {% if filters.status == status_value %}selected{% endif %}>{{ status_label }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="mb-2">
-                                <label class="form-label small">From Date</label>
-                                <input type="date" name="date_from" class="form-control form-control-sm" value="{{ filters.date_from }}">
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="mb-2">
-                                <label class="form-label small">To Date</label>
-                                <input type="date" name="date_to" class="form-control form-control-sm" value="{{ filters.date_to }}">
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="mb-2">
-                                <label class="form-label small">Search Guest</label>
-                                <div class="input-group input-group-sm">
-                                    <input type="text" name="q" class="form-control form-control-sm" value="{{ filters.search_query }}" placeholder="Guest name...">
-                                    <button class="btn btn-primary" type="submit">
-                                        <i class="bi bi-search"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
+            <div class="stat-content">
+                <div class="stat-value">{{ bookings.total if bookings else 0 }}</div>
+                <div class="stat-label">Total Bookings</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon reserved">
+                <i class="bi bi-calendar-plus"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">12</div>
+                <div class="stat-label">Reserved</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon active">
+                <i class="bi bi-house-door"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">8</div>
+                <div class="stat-label">Active</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon completed">
+                <i class="bi bi-check-circle"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">45</div>
+                <div class="stat-label">Completed</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-card">
+        <div class="card-header">
+            <h3><i class="bi bi-funnel me-2"></i>Filter Bookings</h3>
+            <a href="{{ url_for('receptionist.new_booking') }}" class="btn btn-primary btn-sm">
+                <i class="bi bi-plus-circle me-2"></i>New Booking
+            </a>
+        </div>
+        <div class="card-body">
+            <form method="GET" class="filter-form">
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label class="form-label">Status</label>
+                        <select name="status" class="form-control">
+                            <option value="">All Statuses</option>
+                            {% if statuses %}
+                                {% for status_key, status_label in statuses %}
+                                <option value="{{ status_key }}" {{ 'selected' if filters.status == status_key else '' }}>
+                                    {{ status_label }}
+                                </option>
+                                {% endfor %}
+                            {% endif %}
+                        </select>
                     </div>
-                </form>
-                
-                <!-- Bookings table -->
-                {% if bookings.items %}
+                    <div class="filter-group">
+                        <label class="form-label">Date From</label>
+                        <input type="date" name="date_from" class="form-control" value="{{ filters.date_from or '' }}">
+                    </div>
+                    <div class="filter-group">
+                        <label class="form-label">Date To</label>
+                        <input type="date" name="date_to" class="form-control" value="{{ filters.date_to or '' }}">
+                    </div>
+                    <div class="filter-group">
+                        <label class="form-label">Search Guest</label>
+                        <input type="text" name="q" class="form-control" placeholder="Guest name..." value="{{ filters.search_query or '' }}">
+                    </div>
+                    <div class="filter-actions">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-search me-2"></i>Filter
+                        </button>
+                        <a href="{{ url_for('receptionist.bookings') }}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-clockwise me-2"></i>Reset
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Bookings Table -->
+    <div class="bookings-table-card">
+        <div class="card-header">
+            <h3>Reservations</h3>
+            <div class="table-info">
+                {% if bookings and bookings.items %}
+                    Showing {{ bookings.items|length }} of {{ bookings.total }} bookings
+                {% else %}
+                    No bookings found
+                {% endif %}
+            </div>
+        </div>
+        <div class="card-body">
+            {% if bookings and bookings.items %}
                 <div class="table-responsive">
-                    <table class="table table-striped table-hover">
-                        <thead class="table-light">
+                    <table class="bookings-table">
+                        <thead>
                             <tr>
                                 <th>ID</th>
                                 <th>Guest</th>
                                 <th>Room</th>
-                                <th>Check-in</th>
-                                <th>Check-out</th>
+                                <th>Dates</th>
                                 <th>Status</th>
+                                <th>Amount</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for booking in bookings.items %}
                             <tr>
-                                <td>{{ booking.id }}</td>
                                 <td>
-                                    {% if booking.customer %}
-                                    <a href="{{ url_for('receptionist.guest_list') }}?q={{ booking.customer.name }}">{{ booking.customer.name }}</a>
-                                    {% else %}
-                                    <span class="text-muted">No customer</span>
-                                    {% endif %}
-                                </td>
-                                <td>{{ booking.room.number }} ({{ booking.room.room_type.name }})</td>
-                                <td>{{ booking.check_in_date.strftime('%Y-%m-%d') }}</td>
-                                <td>{{ booking.check_out_date.strftime('%Y-%m-%d') }}</td>
-                                <td>
-                                    {% if booking.status == 'Reserved' %}
-                                    <span class="badge bg-info">{{ booking.status }}</span>
-                                    {% elif booking.status == 'Checked In' %}
-                                    <span class="badge bg-success">{{ booking.status }}</span>
-                                    {% elif booking.status == 'Checked Out' %}
-                                    <span class="badge bg-secondary">{{ booking.status }}</span>
-                                    {% elif booking.status == 'Cancelled' %}
-                                    <span class="badge bg-danger">{{ booking.status }}</span>
-                                    {% else %}
-                                    <span class="badge bg-warning">{{ booking.status }}</span>
-                                    {% endif %}
+                                    <span class="booking-id">#{{ booking.id }}</span>
                                 </td>
                                 <td>
-                                    <div class="btn-group btn-group-sm">
-                                        <a href="#" class="btn btn-outline-primary">
+                                    <div class="guest-info">
+                                        <div class="guest-avatar">
+                                            {{ booking.customer.name[:2].upper() if booking.customer else 'G' }}
+                                        </div>
+                                        <div class="guest-details">
+                                            <div class="guest-name">{{ booking.customer.name if booking.customer else 'Guest' }}</div>
+                                            <div class="guest-contact">{{ booking.customer.email if booking.customer else '' }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="room-info">
+                                        <div class="room-number">Room {{ booking.room.number if booking.room else 'TBD' }}</div>
+                                        <div class="room-type">{{ booking.room.room_type.name if booking.room and booking.room.room_type else 'Standard' }}</div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="date-info">
+                                        <div class="check-in">{{ booking.check_in_date.strftime('%b %d') if booking.check_in_date else 'TBD' }}</div>
+                                        <div class="check-out">{{ booking.check_out_date.strftime('%b %d') if booking.check_out_date else 'TBD' }}</div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="status-badge status-{{ booking.status.lower().replace('_', '') if booking.status else 'pending' }}">
+                                        {{ booking.status.replace('_', ' ').title() if booking.status else 'Pending' }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="amount-info">
+                                        <div class="amount">${{ "%.2f"|format(booking.total_price) if booking.total_price else '0.00' }}</div>
+                                        <div class="payment-status {{ 'paid' if booking.payment_status == 'paid' else 'pending' }}">
+                                            {{ booking.payment_status.title() if booking.payment_status else 'Pending' }}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <a href="{{ url_for('receptionist.view_booking', booking_id=booking.id) }}" 
+                                           class="btn btn-sm btn-outline-primary" title="View Details">
                                             <i class="bi bi-eye"></i>
                                         </a>
-                                        {% if booking.status == 'Reserved' %}
-                                        <a href="#" class="btn btn-outline-success">
-                                            <i class="bi bi-box-arrow-in-right"></i> Check In
+                                        {% if booking.status == 'reserved' %}
+                                        <a href="{{ url_for('receptionist.check_in_guest', booking_id=booking.id) }}" 
+                                           class="btn btn-sm btn-outline-success" title="Check In">
+                                            <i class="bi bi-box-arrow-in-right"></i>
                                         </a>
-                                        {% elif booking.status == 'Checked In' %}
-                                        <a href="#" class="btn btn-outline-secondary">
-                                            <i class="bi bi-box-arrow-right"></i> Check Out
+                                        {% elif booking.status == 'checked_in' %}
+                                        <a href="{{ url_for('receptionist.check_out_guest', booking_id=booking.id) }}" 
+                                           class="btn btn-sm btn-outline-warning" title="Check Out">
+                                            <i class="bi bi-box-arrow-right"></i>
                                         </a>
                                         {% endif %}
                                     </div>
@@ -162,53 +261,525 @@
                         </tbody>
                     </table>
                 </div>
-                
+
                 <!-- Pagination -->
                 {% if bookings.pages > 1 %}
-                <nav aria-label="Bookings pagination">
-                    <ul class="pagination justify-content-center">
-                        {% if bookings.has_prev %}
-                        <li class="page-item">
-                            <a class="page-link" href="{{ url_for('receptionist.bookings', page=bookings.prev_num, status=filters.status, date_from=filters.date_from, date_to=filters.date_to, q=filters.search_query) }}">Previous</a>
-                        </li>
-                        {% else %}
-                        <li class="page-item disabled">
-                            <span class="page-link">Previous</span>
-                        </li>
-                        {% endif %}
-                        
-                        {% for page_num in bookings.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
-                        {% if page_num %}
-                        <li class="page-item {{ 'active' if page_num == bookings.page else '' }}">
-                            <a class="page-link" href="{{ url_for('receptionist.bookings', page=page_num, status=filters.status, date_from=filters.date_from, date_to=filters.date_to, q=filters.search_query) }}">{{ page_num }}</a>
-                        </li>
-                        {% else %}
-                        <li class="page-item disabled">
-                            <span class="page-link">...</span>
-                        </li>
-                        {% endif %}
-                        {% endfor %}
-                        
-                        {% if bookings.has_next %}
-                        <li class="page-item">
-                            <a class="page-link" href="{{ url_for('receptionist.bookings', page=bookings.next_num, status=filters.status, date_from=filters.date_from, date_to=filters.date_to, q=filters.search_query) }}">Next</a>
-                        </li>
-                        {% else %}
-                        <li class="page-item disabled">
-                            <span class="page-link">Next</span>
-                        </li>
-                        {% endif %}
-                    </ul>
-                </nav>
-                {% endif %}
-                
-                {% else %}
-                <div class="alert alert-info">
-                    <i class="bi bi-info-circle me-2"></i> No bookings found matching your criteria.
+                <div class="pagination-container">
+                    <nav aria-label="Bookings pagination">
+                        <ul class="pagination">
+                            {% if bookings.has_prev %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('receptionist.bookings', page=bookings.prev_num, **filters) }}">
+                                    <i class="bi bi-chevron-left"></i>
+                                </a>
+                            </li>
+                            {% endif %}
+                            
+                            {% for page_num in bookings.iter_pages() %}
+                                {% if page_num %}
+                                    {% if page_num != bookings.page %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ url_for('receptionist.bookings', page=page_num, **filters) }}">{{ page_num }}</a>
+                                    </li>
+                                    {% else %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ page_num }}</span>
+                                    </li>
+                                    {% endif %}
+                                {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">…</span>
+                                </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if bookings.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('receptionist.bookings', page=bookings.next_num, **filters) }}">
+                                    <i class="bi bi-chevron-right"></i>
+                                </a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
                 </div>
                 {% endif %}
-            </div>
+            {% else %}
+                <div class="empty-state">
+                    <i class="bi bi-calendar-x"></i>
+                    <h4>No Bookings Found</h4>
+                    <p>No bookings match your current filters. Try adjusting your search criteria.</p>
+                    <a href="{{ url_for('receptionist.new_booking') }}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-2"></i>Create New Booking
+                    </a>
+                </div>
+            {% endif %}
         </div>
     </div>
 </div>
+
+<style>
+/* Bookings Page Styles */
+.bookings-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.stat-card {
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease;
+}
+
+.stat-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.stat-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 10px;
+    background: hsl(var(--accent));
+    color: hsl(var(--accent-foreground));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+}
+
+.stat-icon.reserved {
+    background: hsl(var(--chart-2));
+    color: white;
+}
+
+.stat-icon.active {
+    background: hsl(var(--chart-3));
+    color: white;
+}
+
+.stat-icon.completed {
+    background: hsl(var(--chart-4));
+    color: white;
+}
+
+.stat-content {
+    flex: 1;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: hsl(var(--foreground));
+    line-height: 1;
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    color: hsl(var(--muted-foreground));
+    margin-top: 0.25rem;
+}
+
+.filters-card,
+.bookings-table-card {
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    margin-bottom: 1.5rem;
+}
+
+.card-header {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid hsl(var(--border));
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: hsl(var(--muted) / 0.3);
+}
+
+.card-header h3 {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 600;
+}
+
+.table-info {
+    font-size: 0.875rem;
+    color: hsl(var(--muted-foreground));
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+.filter-form {
+    margin: 0;
+}
+
+.filter-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+    align-items: end;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-label {
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: hsl(var(--foreground));
+    font-size: 0.875rem;
+}
+
+.form-control {
+    padding: 0.75rem 1rem;
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+    background: hsl(var(--background));
+    color: hsl(var(--foreground));
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: hsl(var(--accent));
+    box-shadow: 0 0 0 2px hsl(var(--accent) / 0.2);
+}
+
+.filter-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn {
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius);
+    font-weight: 500;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+    cursor: pointer;
+}
+
+.btn-sm {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+}
+
+.btn-primary {
+    background: hsl(var(--accent));
+    color: hsl(var(--accent-foreground));
+    border-color: hsl(var(--accent));
+}
+
+.btn-primary:hover {
+    background: hsl(var(--accent) / 0.9);
+}
+
+.btn-secondary {
+    background: hsl(var(--muted));
+    color: hsl(var(--muted-foreground));
+    border-color: hsl(var(--border));
+}
+
+.btn-secondary:hover {
+    background: hsl(var(--muted) / 0.8);
+}
+
+.btn-outline-primary {
+    background: transparent;
+    color: hsl(var(--accent));
+    border-color: hsl(var(--accent));
+}
+
+.btn-outline-primary:hover {
+    background: hsl(var(--accent));
+    color: hsl(var(--accent-foreground));
+}
+
+.btn-outline-success {
+    background: transparent;
+    color: hsl(var(--chart-2));
+    border-color: hsl(var(--chart-2));
+}
+
+.btn-outline-success:hover {
+    background: hsl(var(--chart-2));
+    color: white;
+}
+
+.btn-outline-warning {
+    background: transparent;
+    color: hsl(var(--chart-3));
+    border-color: hsl(var(--chart-3));
+}
+
+.btn-outline-warning:hover {
+    background: hsl(var(--chart-3));
+    color: white;
+}
+
+.table-responsive {
+    overflow-x: auto;
+}
+
+.bookings-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+}
+
+.bookings-table th {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    font-weight: 600;
+    color: hsl(var(--muted-foreground));
+    border-bottom: 2px solid hsl(var(--border));
+    background: hsl(var(--muted) / 0.3);
+}
+
+.bookings-table td {
+    padding: 1rem;
+    border-bottom: 1px solid hsl(var(--border));
+    vertical-align: middle;
+}
+
+.bookings-table tr:hover {
+    background: hsl(var(--muted) / 0.3);
+}
+
+.booking-id {
+    font-weight: 600;
+    color: hsl(var(--accent));
+}
+
+.guest-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.guest-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: hsl(var(--accent));
+    color: hsl(var(--accent-foreground));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.guest-details {
+    min-width: 0;
+}
+
+.guest-name {
+    font-weight: 600;
+    color: hsl(var(--foreground));
+    line-height: 1.2;
+}
+
+.guest-contact {
+    font-size: 0.75rem;
+    color: hsl(var(--muted-foreground));
+}
+
+.room-info {
+    min-width: 0;
+}
+
+.room-number {
+    font-weight: 600;
+    color: hsl(var(--foreground));
+    line-height: 1.2;
+}
+
+.room-type {
+    font-size: 0.75rem;
+    color: hsl(var(--muted-foreground));
+}
+
+.date-info {
+    min-width: 0;
+}
+
+.check-in,
+.check-out {
+    font-size: 0.875rem;
+    line-height: 1.2;
+}
+
+.check-in {
+    font-weight: 600;
+    color: hsl(var(--foreground));
+}
+
+.check-out {
+    color: hsl(var(--muted-foreground));
+}
+
+.status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-align: center;
+}
+
+.status-reserved {
+    background: hsl(var(--chart-1) / 0.1);
+    color: hsl(var(--chart-1));
+}
+
+.status-checkedin {
+    background: hsl(var(--chart-2) / 0.1);
+    color: hsl(var(--chart-2));
+}
+
+.status-checkedout {
+    background: hsl(var(--muted));
+    color: hsl(var(--muted-foreground));
+}
+
+.status-cancelled {
+    background: hsl(var(--destructive) / 0.1);
+    color: hsl(var(--destructive));
+}
+
+.amount-info {
+    text-align: right;
+}
+
+.amount {
+    font-weight: 600;
+    color: hsl(var(--foreground));
+    line-height: 1.2;
+}
+
+.payment-status {
+    font-size: 0.75rem;
+}
+
+.payment-status.paid {
+    color: hsl(var(--chart-2));
+}
+
+.payment-status.pending {
+    color: hsl(var(--muted-foreground));
+}
+
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.pagination-container {
+    margin-top: 1.5rem;
+    display: flex;
+    justify-content: center;
+}
+
+.pagination {
+    display: flex;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    gap: 0.25rem;
+}
+
+.page-item {
+    margin: 0;
+}
+
+.page-link {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    color: hsl(var(--foreground));
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.page-link:hover {
+    background: hsl(var(--muted));
+}
+
+.page-item.active .page-link {
+    background: hsl(var(--accent));
+    color: hsl(var(--accent-foreground));
+    border-color: hsl(var(--accent));
+}
+
+.page-item.disabled .page-link {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+    text-align: center;
+    color: hsl(var(--muted-foreground));
+}
+
+.empty-state i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.empty-state h4 {
+    margin-bottom: 0.5rem;
+    color: hsl(var(--foreground));
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .filter-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .filter-actions {
+        flex-direction: column;
+    }
+    
+    .btn {
+        width: 100%;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Bookings page initialized successfully');
+});
+</script>
 {% endblock %} 

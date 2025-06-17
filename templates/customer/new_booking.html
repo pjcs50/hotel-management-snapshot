@@ -1,563 +1,312 @@
-{% extends 'base.html' %}
+{% extends 'dashboard_sidebar_base.html' %}
 {% from '_form_macros.html' import render_field %}
 
 {% block title %}New Booking - Horizon Hotel{% endblock %}
+{% block page_title %}New Booking{% endblock %}
+{% block sidebar_title %}Customer Menu{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/clean-customer.css') }}">
+{% endblock %}
+
+{% block sidebar_links %}
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('customer.dashboard') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-speedometer2"></i>
+        </div>
+        <span class="sidebar-nav-text">Dashboard</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('customer.bookings') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-calendar-check"></i>
+        </div>
+        <span class="sidebar-nav-text">My Bookings</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('customer.new_booking') }}" class="sidebar-nav-link active">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-calendar-plus"></i>
+        </div>
+        <span class="sidebar-nav-text">New Booking</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('customer.room_types') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-building"></i>
+        </div>
+        <span class="sidebar-nav-text">Room Types</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('customer.profile') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-person-gear"></i>
+        </div>
+        <span class="sidebar-nav-text">Edit Profile</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('customer.loyalty_history') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-award"></i>
+        </div>
+        <span class="sidebar-nav-text">Loyalty Program</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('customer.feedback') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-star"></i>
+        </div>
+        <span class="sidebar-nav-text">Leave Feedback</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('customer.help_page') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-question-circle"></i>
+        </div>
+        <span class="sidebar-nav-text">Help & FAQs</span>
+    </a>
+</li>
+{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-    <div class="row mb-4">
-        <div class="col-md-10 offset-md-1">
-            <h1 class="display-5 mb-4 text-primary fw-bold">New Booking</h1>
+<div class="fade-in">
+    <!-- Clean Professional Header -->
+    <div class="clean-page-header">
+        <h1 class="clean-page-title">New Booking</h1>
+        <p class="clean-page-subtitle">Create a new room reservation</p>
+    </div>
 
-            <div class="card shadow rounded-4 border-0 mb-5">
-                <div class="card-header bg-primary text-white py-3 rounded-top-4">
-                    <h2 class="h4 mb-0 fw-bold"><i class="bi bi-calendar-check me-2"></i>Room Reservation</h2>
+    <!-- Clean Main Container -->
+    <div class="clean-container">
+        <div class="clean-card">
+            <div class="clean-card-header">
+                <h2 class="clean-card-title">Room Reservation</h2>
                 </div>
-                <div class="card-body p-4">
+            <div class="clean-card-body" style="padding: var(--clean-space-6);">
                     <form method="post" action="{{ url_for('customer.new_booking') }}" id="newBookingForm">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         {{ form.customer_id() }}
                         {{ form.status(type="hidden") }}
 
-                        <div class="row g-4 mb-3">
-                            <div class="col-md-6">
-                                <div class="mb-3 form-floating">
-                                    {{ form.check_in_date(class_="form-control", type="date", placeholder="Check-in Date") }}
-                                    {{ form.check_in_date.label(class_='form-label') }}
+                    <!-- Booking Dates -->
+                    <div class="clean-metrics-grid" style="margin-bottom: var(--clean-space-6);">
+                        <div class="clean-form-group">
+                            <label for="check_in_date" class="clean-form-label">
+                                <i class="bi bi-calendar-event"></i>
+                                Check-in Date
+                            </label>
+                            {{ form.check_in_date(class="clean-form-control", type="date") }}
                                     {% if form.check_in_date.errors %}
-                                    <div class="invalid-feedback d-block">
+                                <div style="color: var(--clean-danger); font-size: var(--clean-font-sm); margin-top: var(--clean-space-2);">
                                         {% for error in form.check_in_date.errors %}
-                                        <span>{{ error }}</span><br>
+                                        {{ error }}
                                         {% endfor %}
                                     </div>
                                     {% endif %}
                                 </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3 form-floating">
-                                    {{ form.check_out_date(class_="form-control", type="date", placeholder="Check-out Date") }}
-                                    {{ form.check_out_date.label(class_='form-label') }}
+                        
+                        <div class="clean-form-group">
+                            <label for="check_out_date" class="clean-form-label">
+                                <i class="bi bi-calendar-event"></i>
+                                Check-out Date
+                            </label>
+                            {{ form.check_out_date(class="clean-form-control", type="date") }}
                                     {% if form.check_out_date.errors %}
-                                    <div class="invalid-feedback d-block">
+                                <div style="color: var(--clean-danger); font-size: var(--clean-font-sm); margin-top: var(--clean-space-2);">
                                         {% for error in form.check_out_date.errors %}
-                                        <span>{{ error }}</span><br>
+                                        {{ error }}
                                         {% endfor %}
                                     </div>
                                     {% endif %}
-                                </div>
                             </div>
                         </div>
 
-                        <div class="row g-4 mb-3">
-                            <div class="col-md-8">
-                                <div class="mb-3 form-floating">
-                                    {{ form.room_id(class_="form-select", id="room_id_select", placeholder="Select Room") }}
-                                    {{ form.room_id.label(class_='form-label') }}
+                    <!-- Room Selection & Guests -->
+                    <div class="clean-metrics-grid" style="margin-bottom: var(--clean-space-6);">
+                        <div class="clean-form-group" style="grid-column: 1 / -1;">
+                            <label for="room_id_select" class="clean-form-label">
+                                <i class="bi bi-building"></i>
+                                Select Room
+                            </label>
+                            {{ form.room_id(class="clean-form-control", id="room_id_select") }}
                                     {% if form.room_id.errors %}
-                                    <div class="invalid-feedback d-block">
+                                <div style="color: var(--clean-danger); font-size: var(--clean-font-sm); margin-top: var(--clean-space-2);">
                                         {% for error in form.room_id.errors %}
-                                        <span>{{ error }}</span><br>
+                                        {{ error }}
                                         {% endfor %}
                                     </div>
                                     {% endif %}
-                                </div>
                                 {% if not form.room_id.choices and request.method == 'POST' %}
-                                    <div class="alert alert-warning mt-2">
-                                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid var(--clean-warning); border-radius: var(--clean-radius); padding: var(--clean-space-3); margin-top: var(--clean-space-2); display: flex; align-items: center; gap: var(--clean-space-2);">
+                                    <i class="bi bi-exclamation-triangle-fill" style="color: var(--clean-warning);"></i>
+                                    <span style="color: var(--clean-text); font-size: var(--clean-font-sm);">
                                         No rooms available for the selected dates and criteria.
-                                    </div>
-                                {% endif %}
-                            </div>
-                            <div class="col-md-4">
-                                <div class="mb-3 form-floating">
-                                    {{ form.num_guests(class_="form-control", type="number", min=1, max=10, placeholder="Number of Guests") }}
-                                    {{ form.num_guests.label(class_='form-label') }}
-                                    {% if form.num_guests.errors %}
-                                    <div class="invalid-feedback d-block">
-                                        {% for error in form.num_guests.errors %}
-                                        <span>{{ error }}</span><br>
-                                        {% endfor %}
-                                    </div>
-                                    {% endif %}
+                                    </span>
                                 </div>
-                            </div>
+                            {% endif %}
                         </div>
 
-                        <div class="mb-4">
-                            <div class="form-floating">
-                                {{ form.special_requests(class_="form-control", rows="3", style="height: 120px", placeholder=form.special_requests.description) }}
-                                {{ form.special_requests.label(class_='form-label') }}
-                                {% if form.special_requests.errors %}
-                                <div class="invalid-feedback d-block">
-                                    {% for error in form.special_requests.errors %}
-                                    <span>{{ error }}</span><br>
+                        <div class="clean-form-group">
+                            <label for="num_guests" class="clean-form-label">
+                                <i class="bi bi-people"></i>
+                                Number of Guests
+                            </label>
+                            {{ form.num_guests(class="clean-form-control", type="number", min=1, max=10) }}
+                            {% if form.num_guests.errors %}
+                                <div style="color: var(--clean-danger); font-size: var(--clean-font-sm); margin-top: var(--clean-space-2);">
+                                    {% for error in form.num_guests.errors %}
+                                        {{ error }}
                                     {% endfor %}
                                 </div>
                                 {% endif %}
                             </div>
-                            <div class="form-text text-muted"><i class="bi bi-info-circle me-1"></i>Let us know if you have any dietary requirements or need extra amenities.</div>
                         </div>
 
-                        <div class="row g-4 mb-4">
-                            <div class="col-md-6">
-                                <div class="card bg-light border-0 h-100">
-                                    <div class="card-body p-3">
-                                        <h5 class="card-title h6 mb-3"><i class="bi bi-clock me-2"></i>Early Check-in</h5>
-                                        <div class="form-floating mb-2">
-                                            {{ form.early_hours(class_="form-control", type="number", min=0, max=12, placeholder="Early Check-in Hours") }}
-                                            {{ form.early_hours.label(class_='form-label') }}
-                                            {% if form.early_hours.errors %}
-                                            <div class="invalid-feedback d-block">
-                                                {% for error in form.early_hours.errors %}
-                                                <span>{{ error }}</span><br>
+                    <!-- Special Requests -->
+                    <div class="clean-form-group" style="margin-bottom: var(--clean-space-6);">
+                        <label for="special_requests" class="clean-form-label">
+                            <i class="bi bi-chat-text"></i>
+                            Special Requests
+                        </label>
+                        {{ form.special_requests(class="clean-form-control", rows="4") }}
+                        {% if form.special_requests.errors %}
+                            <div style="color: var(--clean-danger); font-size: var(--clean-font-sm); margin-top: var(--clean-space-2);">
+                                {% for error in form.special_requests.errors %}
+                                    {{ error }}
+                                                {% endfor %}
+                                            </div>
+                                            {% endif %}
+                        <div class="clean-text-muted" style="font-size: var(--clean-font-sm); margin-top: var(--clean-space-2);">
+                            Let us know if you have any dietary requirements or need extra amenities.
+                                    </div>
+                                </div>
+
+                    <!-- Check-in/out Options -->
+                    <div class="clean-metrics-grid" style="margin-bottom: var(--clean-space-6);">
+                        <div class="clean-card" style="border: 1px solid var(--clean-border-light); background: var(--clean-background);">
+                            <div class="clean-card-header" style="padding: var(--clean-space-4); border-bottom: 1px solid var(--clean-border-light);">
+                                <h3 style="font-size: var(--clean-font-base); font-weight: 600; margin: 0; display: flex; align-items: center; gap: var(--clean-space-2);">
+                                    <i class="bi bi-clock"></i>
+                                    Early Check-in
+                                </h3>
+                            </div>
+                            <div style="padding: var(--clean-space-4);">
+                                <div class="clean-form-group">
+                                    <label for="early_hours" class="clean-form-label">Hours Before 3:00 PM</label>
+                                    {{ form.early_hours(class="clean-form-control", type="number", min=0, max=12) }}
+                                    {% if form.early_hours.errors %}
+                                        <div style="color: var(--clean-danger); font-size: var(--clean-font-sm); margin-top: var(--clean-space-2);">
+                                            {% for error in form.early_hours.errors %}
+                                                {{ error }}
                                                 {% endfor %}
                                             </div>
                                             {% endif %}
                                         </div>
-                                        <div class="form-text small">Standard check-in 3:00 PM. Fees may apply.</div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="card bg-light border-0 h-100">
-                                    <div class="card-body p-3">
-                                        <h5 class="card-title h6 mb-3"><i class="bi bi-clock-history me-2"></i>Late Check-out</h5>
-                                        <div class="form-floating mb-2">
-                                            {{ form.late_hours(class_="form-control", type="number", min=0, max=12, placeholder="Late Check-out Hours") }}
-                                            {{ form.late_hours.label(class_='form-label') }}
-                                            {% if form.late_hours.errors %}
-                                            <div class="invalid-feedback d-block">
-                                                {% for error in form.late_hours.errors %}
-                                                <span>{{ error }}</span><br>
-                                                {% endfor %}
-                                            </div>
-                                            {% endif %}
-                                        </div>
-                                        <div class="form-text small">Standard check-out 11:00 AM. Fees may apply.</div>
-                                    </div>
+                                <div class="clean-text-muted" style="font-size: var(--clean-font-sm); margin-top: var(--clean-space-2);">
+                                    Standard check-in 3:00 PM. Fees may apply.
                                 </div>
                             </div>
                         </div>
 
-                        <div id="priceEstimate">
-                            {% if estimated_price and form.room_id.data %}
-                            <div class="alert alert-info mt-3 rounded-3 shadow-sm">
-                                <div class="d-flex">
-                                    <div class="flex-shrink-0">
-                                        <i class="bi bi-tag-fill fs-3 text-primary me-3"></i>
+                        <div class="clean-card" style="border: 1px solid var(--clean-border-light); background: var(--clean-background);">
+                            <div class="clean-card-header" style="padding: var(--clean-space-4); border-bottom: 1px solid var(--clean-border-light);">
+                                <h3 style="font-size: var(--clean-font-base); font-weight: 600; margin: 0; display: flex; align-items: center; gap: var(--clean-space-2);">
+                                    <i class="bi bi-clock-history"></i>
+                                    Late Check-out
+                                </h3>
                                     </div>
-                                    <div>
-                                        <h5 class="alert-heading">Estimated Total Price: ${{ "%.2f"|format(estimated_price) }}</h5>
-                                        <p class="mb-0 small">This price is an estimate based on selected room and dates. Final price confirmed upon booking.</p>
-                                    </div>
-                                </div>
+                            <div style="padding: var(--clean-space-4);">
+                                <div class="clean-form-group">
+                                    <label for="late_hours" class="clean-form-label">Hours After 11:00 AM</label>
+                                    {{ form.late_hours(class="clean-form-control", type="number", min=0, max=12) }}
+                                    {% if form.late_hours.errors %}
+                                        <div style="color: var(--clean-danger); font-size: var(--clean-font-sm); margin-top: var(--clean-space-2);">
+                                            {% for error in form.late_hours.errors %}
+                                                {{ error }}
+                                            {% endfor %}
                             </div>
                             {% endif %}
-                        </div>
-
-                        <div class="mb-4 alert alert-secondary rounded-3 border-0 bg-light" role="alert">
-                            <div class="d-flex">
-                                <div class="flex-shrink-0">
-                                    <i class="bi bi-info-circle-fill text-primary me-3 fs-4"></i>
                                 </div>
-                                <div>
-                                    Fields marked with <span class="text-danger">*</span> are required.
+                                <div class="clean-text-muted" style="font-size: var(--clean-font-sm); margin-top: var(--clean-space-2);">
+                                    Standard check-out 11:00 AM. Fees may apply.
                                 </div>
                             </div>
                         </div>
+                    </div>
 
-                        <div class="d-flex justify-content-between mt-4">
-                            <a href="{{ url_for('customer.bookings') }}" class="btn btn-outline-secondary btn-lg rounded-pill px-4">
-                                <i class="bi bi-arrow-left me-2"></i> Back
-                            </a>
-                            {% if (not form.room_id.choices and request.method == 'POST') or (not form.room_id.choices and request.method == 'GET' and not form.check_in_date.data) %}
-                                <button type="button" class="btn btn-secondary btn-lg rounded-pill px-4" disabled>
-                                    <i class="bi bi-calendar-x me-2"></i> No Rooms Available
-                                </button>
-                            {% else %}
-                                 <button type="submit" class="btn btn-primary btn-lg rounded-pill px-4" id="createBookingBtn">
-                                    <i class="bi bi-calendar-check me-2"></i> Create Booking
-                                </button>
-                            {% endif %}
-                        </div>
-                    </form>
-                </div>
+                    <!-- Form Actions -->
+                    <div style="background: rgba(59, 130, 246, 0.1); border: 1px solid var(--clean-primary); border-radius: var(--clean-radius); padding: var(--clean-space-4); margin-bottom: var(--clean-space-6); display: flex; align-items: center; gap: var(--clean-space-3);">
+                        <i class="bi bi-info-circle-fill" style="color: var(--clean-primary); font-size: var(--clean-font-lg);"></i>
+                        <span style="color: var(--clean-text); font-size: var(--clean-font-sm);">
+                            Review your booking details before submitting. You can modify or cancel your reservation later.
+                        </span>
             </div>
 
-            <!-- Selected Room Details -->
-            <div id="selectedRoomDetails" class="card shadow mt-4 mb-4 rounded-4 border-0" style="display: none;">
-                <div class="card-header bg-success text-white py-3 rounded-top-4">
-                    <h3 class="h5 mb-0 fw-bold"><i class="bi bi-house-check me-2"></i>Selected Room Details</h3>
-                </div>
-                <div class="card-body p-4">
-                    <div class="row g-4">
-                        <div class="col-md-6">
-                            <div id="roomImage" class="mb-3 text-center">
-                                <!-- Room image will be inserted here by JavaScript -->
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <h4 id="roomTypeName" class="h5 mb-3 border-bottom pb-2">Room Type</h4>
-                            <div class="mb-2 d-flex align-items-center">
-                                <i class="bi bi-currency-dollar me-2 text-success"></i>
-                                <strong>Rate:</strong> <span id="roomRate" class="ms-2">$0.00</span>/night
-                            </div>
-                            <div class="mb-2 d-flex align-items-center">
-                                <i class="bi bi-people me-2 text-primary"></i>
-                                <strong>Capacity:</strong> <span id="roomCapacity" class="ms-2">0</span> person(s)
-                            </div>
-                            <div class="mb-2 d-flex align-items-center">
-                                <i class="bi bi-rulers me-2 text-secondary"></i>
-                                <strong>Size:</strong> <span id="roomSize" class="ms-2">0</span> m²
-                            </div>
-                            <div class="mb-2 d-flex align-items-center">
-                                <i class="bi bi-door-open me-2 text-info"></i>
-                                <strong>Bed Type:</strong> <span id="roomBedType" class="ms-2">N/A</span>
-                            </div>
-                            <div id="roomAmenities" class="mb-2">
-                                <div class="d-flex align-items-start">
-                                    <i class="bi bi-stars me-2 text-warning"></i>
-                                    <div>
-                                        <strong>Amenities:</strong>
-                                        <ul class="list-group list-group-flush mt-1" id="amenitiesList">
-                                            <!-- Amenities will be inserted here by JavaScript -->
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="clean-flex clean-gap-4">
+                        {{ form.submit(class="clean-btn clean-btn-primary") }}
+                        <a href="{{ url_for('customer.room_types') }}" class="clean-btn clean-btn-outline">
+                            <i class="bi bi-building"></i>
+                            Browse Rooms
+                        </a>
                     </div>
-                    <div class="mt-3">
-                        <p id="roomDescription" class="fst-italic bg-light p-3 rounded-3">Room description will appear here.</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Available Room Types -->
-            <div class="card shadow mt-4 rounded-4 border-0">
-                <div class="card-header bg-info text-white py-3 rounded-top-4">
-                    <h3 class="h5 mb-0 fw-bold"><i class="bi bi-grid-3x3-gap me-2"></i>Available Room Types</h3>
-                </div>
-                <div class="card-body p-4">
-                    {% if room_types %}
-                    <div class="row g-4">
-                        {% for room_type in room_types %}
-                        <div class="col-md-4 mb-3">
-                            <div class="card h-100 shadow-sm hover-lift rounded-3 border-0">
-                                <div class="card-header bg-light">
-                                    <h4 class="h6 mb-0 fw-bold">{{ room_type.name }}</h4>
-                                </div>
-                                {% if room_type.image_main %}
-                                <img src="{{ room_type.image_main }}" class="card-img-top" alt="{{ room_type.name }}" style="height: 180px; object-fit: cover;">
-                                {% endif %}
-                                <div class="card-body">
-                                    <div class="mb-2 d-flex align-items-center">
-                                        <i class="bi bi-currency-dollar me-2 text-success"></i>
-                                        <strong>Rate:</strong> <span class="ms-2">${{ "%.2f"|format(room_type.base_rate) }}</span>/night
-                                    </div>
-                                    <div class="mb-2 d-flex align-items-center">
-                                        <i class="bi bi-people me-2 text-primary"></i>
-                                        <strong>Capacity:</strong> <span class="ms-2">{{ room_type.capacity }}</span> person(s)
-                                    </div>
-                                    <p class="card-text small mt-3"><em>{{ room_type.description }}</em></p>
-                                    {% if room_type.amenities %}
-                                    <div class="mt-3">
-                                        <h6 class="small fw-bold text-uppercase"><i class="bi bi-stars me-1 text-warning"></i>Amenities</h6>
-                                        <p class="card-text small mt-2">{{ room_type.amenities }}</p>
-                                    </div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                    {% else %}
-                    <div class="alert alert-light text-center p-4">
-                        <i class="bi bi-house-x display-4 text-muted mb-3 d-block"></i>
-                        <p>No room types available at the moment.</p>
-                    </div>
-                    {% endif %}
-                </div>
+                </form>
             </div>
         </div>
     </div>
 </div>
 
-<style>
-.hover-lift {
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-.hover-lift:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
-}
-</style>
-
-{% endblock %}
-
-{% block scripts %}
-{{ super() }}
 <script>
-{# This needs to be raw for JS template literals but that causes linter errors, so adding inline style #}
-{% raw %}
     document.addEventListener('DOMContentLoaded', function() {
-        const checkInDateEl = document.getElementById('check_in_date');
-        const checkOutDateEl = document.getElementById('check_out_date');
-        const roomIdSelectEl = document.getElementById('room_id_select');
-        const numGuestsEl = document.getElementById('num_guests');
-        const earlyHoursEl = document.getElementById('early_hours');
-        const lateHoursEl = document.getElementById('late_hours');
-        const newBookingForm = document.getElementById('newBookingForm');
-        const createBookingBtn = document.getElementById('createBookingBtn');
-        const loadingSpinner = document.createElement('span');
-        loadingSpinner.className = 'spinner-border spinner-border-sm me-2';
-        loadingSpinner.setAttribute('role', 'status');
-        loadingSpinner.innerHTML = '<span class="visually-hidden">Loading...</span>';
-
-        // Set minimum check-in date to today
-        const today = new Date();
-        const tomorrow = new Date(today);
-        tomorrow.setDate(tomorrow.getDate() + 1);
-
-        if (checkInDateEl) {
-            checkInDateEl.min = today.toISOString().split('T')[0];
-        }
-        if (checkOutDateEl) {
-            checkOutDateEl.min = tomorrow.toISOString().split('T')[0];
-        }
-
-        // Update room options when dates change
-        function updateRoomOptions() {
-            if (checkInDateEl && checkOutDateEl && checkInDateEl.value && checkOutDateEl.value) {
-                // Show loading indicator
-                if (roomIdSelectEl) roomIdSelectEl.disabled = true;
-
-                // Create form data
-                const formData = new FormData(newBookingForm);
-                formData.append('action', 'update_options');
-
-                // Make AJAX request
-                fetch(window.location.href, {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.json();
-                })
+    const checkInInput = document.getElementById('check_in_date');
+    const checkOutInput = document.getElementById('check_out_date');
+    const roomSelect = document.getElementById('room_id_select');
+    const form = document.getElementById('newBookingForm');
+    
+    // Auto-refresh room availability when dates change
+    function refreshRoomAvailability() {
+        if (checkInInput.value && checkOutInput.value) {
+            const params = new URLSearchParams({
+                check_in_date: checkInInput.value,
+                check_out_date: checkOutInput.value
+            });
+            
+            fetch(`{{ url_for('customer.get_available_rooms') }}?${params}`)
+                .then(response => response.json())
                 .then(data => {
-                    // Update room options
-                    if (data.room_options && roomIdSelectEl) {
-                        roomIdSelectEl.innerHTML = '';
-                        data.room_options.forEach(option => {
-                            const optEl = document.createElement('option');
-                            optEl.value = option.value;
-                            optEl.textContent = option.text;
-                            optEl.dataset.roomType = option.room_type;
-                            optEl.dataset.capacity = option.capacity;
-                            optEl.dataset.rate = option.rate;
-                            roomIdSelectEl.appendChild(optEl);
-                        });
-                    }
-
-                    // Update price estimate
-                    if (data.estimated_price) {
-                        updatePriceEstimate(data);
-                    }
-
-                    // Enable room select
-                    if (roomIdSelectEl) roomIdSelectEl.disabled = false;
-
-                    // Update max guests based on selected room
-                    updateMaxGuests();
+                    roomSelect.innerHTML = '<option value="">Select a room...</option>';
+                    data.rooms.forEach(room => {
+                        const option = document.createElement('option');
+                        option.value = room.id;
+                        option.textContent = `Room ${room.number} - ${room.room_type} ($${room.rate}/night)`;
+                        roomSelect.appendChild(option);
+                    });
                 })
                 .catch(error => {
-                    console.error('Error updating room options:', error);
-                    if (roomIdSelectEl) roomIdSelectEl.disabled = false;
-
-                    // Fallback to traditional form submission
-                    submitFormForUpdate();
+                    console.error('Error fetching rooms:', error);
                 });
             }
         }
 
-        // Update price estimate
-        function updatePriceEstimate(data) {
-            const priceContainer = document.getElementById('priceEstimate');
-            if (priceContainer) {
-                if (data.estimated_price) {
-                    const formattedPrice = data.estimated_price.toFixed(2);
-                    const html = '<div class="alert alert-info mt-3">' +
-                        '<strong>Estimated Total Price:</strong> $' + formattedPrice +
-                        '<small class="d-block">This price is an estimate based on selected room and dates. Final price confirmed upon booking.</small>' +
-                        '</div>';
-                    priceContainer.innerHTML = html;
-                    priceContainer.style.display = 'block';
-                } else {
-                    priceContainer.style.display = 'none';
-                }
-            }
-        }
-
-        // Update max guests based on selected room
-        function updateMaxGuests() {
-            if (roomIdSelectEl && roomIdSelectEl.selectedIndex >= 0) {
-                const selectedOption = roomIdSelectEl.options[roomIdSelectEl.selectedIndex];
-                const maxCapacity = selectedOption.dataset.capacity;
-                if (maxCapacity && numGuestsEl) {
-                    numGuestsEl.max = maxCapacity;
-                    if (numGuestsEl.nextElementSibling) {
-                         numGuestsEl.nextElementSibling.textContent = 'Maximum capacity: ' + maxCapacity + ' guests';
-                    }
-                    // If current value exceeds max, adjust it
-                    if (parseInt(numGuestsEl.value) > parseInt(maxCapacity)) {
-                        numGuestsEl.value = maxCapacity;
-                    }
-                }
-                // Update selected room details
-                updateSelectedRoomDetails();
-            }
-        }
-
-        // Update selected room details
-        function updateSelectedRoomDetails() {
-            const selectedRoomDetailsEl = document.getElementById('selectedRoomDetails');
-
-            if (roomIdSelectEl && roomIdSelectEl.selectedIndex >= 0 && selectedRoomDetailsEl) {
-                // Get room details from the selected option
-                const selectedOption = roomIdSelectEl.options[roomIdSelectEl.selectedIndex];
-                const roomTypeText = selectedOption.textContent;
-                const roomParts = roomTypeText.split(' - ');
-                // const roomNumber = roomParts[0]; // Not used in current display
-                const roomTypeName = roomParts[1].split(' ($')[0];
-                const roomRate = parseFloat(selectedOption.dataset.rate || 0).toFixed(2);
-                const roomCapacity = selectedOption.dataset.capacity || '?';
-
-                // Update the details in the UI
-                const roomTypeNameEl = document.getElementById('roomTypeName');
-                const roomRateEl = document.getElementById('roomRate');
-                const roomCapacityEl = document.getElementById('roomCapacity');
-
-                if(roomTypeNameEl) roomTypeNameEl.textContent = roomTypeName;
-                if(roomRateEl) roomRateEl.textContent = '$' + roomRate;
-                if(roomCapacityEl) roomCapacityEl.textContent = roomCapacity;
-                
-                // Show the details card
-                selectedRoomDetailsEl.style.display = 'block';
-            } else if (selectedRoomDetailsEl) {
-                // Hide the details card if no room is selected
-                selectedRoomDetailsEl.style.display = 'none';
-            }
-        }
-
-        // Traditional form submission for fallback
-        function submitFormForUpdate() {
-            if (newBookingForm) {
-                let updateInput = document.createElement('input');
-                updateInput.type = 'hidden';
-                updateInput.name = 'action';
-                updateInput.value = 'update_options';
-                newBookingForm.appendChild(updateInput);
-                newBookingForm.submit();
-            }
-        }
-
-        // Submit booking with standard form
-        function submitBooking(e) {
-            e.preventDefault();
-
-            if (!newBookingForm) return;
-
-            // Validate form
-            if (!newBookingForm.checkValidity()) {
-                newBookingForm.reportValidity();
-                return;
-            }
-
-            // Show loading indicator
-            if (createBookingBtn) {
-                createBookingBtn.disabled = true;
-                if (loadingSpinner) createBookingBtn.prepend(loadingSpinner);
-            }
-            
-            // Submit the form normally
-            newBookingForm.submit();
-        }
-
-        // Event listeners
-        if (checkInDateEl) {
-            checkInDateEl.addEventListener('change', function() {
-                if (checkInDateEl.value && checkOutDateEl) {
-                    const checkInDate = new Date(checkInDateEl.value);
-                    checkInDate.setDate(checkInDate.getDate() + 1);
-                    const minCheckOutDate = checkInDate.toISOString().split('T')[0];
-                    checkOutDateEl.min = minCheckOutDate;
-
-                    if (checkOutDateEl.value && checkOutDateEl.value <= checkInDateEl.value) {
-                        checkOutDateEl.value = minCheckOutDate;
-                    }
-                }
-                if (checkOutDateEl && checkOutDateEl.value) {
-                    updateRoomOptions();
-                }
-            });
-        }
-
-        if (checkOutDateEl) {
-            checkOutDateEl.addEventListener('change', function() {
-                if (checkInDateEl && checkInDateEl.value) {
-                    updateRoomOptions();
-                }
-            });
-        }
-
-        if (roomIdSelectEl) {
-            roomIdSelectEl.addEventListener('change', function() {
-                updateMaxGuests();
-                if (checkInDateEl && checkOutDateEl && checkInDateEl.value && checkOutDateEl.value) {
-                    const formData = new FormData(newBookingForm);
-                    formData.append('action', 'update_options');
-
-                    fetch(window.location.href, {
-                        method: 'POST',
-                        body: formData,
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest'
-                        }
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.estimated_price) {
-                            updatePriceEstimate(data);
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error updating price:', error);
-                    });
-                }
-            });
-        }
-
-        if (newBookingForm) {
-            newBookingForm.addEventListener('submit', function(e) {
-                const activeElement = document.activeElement;
-                if (activeElement) {
-                    const action = activeElement.getAttribute('name');
-                    if (action === 'action' && activeElement.value === 'update_options') {
-                        return; 
-                    }
-                }
-                submitBooking(e);
-            });
-        }
-        // Initialize on page load
-        updateMaxGuests();
+    checkInInput.addEventListener('change', refreshRoomAvailability);
+    checkOutInput.addEventListener('change', refreshRoomAvailability);
+    
+    // Set minimum dates
+    const today = new Date().toISOString().split('T')[0];
+    checkInInput.min = today;
+    
+    checkInInput.addEventListener('change', function() {
+        const selectedDate = new Date(this.value);
+        selectedDate.setDate(selectedDate.getDate() + 1);
+        checkOutInput.min = selectedDate.toISOString().split('T')[0];
     });
-{% endraw %}
+            });
 </script>
 {% endblock %}

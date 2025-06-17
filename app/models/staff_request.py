@@ -24,8 +24,8 @@ class StaffRequest(db.Model):
     handled_by = db.Column(db.Integer, ForeignKey('users.id'), nullable=True)
 
     # Relationships
-    user = db.relationship('User', foreign_keys=[user_id], backref='staff_requests')
-    processor = db.relationship('User', foreign_keys=[handled_by], backref='processed_requests')
+    user = db.relationship('User', foreign_keys=[user_id], back_populates='staff_requests')
+    processor = db.relationship('User', foreign_keys=[handled_by], back_populates='processed_requests')
 
     def __repr__(self):
         """Return a helpful representation of this instance."""

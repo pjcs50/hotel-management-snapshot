@@ -28,6 +28,7 @@ from app.forms.user_forms import ChangePasswordForm
 from app.services.user_service import UserService
 from app.models.loyalty_reward import LoyaltyReward
 from app.models.loyalty_redemption import LoyaltyRedemption
+from app.utils.password_security import PasswordStrengthError, PasswordRateLimitError
 
 # Create blueprint
 customer_bp = Blueprint('customer', __name__)
@@ -142,11 +143,12 @@ def profile():
 @login_required
 @role_required('customer')
 def change_password():
-    """Allow customer to change their password."""
+    """Allow customer to change their password with enhanced security."""
     form = ChangePasswordForm()
-    user_service = UserService(db.session)
-
+    
     if form.validate_on_submit():
+        user_service = UserService(db.session)
+        
         try:
             user_service.change_password(
                 user_id=current_user.id,
@@ -155,12 +157,26 @@ def change_password():
             )
             flash('Your password has been changed successfully.', 'success')
             return redirect(url_for('customer.profile'))
+            
+        except PasswordStrengthError as e:
+            flash(f'Password validation failed: {str(e)}', 'danger')
+            
+        except PasswordRateLimitError as e:
+            flash(f'Security restriction: {str(e)}', 'danger')
+            
         except ValueError as e:
-            flash(str(e), 'danger')
+            # Handle user not found or current password mismatch
+            if "Current password does not match" in str(e):
+                flash('Current password is incorrect.', 'danger')
+            else:
+                flash('Password change failed. Please try again.', 'danger')
+                # Log the error for debugging
+                current_app.logger.error(f"Password change error for user {current_user.id}: {e}")
+                
         except Exception as e:
-            # Log general errors for debugging
-            # current_app.logger.error(f"Password change error for user {current_user.id}: {e}")
-            flash('An unexpected error occurred. Please try again.', 'danger')
+            flash('Password change failed. Please try again later.', 'danger')
+            # Log unexpected errors
+            current_app.logger.error(f"Unexpected password change error for user {current_user.id}: {e}")
 
     return render_template('customer/change_password.html', form=form)
 
@@ -228,9 +244,17 @@ def edit_booking(booking_id):
             check_in_date=check_in_for_avail,
             check_out_date=check_out_for_avail
         )
-    form.room_id.choices = [(r.id, f"{r.number} - {r.room_type.name} (${r.room_type.base_rate:.2f}/night)") for r in available_rooms]
-    # If current room is not in available_rooms (e.g. if user changed dates and current room became unavailable),
-    # it will still be listed, but check_room_availability in update_booking will handle it if selected with incompatible dates.
+    room_choices = [(r.id, f"{r.number} - {r.room_type.name} (${r.room_type.base_rate:.2f}/night)") for r in available_rooms]
+    # If the selected room is not in available_rooms, add it as a disabled option
+    selected_room_id = form.room_id.data
+    if selected_room_id and selected_room_id not in [r.id for r in available_rooms]:
+        # Try to fetch the room for display
+        missing_room = Room.query.get(selected_room_id)
+        if missing_room:
+            room_choices = [
+                (missing_room.id, f"{missing_room.number} - {missing_room.room_type.name} (Unavailable)")
+            ] + room_choices
+    form.room_id.choices = room_choices
 
     if request.method == 'POST':
         action = request.form.get('action')
@@ -253,7 +277,7 @@ def edit_booking(booking_id):
                         check_out_date=form.check_out_date.data
                     )
                 # Update room choices
-                form.room_id.choices = [(room.id, f"Room {room.number} - {room.room_type.name}") for room in available_rooms]
+                room_choices = [(r.id, f"{r.number} - {r.room_type.name}") for r in available_rooms]
 
                 # Calculate price if room is selected
                 if form.room_id.data:
@@ -624,7 +648,17 @@ def new_booking():
             check_in_date=check_in_for_avail,
             check_out_date=check_out_for_avail
         )
-    form.room_id.choices = [(r.id, f"{r.number} - {r.room_type.name} (${r.room_type.base_rate:.2f}/night)") for r in available_rooms]
+    room_choices = [(r.id, f"{r.number} - {r.room_type.name} (${r.room_type.base_rate:.2f}/night)") for r in available_rooms]
+    # If the selected room is not in available_rooms, add it as a disabled option
+    selected_room_id = form.room_id.data
+    if selected_room_id and selected_room_id not in [r.id for r in available_rooms]:
+        # Try to fetch the room for display
+        missing_room = Room.query.get(selected_room_id)
+        if missing_room:
+            room_choices = [
+                (missing_room.id, f"{missing_room.number} - {missing_room.room_type.name} (Unavailable)")
+            ] + room_choices
+    form.room_id.choices = room_choices
 
     if request.method == 'POST':
         # If only updating options (e.g., date change from JS)
@@ -647,7 +681,7 @@ def new_booking():
                         check_out_date=form.check_out_date.data
                     )
                 # Update room choices
-                form.room_id.choices = [(room.id, f"Room {room.number} - {room.room_type.name}") for room in available_rooms]
+                room_choices = [(r.id, f"{r.number} - {r.room_type.name}") for r in available_rooms]
 
                 # Calculate price if room is selected
                 if form.room_id.data:

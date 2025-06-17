@@ -1,0 +1,205 @@
+{% extends 'dashboard_sidebar_base.html' %}
+
+{% block title %}Backup & Restore - Admin Dashboard{% endblock %}
+{% block page_title %}Backup & Restore{% endblock %}
+{% block sidebar_title %}Admin Panel{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/clean-admin.css') }}">
+{% endblock %}
+
+{% block sidebar_links %}
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('admin.dashboard') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-speedometer2"></i>
+        </div>
+        <span class="sidebar-nav-text">Dashboard</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('admin.users') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-people"></i>
+        </div>
+        <span class="sidebar-nav-text">Manage Users</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('admin.roles') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-shield-check"></i>
+        </div>
+        <span class="sidebar-nav-text">User Roles</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('admin.guests') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-people-fill"></i>
+        </div>
+        <span class="sidebar-nav-text">Guest Management</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('admin.reservations') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-calendar-check"></i>
+        </div>
+        <span class="sidebar-nav-text">Reservations</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('admin.reports') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-graph-up"></i>
+        </div>
+        <span class="sidebar-nav-text">Reports</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('admin.logs') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-journal-text"></i>
+        </div>
+        <span class="sidebar-nav-text">System Logs</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('admin.backup') }}" class="sidebar-nav-link active">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-cloud-arrow-up"></i>
+        </div>
+        <span class="sidebar-nav-text">Backup & Restore</span>
+    </a>
+</li>
+{% endblock %}
+
+{% block content %}
+<div class="clean-page">
+    <!-- Clean Header -->
+    <div class="clean-header">
+        <h1 class="clean-page-title">Backup & Restore</h1>
+        <p class="clean-page-subtitle">Manage system backups and data recovery</p>
+    </div>
+
+    <!-- System Status Card -->
+    <div class="clean-card">
+        <div class="clean-card-header">
+            <h3 class="clean-card-title">System Status</h3>
+        </div>
+        <div class="clean-card-body">
+            <div class="clean-grid clean-grid-3">
+                <div class="clean-text-center">
+                    <div class="clean-permission-icon" style="background: rgba(16, 185, 129, 0.1); color: var(--clean-success); margin: 0 auto var(--clean-space-3) auto;">
+                        <i class="bi bi-shield-check"></i>
+                    </div>
+                    <h4 class="clean-font-semibold clean-mb-2">System Health</h4>
+                    <span class="clean-badge clean-badge-success">Operational</span>
+                </div>
+                
+                <div class="clean-text-center">
+                    <div class="clean-permission-icon" style="background: rgba(59, 130, 246, 0.1); color: var(--clean-primary); margin: 0 auto var(--clean-space-3) auto;">
+                        <i class="bi bi-clock-history"></i>
+                    </div>
+                    <h4 class="clean-font-semibold clean-mb-2">Last Backup</h4>
+                    <div class="clean-font-medium">2 hours ago</div>
+                </div>
+                
+                <div class="clean-text-center">
+                    <div class="clean-permission-icon" style="background: rgba(245, 158, 11, 0.1); color: var(--clean-warning); margin: 0 auto var(--clean-space-3) auto;">
+                        <i class="bi bi-hdd"></i>
+                    </div>
+                    <h4 class="clean-font-semibold clean-mb-2">Storage Used</h4>
+                    <div class="clean-font-medium">2.3 GB</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Backup Section -->
+    <div class="clean-grid clean-grid-2">
+        <div class="clean-card">
+            <div class="clean-card-header">
+                <h3 class="clean-card-title">
+                    <i class="bi bi-cloud-arrow-up"></i> Create Backup
+                </h3>
+            </div>
+            <div class="clean-card-body">
+                <div class="clean-form-group">
+                    <label class="clean-form-label">Backup Type</label>
+                    <div class="clean-space-y-2">
+                        <label class="clean-radio-label">
+                            <input type="radio" name="backup_type" value="full" class="clean-radio" checked>
+                            Full Backup
+                        </label>
+                        <label class="clean-radio-label">
+                            <input type="radio" name="backup_type" value="data" class="clean-radio">
+                            Data Only
+                        </label>
+                    </div>
+                </div>
+                <button class="clean-btn clean-btn-primary">
+                    <i class="bi bi-cloud-arrow-up"></i> Create Backup
+                </button>
+            </div>
+        </div>
+
+        <div class="clean-card">
+            <div class="clean-card-header">
+                <h3 class="clean-card-title">
+                    <i class="bi bi-cloud-arrow-down"></i> Restore System
+                </h3>
+            </div>
+            <div class="clean-card-body">
+                <div class="clean-form-group">
+                    <label for="restore_file" class="clean-form-label">Select Backup File</label>
+                    <input type="file" id="restore_file" class="clean-form-input" accept=".zip,.sql">
+                </div>
+                <div class="clean-alert clean-alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    Warning: This will overwrite current data
+                </div>
+                <button class="clean-btn clean-btn-danger">
+                    <i class="bi bi-cloud-arrow-down"></i> Restore System
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Backup History -->
+    <div class="clean-card">
+        <div class="clean-card-header">
+            <h3 class="clean-card-title">Backup History</h3>
+        </div>
+        <div class="clean-card-body">
+            <div class="clean-table-container">
+                <table class="clean-table">
+                    <thead>
+                        <tr>
+                            <th>Backup Name</th>
+                            <th>Type</th>
+                            <th>Size</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>backup_20241201.zip</td>
+                            <td><span class="clean-badge clean-badge-primary">Full</span></td>
+                            <td>2.3 GB</td>
+                            <td>2024-12-01 14:28</td>
+                            <td>
+                                <button class="clean-btn clean-btn-outline clean-btn-sm">
+                                    <i class="bi bi-download"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

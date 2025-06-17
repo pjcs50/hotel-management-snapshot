@@ -56,9 +56,9 @@ class LoyaltyRedemption(BaseModel):
     staff_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
 
     # Relationships
-    customer = db.relationship('Customer', backref='loyalty_redemptions')
+    customer = db.relationship('Customer', back_populates='loyalty_redemptions')
     reward = db.relationship('LoyaltyReward', backref='redemptions')
-    booking = db.relationship('Booking', backref='loyalty_redemptions')
+    booking = db.relationship('Booking', back_populates='loyalty_redemptions')
     staff = db.relationship('User', backref='processed_redemptions')
 
     def __repr__(self):

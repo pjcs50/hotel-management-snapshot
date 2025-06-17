@@ -1,227 +1,331 @@
-{% extends 'base.html' %}
+{% extends 'dashboard_sidebar_base.html' %}
 
 {% block title %}Room Types - Horizon Hotel{% endblock %}
+{% block sidebar_title %}Customer Menu{% endblock %}
+{% block page_title %}Our Room Types{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/clean-customer.css') }}">
+{% endblock %}
+
+{% block sidebar_links %}
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('customer.dashboard') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-speedometer2"></i>
+        </div>
+        <span class="sidebar-nav-text">Dashboard</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('customer.bookings') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-calendar-check"></i>
+        </div>
+        <span class="sidebar-nav-text">My Bookings</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('customer.new_booking') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-calendar-plus"></i>
+        </div>
+        <span class="sidebar-nav-text">New Booking</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('customer.room_types') }}" class="sidebar-nav-link active">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-building"></i>
+        </div>
+        <span class="sidebar-nav-text">Room Types</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('customer.profile') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-person-gear"></i>
+        </div>
+        <span class="sidebar-nav-text">Edit Profile</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('customer.loyalty_history') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-award"></i>
+        </div>
+        <span class="sidebar-nav-text">Loyalty Program</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('customer.feedback') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-star"></i>
+        </div>
+        <span class="sidebar-nav-text">Leave Feedback</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('customer.help_page') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-question-circle"></i>
+        </div>
+        <span class="sidebar-nav-text">Help & FAQs</span>
+    </a>
+</li>
+{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="row mb-4">
-        <div class="col-md-12">
-            <h1 class="display-6 mb-3">Our Room Types</h1>
+<div class="fade-in">
+    <!-- Clean Professional Header -->
+    <div class="clean-page-header">
+        <h1 class="clean-page-title">Room Types</h1>
+        <p class="clean-page-subtitle">Explore our accommodation options and amenities</p>
+    </div>
 
-            <!-- Room Type Filters -->
-            <div class="card shadow mb-4">
-                <div class="card-header bg-light">
-                    <h2 class="h5 mb-0">Filter Options</h2>
+    <!-- Clean Main Container -->
+    <div class="clean-container">
+        <!-- Filters & Availability Section -->
+        <div class="clean-metrics-grid" style="margin-bottom: var(--clean-space-8);">
+            <!-- Filter Options -->
+            <div class="clean-card">
+                <div class="clean-card-header">
+                    <h2 class="clean-card-title">Filter Options</h2>
                 </div>
-                <div class="card-body">
+                <div class="clean-card-body" style="padding: var(--clean-space-6);">
                     <form method="get" id="roomFilterForm">
-                        <div class="row g-3">
-                            <div class="col-md-3">
-                                <label for="capacity" class="form-label">Capacity</label>
-                                <select class="form-select" id="capacity" name="capacity">
-                                    <option value="">Any</option>
-                                    <option value="1" {% if request.args.get('capacity') == '1' %}selected{% endif %}>1 Person</option>
-                                    <option value="2" {% if request.args.get('capacity') == '2' %}selected{% endif %}>2 People</option>
-                                    <option value="3" {% if request.args.get('capacity') == '3' %}selected{% endif %}>3 People</option>
-                                    <option value="4" {% if request.args.get('capacity') == '4' %}selected{% endif %}>4+ People</option>
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <label for="price_range" class="form-label">Price Range</label>
-                                <select class="form-select" id="price_range" name="price_range">
-                                    <option value="">Any</option>
-                                    <option value="economy" {% if request.args.get('price_range') == 'economy' %}selected{% endif %}>Economy</option>
-                                    <option value="standard" {% if request.args.get('price_range') == 'standard' %}selected{% endif %}>Standard</option>
-                                    <option value="premium" {% if request.args.get('price_range') == 'premium' %}selected{% endif %}>Premium</option>
-                                    <option value="luxury" {% if request.args.get('price_range') == 'luxury' %}selected{% endif %}>Luxury</option>
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <label for="amenities" class="form-label">Amenities</label>
-                                <select class="form-select" id="amenities" name="amenities">
-                                    <option value="">Any</option>
-                                    <option value="view" {% if request.args.get('amenities') == 'view' %}selected{% endif %}>Ocean View</option>
-                                    <option value="balcony" {% if request.args.get('amenities') == 'balcony' %}selected{% endif %}>Balcony</option>
-                                    <option value="kitchen" {% if request.args.get('amenities') == 'kitchen' %}selected{% endif %}>Kitchenette</option>
-                                </select>
-                            </div>
-                            <div class="col-md-3 d-flex align-items-end">
-                                <button type="submit" class="btn btn-primary w-100">
-                                    <i class="bi bi-filter"></i> Apply Filters
-                                </button>
-                            </div>
+                        <div class="clean-form-group" style="margin-bottom: var(--clean-space-4);">
+                            <label for="capacity" class="clean-form-label">
+                                <i class="bi bi-people"></i>
+                                Capacity
+                            </label>
+                            <select class="clean-form-control" id="capacity" name="capacity">
+                                <option value="">Any</option>
+                                <option value="1" {% if request.args.get('capacity') == '1' %}selected{% endif %}>1 Person</option>
+                                <option value="2" {% if request.args.get('capacity') == '2' %}selected{% endif %}>2 People</option>
+                                <option value="3" {% if request.args.get('capacity') == '3' %}selected{% endif %}>3 People</option>
+                                <option value="4" {% if request.args.get('capacity') == '4' %}selected{% endif %}>4+ People</option>
+                            </select>
                         </div>
+                        
+                        <div class="clean-form-group" style="margin-bottom: var(--clean-space-4);">
+                            <label for="price_range" class="clean-form-label">
+                                <i class="bi bi-currency-dollar"></i>
+                                Price Range
+                            </label>
+                            <select class="clean-form-control" id="price_range" name="price_range">
+                                <option value="">Any</option>
+                                <option value="economy" {% if request.args.get('price_range') == 'economy' %}selected{% endif %}>Economy</option>
+                                <option value="standard" {% if request.args.get('price_range') == 'standard' %}selected{% endif %}>Standard</option>
+                                <option value="premium" {% if request.args.get('price_range') == 'premium' %}selected{% endif %}>Premium</option>
+                                <option value="luxury" {% if request.args.get('price_range') == 'luxury' %}selected{% endif %}>Luxury</option>
+                            </select>
+                        </div>
+                        
+                        <div class="clean-form-group" style="margin-bottom: var(--clean-space-6);">
+                            <label for="amenities" class="clean-form-label">
+                                <i class="bi bi-stars"></i>
+                                Amenities
+                            </label>
+                            <select class="clean-form-control" id="amenities" name="amenities">
+                                <option value="">Any</option>
+                                <option value="view" {% if request.args.get('amenities') == 'view' %}selected{% endif %}>Ocean View</option>
+                                <option value="balcony" {% if request.args.get('amenities') == 'balcony' %}selected{% endif %}>Balcony</option>
+                                <option value="kitchen" {% if request.args.get('amenities') == 'kitchen' %}selected{% endif %}>Kitchenette</option>
+                            </select>
+                        </div>
+                        
+                        <button type="submit" class="clean-btn clean-btn-primary">
+                            <i class="bi bi-filter"></i>
+                            Apply Filters
+                        </button>
                     </form>
                 </div>
             </div>
 
-            <!-- Date Selection for Availability Check -->
-            <div class="card shadow mb-4">
-                <div class="card-header bg-light">
-                    <h2 class="h5 mb-0">Check Availability</h2>
+            <!-- Availability Check -->
+            <div class="clean-card">
+                <div class="clean-card-header">
+                    <h2 class="clean-card-title">Check Availability</h2>
                 </div>
-                <div class="card-body">
+                <div class="clean-card-body" style="padding: var(--clean-space-6);">
                     <form method="get" id="availabilityForm">
-                        <div class="row g-3">
-                            <div class="col-md-4">
-                                <label for="check_in_date" class="form-label">Check-in Date</label>
-                                <input type="date" class="form-control" id="check_in_date" name="check_in_date"
-                                       value="{{ request.args.get('check_in_date') or today_str }}" min="{{ today_str }}">
-                            </div>
-                            <div class="col-md-4">
-                                <label for="check_out_date" class="form-label">Check-out Date</label>
-                                <input type="date" class="form-control" id="check_out_date" name="check_out_date"
-                                       value="{{ request.args.get('check_out_date') or tomorrow_str }}" min="{{ tomorrow_str }}">
-                            </div>
-                            <div class="col-md-4 d-flex align-items-end">
-                                <button type="submit" class="btn btn-success w-100">
-                                    <i class="bi bi-calendar-check"></i> Check Availability
-                                </button>
-                            </div>
+                        <div class="clean-form-group" style="margin-bottom: var(--clean-space-4);">
+                            <label for="check_in_date" class="clean-form-label">
+                                <i class="bi bi-calendar-event"></i>
+                                Check-in Date
+                            </label>
+                            <input type="date" class="clean-form-control" id="check_in_date" name="check_in_date"
+                                   value="{{ request.args.get('check_in_date') or today_str }}" min="{{ today_str }}">
                         </div>
+                        
+                        <div class="clean-form-group" style="margin-bottom: var(--clean-space-6);">
+                            <label for="check_out_date" class="clean-form-label">
+                                <i class="bi bi-calendar-event"></i>
+                                Check-out Date
+                            </label>
+                            <input type="date" class="clean-form-control" id="check_out_date" name="check_out_date"
+                                   value="{{ request.args.get('check_out_date') or tomorrow_str }}" min="{{ tomorrow_str }}">
+                        </div>
+                        
+                        <button type="submit" class="clean-btn clean-btn-primary clean-w-full">
+                            <i class="bi bi-calendar-check"></i>
+                            Check Availability
+                        </button>
                     </form>
                 </div>
             </div>
+        </div>
 
-            <!-- Room Types Display -->
-            <div class="row">
+        <!-- Room Types Grid -->
+        {% if room_types %}
+            <div class="clean-metrics-grid">
                 {% for room_type in room_types %}
-                <div class="col-md-6 mb-4">
-                    <div class="card shadow h-100">
-                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                            <h3 class="h5 mb-0">{{ room_type.name }}</h3>
-                            <span class="badge bg-primary">${{ "%.2f"|format(room_type.base_rate) }}/night</span>
+                <div class="clean-card" style="overflow: hidden;">
+                    <!-- Room Image -->
+                    <div style="position: relative; height: 200px; overflow: hidden; background: var(--clean-background);">
+                        <img src="{{ room_type.image_main or '/static/images/default-room.jpg' }}" 
+                             style="width: 100%; height: 100%; object-fit: cover;" 
+                             alt="{{ room_type.name }}"
+                             loading="lazy">
+                        
+                        <!-- Price Badge -->
+                        <div style="position: absolute; top: var(--clean-space-4); right: var(--clean-space-4); background: var(--clean-white); border-radius: var(--clean-radius); padding: var(--clean-space-2) var(--clean-space-3); box-shadow: var(--clean-shadow);">
+                            <span style="font-weight: 700; color: var(--clean-text); font-size: var(--clean-font-lg);">${{ "%.0f"|format(room_type.base_rate) }}</span>
+                            <span style="color: var(--clean-text-muted); font-size: var(--clean-font-sm);">/night</span>
                         </div>
-                        <img src="{{ room_type.image_main }}" class="card-img-top" alt="{{ room_type.name }}" style="height: 200px; object-fit: cover;">
-                        <div class="card-body">
-                            <div class="mb-3">
-                                <p class="card-text">{{ room_type.description }}</p>
+                        
+                        <!-- Availability Badge -->
+                        {% if availability and room_type.id in availability %}
+                            {% if availability[room_type.id] > 0 %}
+                            <div style="position: absolute; bottom: var(--clean-space-4); left: var(--clean-space-4);">
+                                <span class="clean-badge clean-badge-success">
+                                    <i class="bi bi-check-circle"></i>
+                                    Available
+                                </span>
                             </div>
-                            <div class="mb-3">
-                                <h4 class="h6">Room Features:</h4>
-                                <ul class="list-unstyled row">
-                                    <li class="col-md-6"><i class="bi bi-people me-2"></i> Capacity: {{ room_type.capacity }} person(s)</li>
-                                    <li class="col-md-6"><i class="bi bi-rulers me-2"></i> Size: {{ room_type.size_sqm }} m²</li>
-                                    <li class="col-md-6"><i class="bi bi-door-open me-2"></i> {{ room_type.bed_type }}</li>
-                                    {% if room_type.has_view %}
-                                    <li class="col-md-6"><i class="bi bi-binoculars me-2"></i> Scenic View</li>
-                                    {% endif %}
-                                    {% if room_type.has_balcony %}
-                                    <li class="col-md-6"><i class="bi bi-door-open-fill me-2"></i> Balcony</li>
-                                    {% endif %}
-                                    <li class="col-md-6"><i class="bi bi-wifi me-2"></i> Free Wi-Fi</li>
-                                    <li class="col-md-6"><i class="bi bi-tv me-2"></i> Flat-screen TV</li>
-                                </ul>
-                            </div>
-                            {% if room_type.amenities %}
-                            <div class="mb-3">
-                                <h4 class="h6">Amenities:</h4>
-                                <p class="small">
-                                    {% for amenity in room_type.amenities %}
-                                        {{ amenity }}{% if not loop.last %}, {% endif %}
-                                    {% endfor %}
-                                </p>
+                            {% else %}
+                            <div style="position: absolute; bottom: var(--clean-space-4); left: var(--clean-space-4);">
+                                <span class="clean-badge clean-badge-danger">
+                                    <i class="bi bi-x-circle"></i>
+                                    Unavailable
+                                </span>
                             </div>
                             {% endif %}
+                        {% endif %}
+                    </div>
 
-                            <!-- Availability Badge -->
-                            {% if availability and room_type.id in availability %}
-                                {% if availability[room_type.id] > 0 %}
-                                <div class="alert alert-success">
-                                    <i class="bi bi-check-circle me-2"></i> {{ availability[room_type.id] }} room(s) available for selected dates
-                                </div>
-                                {% else %}
-                                <div class="alert alert-danger">
-                                    <i class="bi bi-x-circle me-2"></i> No rooms available for selected dates
-                                </div>
-                                {% endif %}
-                            {% endif %}
+                    <!-- Room Content -->
+                    <div class="clean-card-body" style="padding: var(--clean-space-6);">
+                        <div style="margin-bottom: var(--clean-space-4);">
+                            <h3 style="font-size: var(--clean-font-xl); font-weight: 600; color: var(--clean-text); margin: 0 0 var(--clean-space-2) 0;">{{ room_type.name }}</h3>
+                            <p style="color: var(--clean-text-muted); margin: 0; line-height: 1.5;">{{ room_type.description }}</p>
                         </div>
-                        <div class="card-footer bg-white">
-                            <div class="d-grid">
-                                {% if availability and room_type.id in availability and availability[room_type.id] > 0 %}
-                                <a href="{{ url_for('customer.new_booking', room_type_id=room_type.id, check_in_date=request.args.get('check_in_date'), check_out_date=request.args.get('check_out_date')) }}" class="btn btn-primary">
-                                    <i class="bi bi-calendar-plus me-2"></i> Book Now
-                                </a>
-                                {% else %}
-                                <button class="btn btn-secondary" disabled>
-                                    <i class="bi bi-calendar-x me-2"></i> Not Available
-                                </button>
-                                {% endif %}
+
+                        <!-- Room Details -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--clean-space-3); margin-bottom: var(--clean-space-4); padding: var(--clean-space-4); background: var(--clean-background); border-radius: var(--clean-radius);">
+                            <div style="display: flex; align-items: center; gap: var(--clean-space-2);">
+                                <i class="bi bi-people" style="color: var(--clean-text-muted);"></i>
+                                <span style="font-size: var(--clean-font-sm); color: var(--clean-text);">{{ room_type.capacity }} guests</span>
                             </div>
+                            <div style="display: flex; align-items: center; gap: var(--clean-space-2);">
+                                <i class="bi bi-rulers" style="color: var(--clean-text-muted);"></i>
+                                <span style="font-size: var(--clean-font-sm); color: var(--clean-text);">{{ room_type.size or 'N/A' }} m²</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: var(--clean-space-2);">
+                                <i class="bi bi-door-open" style="color: var(--clean-text-muted);"></i>
+                                <span style="font-size: var(--clean-font-sm); color: var(--clean-text);">{{ room_type.bed_type or 'Standard' }}</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: var(--clean-space-2);">
+                                <i class="bi bi-wifi" style="color: var(--clean-text-muted);"></i>
+                                <span style="font-size: var(--clean-font-sm); color: var(--clean-text);">Free WiFi</span>
+                            </div>
+                        </div>
+
+                        <!-- Amenities -->
+                        {% if room_type.amenities %}
+                        <div style="margin-bottom: var(--clean-space-4);">
+                            <h4 style="font-size: var(--clean-font-base); font-weight: 600; color: var(--clean-text); margin: 0 0 var(--clean-space-2) 0; display: flex; align-items: center; gap: var(--clean-space-2);">
+                                <i class="bi bi-stars" style="color: var(--clean-text-muted);"></i>
+                                Amenities
+                            </h4>
+                            <p style="font-size: var(--clean-font-sm); color: var(--clean-text-muted); margin: 0; line-height: 1.5;">{{ room_type.amenities }}</p>
+                        </div>
+                        {% endif %}
+
+                        <!-- Availability Notification -->
+                        {% if availability and room_type.id in availability %}
+                            {% if availability[room_type.id] > 0 %}
+                            <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--clean-success); border-radius: var(--clean-radius); padding: var(--clean-space-3); margin-bottom: var(--clean-space-4); display: flex; align-items: center; gap: var(--clean-space-2);">
+                                <i class="bi bi-check-circle-fill" style="color: var(--clean-success);"></i>
+                                <span style="color: var(--clean-text); font-size: var(--clean-font-sm);">
+                                    {{ availability[room_type.id] }} room{{ 's' if availability[room_type.id] != 1 }} available for selected dates
+                                </span>
+                            </div>
+                            {% else %}
+                            <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid var(--clean-danger); border-radius: var(--clean-radius); padding: var(--clean-space-3); margin-bottom: var(--clean-space-4); display: flex; align-items: center; gap: var(--clean-space-2);">
+                                <i class="bi bi-x-circle-fill" style="color: var(--clean-danger);"></i>
+                                <span style="color: var(--clean-text); font-size: var(--clean-font-sm);">
+                                    No rooms available for selected dates
+                                </span>
+                            </div>
+                            {% endif %}
+                        {% endif %}
+
+                        <!-- Action Buttons -->
+                        <div class="clean-flex clean-gap-2">
+                            {% if availability and room_type.id in availability and availability[room_type.id] > 0 %}
+                                <a href="{{ url_for('customer.new_booking', room_type_id=room_type.id) }}" class="clean-btn clean-btn-primary">
+                                    <i class="bi bi-calendar-plus"></i>
+                                    Book Now
+                                </a>
+                            {% else %}
+                                <a href="{{ url_for('customer.new_booking') }}" class="clean-btn clean-btn-outline">
+                                    <i class="bi bi-calendar-check"></i>
+                                    Check Dates
+                                </a>
+                            {% endif %}
+                            <a href="{{ url_for('customer.room_details', room_type_id=room_type.id) }}" class="clean-btn clean-btn-outline">
+                                <i class="bi bi-eye"></i>
+                                View Details
+                            </a>
                         </div>
                     </div>
                 </div>
                 {% endfor %}
             </div>
-
-            {% if not room_types %}
-            <div class="alert alert-info">
-                <i class="bi bi-info-circle me-2"></i> No room types match your criteria. Please try different filters.
+        {% else %}
+            <!-- Empty State -->
+            <div class="clean-empty-state">
+                <div class="clean-empty-icon">
+                    <i class="bi bi-building-x"></i>
+                </div>
+                <h2 class="clean-empty-title">No Room Types Available</h2>
+                <p class="clean-empty-text">There are currently no room types available that match your criteria. Please try adjusting your filters.</p>
+                <a href="{{ url_for('customer.room_types') }}" class="clean-btn clean-btn-primary">
+                    <i class="bi bi-arrow-clockwise"></i>
+                    Reset Filters
+                </a>
             </div>
-            {% endif %}
-        </div>
+        {% endif %}
     </div>
 </div>
-{% endblock %}
 
-{% block scripts %}
-{{ super() }}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const checkInDateEl = document.getElementById('check_in_date');
-        const checkOutDateEl = document.getElementById('check_out_date');
-
-        // Set minimum check-out date based on check-in date
-        checkInDateEl.addEventListener('change', function() {
-            if (checkInDateEl.value) {
-                const checkInDate = new Date(checkInDateEl.value);
-                checkInDate.setDate(checkInDate.getDate() + 1);
-                const minCheckOutDate = checkInDate.toISOString().split('T')[0];
-                checkOutDateEl.min = minCheckOutDate;
-
-                // If check-out date is before new minimum, update it
-                if (checkOutDateEl.value && checkOutDateEl.value < minCheckOutDate) {
-                    checkOutDateEl.value = minCheckOutDate;
-                }
-            }
-        });
-
-        // Combine filter and availability forms
-        const roomFilterForm = document.getElementById('roomFilterForm');
-        const availabilityForm = document.getElementById('availabilityForm');
-
-        roomFilterForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-
-            // Combine parameters from both forms
-            const filterParams = new URLSearchParams(new FormData(roomFilterForm));
-            const availParams = new URLSearchParams(new FormData(availabilityForm));
-
-            // Merge parameters
-            for (const [key, value] of availParams.entries()) {
-                filterParams.append(key, value);
-            }
-
-            // Redirect to the same page with combined parameters
-            window.location.href = `${window.location.pathname}?${filterParams.toString()}`;
-        });
-
-        availabilityForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-
-            // Combine parameters from both forms
-            const availParams = new URLSearchParams(new FormData(availabilityForm));
-            const filterParams = new URLSearchParams(new FormData(roomFilterForm));
-
-            // Merge parameters
-            for (const [key, value] of filterParams.entries()) {
-                availParams.append(key, value);
-            }
-
-            // Redirect to the same page with combined parameters
-            window.location.href = `${window.location.pathname}?${availParams.toString()}`;
-        });
+document.addEventListener('DOMContentLoaded', function() {
+    const checkInInput = document.getElementById('check_in_date');
+    const checkOutInput = document.getElementById('check_out_date');
+    
+    // Set minimum dates and validate date selection
+    checkInInput.addEventListener('change', function() {
+        const selectedDate = new Date(this.value);
+        selectedDate.setDate(selectedDate.getDate() + 1);
+        checkOutInput.min = selectedDate.toISOString().split('T')[0];
+        
+        if (checkOutInput.value && checkOutInput.value <= this.value) {
+            checkOutInput.value = selectedDate.toISOString().split('T')[0];
+        }
     });
+});
 </script>
 {% endblock %}

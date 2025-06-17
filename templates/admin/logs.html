@@ -1,84 +1,192 @@
-{% extends "base.html" %}
+{% extends 'dashboard_sidebar_base.html' %}
 
-{% block title %}System Logs{% endblock %}
+{% block title %}System Logs - Admin Dashboard{% endblock %}
+{% block page_title %}System Logs{% endblock %}
+{% block sidebar_title %}Admin Panel{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/clean-admin.css') }}">
+{% endblock %}
+
+{% block sidebar_links %}
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('admin.dashboard') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-speedometer2"></i>
+        </div>
+        <span class="sidebar-nav-text">Dashboard</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('admin.users') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-people"></i>
+        </div>
+        <span class="sidebar-nav-text">Manage Users</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('admin.roles') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-shield-check"></i>
+        </div>
+        <span class="sidebar-nav-text">User Roles</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('admin.guests') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-people-fill"></i>
+        </div>
+        <span class="sidebar-nav-text">Guest Management</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('admin.reservations') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-calendar-check"></i>
+        </div>
+        <span class="sidebar-nav-text">Reservations</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('admin.reports') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-graph-up"></i>
+        </div>
+        <span class="sidebar-nav-text">Reports</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('admin.logs') }}" class="sidebar-nav-link active">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-journal-text"></i>
+        </div>
+        <span class="sidebar-nav-text">System Logs</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('admin.backup') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-cloud-arrow-up"></i>
+        </div>
+        <span class="sidebar-nav-text">Backup & Restore</span>
+    </a>
+</li>
+{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>System Logs</h1>
-        <div>
-            <a href="{{ url_for('admin.logs') }}" class="btn btn-primary me-2">
-                <i class="bi bi-arrow-clockwise"></i> Refresh
-            </a>
-            <a href="{{ url_for('admin.dashboard') }}" class="btn btn-secondary">
-                <i class="bi bi-arrow-left"></i> Back to Dashboard
-            </a>
-        </div>
+<div class="clean-page">
+    <!-- Clean Header -->
+    <div class="clean-header">
+        <h1 class="clean-page-title">System Logs</h1>
+        <p class="clean-page-subtitle">Monitor system activity and troubleshoot issues</p>
     </div>
 
-    <div class="card mb-4">
-        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-            <h2 class="h5 mb-0">Log Viewer</h2>
-            <small>Last updated: {{ last_updated }}</small>
+    <!-- Log Viewer Card -->
+    <div class="clean-card">
+        <div class="clean-card-header clean-flex clean-justify-between clean-items-center">
+            <h3 class="clean-card-title clean-mb-0">
+                <i class="bi bi-journal-text"></i> Log Viewer
+            </h3>
+            <div class="clean-flex clean-gap-3 clean-items-center">
+                <div class="clean-text-muted clean-font-sm">
+                    Last updated: {{ last_updated }}
+                </div>
+                <a href="{{ url_for('admin.logs') }}" class="clean-btn clean-btn-outline clean-btn-sm">
+                    <i class="bi bi-arrow-clockwise"></i> Refresh
+                </a>
+            </div>
         </div>
-        <div class="card-body">
+        <div class="clean-card-body">
             {% if error %}
-            <div class="alert alert-danger">
+            <div class="clean-alert clean-alert-danger">
+                <i class="bi bi-exclamation-triangle"></i>
                 {{ error }}
             </div>
             {% else %}
-            <div class="mb-3">
-                <div class="input-group">
-                    <input type="text" class="form-control" id="logSearch" placeholder="Filter logs...">
-                    <button class="btn btn-outline-secondary" type="button" id="clearSearch">Clear</button>
+            <!-- Log Filter Controls -->
+            <div class="clean-search-container" style="margin-bottom: var(--clean-space-6);">
+                <div class="clean-search-input">
+                    <div class="clean-form-group clean-mb-0">
+                        <label for="logSearch" class="clean-form-label clean-font-semibold">Filter Logs</label>
+                        <input type="text" 
+                               class="clean-form-input" 
+                               id="logSearch" 
+                               placeholder="Search log messages...">
+                    </div>
                 </div>
-                <div class="mt-2">
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="checkbox" id="infoCheck" checked>
-                        <label class="form-check-label" for="infoCheck">
-                            <span class="badge bg-info">INFO</span>
-                        </label>
+                <div class="clean-filter-group">
+                    <div class="clean-form-group clean-mb-0">
+                        <label class="clean-form-label">&nbsp;</label>
+                        <button class="clean-btn clean-btn-outline clean-btn-sm" type="button" id="clearSearch">
+                            <i class="bi bi-x-circle"></i> Clear
+                        </button>
                     </div>
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="checkbox" id="warningCheck" checked>
-                        <label class="form-check-label" for="warningCheck">
-                            <span class="badge bg-warning">WARNING</span>
+                </div>
+            </div>
+
+            <!-- Log Level Filters -->
+            <div style="margin-bottom: var(--clean-space-6);">
+                <div class="clean-form-group">
+                    <label class="clean-form-label clean-font-semibold">Log Levels</label>
+                    <div class="clean-flex clean-gap-4 clean-wrap">
+                        <label class="clean-checkbox-label">
+                            <input class="clean-checkbox" type="checkbox" id="infoCheck" checked>
+                            <span class="clean-badge" style="background: rgba(59, 130, 246, 0.1); color: var(--clean-primary);">INFO</span>
                         </label>
-                    </div>
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="checkbox" id="errorCheck" checked>
-                        <label class="form-check-label" for="errorCheck">
-                            <span class="badge bg-danger">ERROR</span>
+                        <label class="clean-checkbox-label">
+                            <input class="clean-checkbox" type="checkbox" id="warningCheck" checked>
+                            <span class="clean-badge" style="background: rgba(245, 158, 11, 0.1); color: var(--clean-warning);">WARNING</span>
                         </label>
-                    </div>
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="checkbox" id="debugCheck" checked>
-                        <label class="form-check-label" for="debugCheck">
-                            <span class="badge bg-secondary">DEBUG</span>
+                        <label class="clean-checkbox-label">
+                            <input class="clean-checkbox" type="checkbox" id="errorCheck" checked>
+                            <span class="clean-badge" style="background: rgba(239, 68, 68, 0.1); color: var(--clean-danger);">ERROR</span>
+                        </label>
+                        <label class="clean-checkbox-label">
+                            <input class="clean-checkbox" type="checkbox" id="debugCheck" checked>
+                            <span class="clean-badge" style="background: rgba(107, 114, 128, 0.1); color: var(--clean-text-muted);">DEBUG</span>
                         </label>
                     </div>
                 </div>
             </div>
             
-            <div class="table-responsive">
-                <table class="table table-striped table-hover" id="logTable">
+            <!-- Log Table -->
+            <div class="clean-table-container">
+                <table class="clean-table" id="logTable">
                     <thead>
                         <tr>
-                            <th>Timestamp</th>
-                            <th>Level</th>
+                            <th style="width: 200px;">Timestamp</th>
+                            <th style="width: 100px;">Level</th>
                             <th>Message</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for log in logs %}
-                        <tr class="log-entry {{ log.level.lower() }}-level">
-                            <td>{{ log.timestamp }}</td>
+                        <tr class="log-entry log-{{ log.level.lower() }}">
+                            <td class="clean-font-mono clean-font-sm">{{ log.timestamp }}</td>
                             <td>
-                                <span class="badge bg-{{ 'info' if log.level == 'INFO' else 'warning' if log.level == 'WARNING' else 'danger' if log.level == 'ERROR' else 'secondary' }}">
-                                    {{ log.level }}
-                                </span>
+                                {% if log.level.lower() == 'info' %}
+                                    <span class="clean-badge" style="background: rgba(59, 130, 246, 0.1); color: var(--clean-primary);">
+                                        {{ log.level }}
+                                    </span>
+                                {% elif log.level.lower() == 'warning' %}
+                                    <span class="clean-badge" style="background: rgba(245, 158, 11, 0.1); color: var(--clean-warning);">
+                                        {{ log.level }}
+                                    </span>
+                                {% elif log.level.lower() == 'error' %}
+                                    <span class="clean-badge" style="background: rgba(239, 68, 68, 0.1); color: var(--clean-danger);">
+                                        {{ log.level }}
+                                    </span>
+                                {% elif log.level.lower() == 'debug' %}
+                                    <span class="clean-badge" style="background: rgba(107, 114, 128, 0.1); color: var(--clean-text-muted);">
+                                        {{ log.level }}
+                                    </span>
+                                {% else %}
+                                    <span class="clean-badge clean-badge-secondary">{{ log.level }}</span>
+                                {% endif %}
                             </td>
-                            <td>{{ log.message }}</td>
+                            <td class="log-message clean-font-sm">{{ log.message }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -88,79 +196,129 @@
         </div>
     </div>
 
-    <div class="card">
-        <div class="card-header bg-info text-white">
-            <h2 class="h5 mb-0">About System Logs</h2>
+    <!-- Log Information Card -->
+    <div class="clean-card">
+        <div class="clean-card-header">
+            <h3 class="clean-card-title">
+                <i class="bi bi-info-circle"></i> About System Logs
+            </h3>
         </div>
-        <div class="card-body">
-            <p>This page displays the most recent system logs (up to 500 entries). Use the filter options above to narrow down the displayed logs.</p>
-            <p><strong>Log Levels:</strong></p>
-            <ul>
-                <li><span class="badge bg-info">INFO</span> - General information about system operation</li>
-                <li><span class="badge bg-warning">WARNING</span> - Issues that might require attention but don't impact system operation</li>
-                <li><span class="badge bg-danger">ERROR</span> - Problems that may impair system functionality</li>
-                <li><span class="badge bg-secondary">DEBUG</span> - Detailed diagnostic information</li>
-            </ul>
+        <div class="clean-card-body">
+            <div class="clean-grid clean-grid-2">
+                <div>
+                    <p style="margin-bottom: var(--clean-space-4);">
+                        This page displays the most recent system logs (up to 500 entries). Use the filter options above to narrow down the displayed logs.
+                    </p>
+                    <p class="clean-text-muted">
+                        Logs are automatically refreshed and can be filtered by level or searched by message content.
+                    </p>
+                </div>
+                <div>
+                    <h5 style="margin-bottom: var(--clean-space-4);">Log Levels:</h5>
+                    <div class="clean-space-y-3">
+                        <div class="clean-flex clean-items-center clean-gap-3">
+                            <span class="clean-badge" style="background: rgba(59, 130, 246, 0.1); color: var(--clean-primary);">INFO</span>
+                            <span class="clean-text-muted clean-font-sm">General information about system operation</span>
+                        </div>
+                        <div class="clean-flex clean-items-center clean-gap-3">
+                            <span class="clean-badge" style="background: rgba(245, 158, 11, 0.1); color: var(--clean-warning);">WARNING</span>
+                            <span class="clean-text-muted clean-font-sm">Issues that might require attention</span>
+                        </div>
+                        <div class="clean-flex clean-items-center clean-gap-3">
+                            <span class="clean-badge" style="background: rgba(239, 68, 68, 0.1); color: var(--clean-danger);">ERROR</span>
+                            <span class="clean-text-muted clean-font-sm">Problems that may impair system functionality</span>
+                        </div>
+                        <div class="clean-flex clean-items-center clean-gap-3">
+                            <span class="clean-badge" style="background: rgba(107, 114, 128, 0.1); color: var(--clean-text-muted);">DEBUG</span>
+                            <span class="clean-text-muted clean-font-sm">Detailed diagnostic information</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Log Actions Card -->
+    <div class="clean-card">
+        <div class="clean-card-header">
+            <h3 class="clean-card-title">Log Management</h3>
+        </div>
+        <div class="clean-card-body">
+            <div class="clean-grid clean-grid-4">
+                <button class="clean-btn clean-btn-outline" onclick="window.location.reload()">
+                    <i class="bi bi-arrow-clockwise"></i> Refresh Logs
+                </button>
+                <button class="clean-btn clean-btn-outline" onclick="exportLogs()">
+                    <i class="bi bi-download"></i> Export Logs
+                </button>
+                <button class="clean-btn clean-btn-outline" onclick="clearLogFilters()">
+                    <i class="bi bi-funnel"></i> Clear Filters
+                </button>
+                <a href="{{ url_for('admin.dashboard') }}" class="clean-btn clean-btn-outline">
+                    <i class="bi bi-speedometer2"></i> Back to Dashboard
+                </a>
+            </div>
         </div>
     </div>
 </div>
-{% endblock %}
 
-{% block extra_js %}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const logSearch = document.getElementById('logSearch');
-        const clearSearch = document.getElementById('clearSearch');
-        const infoCheck = document.getElementById('infoCheck');
-        const warningCheck = document.getElementById('warningCheck');
-        const errorCheck = document.getElementById('errorCheck');
-        const debugCheck = document.getElementById('debugCheck');
-        const logTable = document.getElementById('logTable');
-        
-        // Function to filter the table based on search and checkboxes
-        function filterTable() {
-            const searchText = logSearch.value.toLowerCase();
-            const showInfo = infoCheck.checked;
-            const showWarning = warningCheck.checked;
-            const showError = errorCheck.checked;
-            const showDebug = debugCheck.checked;
-            
-            // Get all rows in the table body
-            const rows = logTable.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
-            
-            // Loop through each row and apply filters
-            for (let row of rows) {
-                const text = row.textContent.toLowerCase();
-                const isInfoRow = row.classList.contains('info-level');
-                const isWarningRow = row.classList.contains('warning-level');
-                const isErrorRow = row.classList.contains('error-level');
-                const isDebugRow = row.classList.contains('debug-level');
-                
-                // Check if row matches all filters
-                const matchesSearchText = searchText === '' || text.includes(searchText);
-                const matchesLevelFilter = 
-                    (isInfoRow && showInfo) || 
-                    (isWarningRow && showWarning) ||
-                    (isErrorRow && showError) ||
-                    (isDebugRow && showDebug) ||
-                    (!isInfoRow && !isWarningRow && !isErrorRow && !isDebugRow); // For other levels
-                
-                // Show or hide the row
-                row.style.display = (matchesSearchText && matchesLevelFilter) ? '' : 'none';
-            }
-        }
-        
-        // Add event listeners
-        logSearch.addEventListener('input', filterTable);
-        clearSearch.addEventListener('click', function() {
-            logSearch.value = '';
-            filterTable();
-        });
-        
-        infoCheck.addEventListener('change', filterTable);
-        warningCheck.addEventListener('change', filterTable);
-        errorCheck.addEventListener('change', filterTable);
-        debugCheck.addEventListener('change', filterTable);
+// Log filtering functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('logSearch');
+    const clearButton = document.getElementById('clearSearch');
+    const levelCheckboxes = document.querySelectorAll('input[type="checkbox"]');
+    const logTable = document.getElementById('logTable');
+    const logRows = logTable.querySelectorAll('tbody tr');
+
+    // Search functionality
+    searchInput.addEventListener('input', filterLogs);
+    clearButton.addEventListener('click', function() {
+        searchInput.value = '';
+        filterLogs();
     });
+
+    // Level filter functionality
+    levelCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', filterLogs);
+    });
+
+    function filterLogs() {
+        const searchTerm = searchInput.value.toLowerCase();
+        const visibleLevels = {
+            info: document.getElementById('infoCheck').checked,
+            warning: document.getElementById('warningCheck').checked,
+            error: document.getElementById('errorCheck').checked,
+            debug: document.getElementById('debugCheck').checked
+        };
+
+        logRows.forEach(row => {
+            const message = row.querySelector('.log-message').textContent.toLowerCase();
+            const level = row.classList.toString().match(/log-(\w+)/);
+            const logLevel = level ? level[1] : '';
+
+            const matchesSearch = message.includes(searchTerm);
+            const matchesLevel = visibleLevels[logLevel];
+
+            if (matchesSearch && matchesLevel) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+});
+
+// Utility functions
+function exportLogs() {
+    // Implementation for exporting logs
+    alert('Export functionality would be implemented here');
+}
+
+function clearLogFilters() {
+    document.getElementById('logSearch').value = '';
+    document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = true);
+    document.querySelectorAll('#logTable tbody tr').forEach(row => row.style.display = '');
+}
 </script>
 {% endblock %} 

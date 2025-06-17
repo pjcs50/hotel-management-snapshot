@@ -256,19 +256,34 @@ class AnalyticsService:
     
     def get_booking_source_distribution(self):
         """
-        Get the distribution of booking sources.
+        Get the distribution of booking sources from real database data.
         
         Returns:
             Dictionary with booking source distribution data
         """
-        # This is a placeholder implementation
-        # In a real application, you would query the actual booking sources
-        sources = {
-            'Website': 65,
-            'Phone': 20,
-            'Walk-in': 5,
-            'Travel Agent': 10
-        }
+        # Query actual booking sources from the database
+        source_counts = self.db_session.query(
+            Booking.source,
+            func.count(Booking.id)
+        ).filter(
+            Booking.source.isnot(None),
+            Booking.status.in_([Booking.STATUS_CHECKED_IN, Booking.STATUS_CHECKED_OUT, Booking.STATUS_RESERVED])
+        ).group_by(Booking.source).all()
+        
+        # If no data, provide reasonable defaults
+        if not source_counts:
+            sources = {
+                'Website': 0,
+                'Phone': 0,
+                'Walk-in': 0,
+                'Front Desk': 0
+            }
+        else:
+            sources = {}
+            for source, count in source_counts:
+                # Clean up source names and provide fallback
+                clean_source = source if source else 'Unknown'
+                sources[clean_source] = count
         
         # Format data for Chart.js
         result = {
@@ -280,12 +295,16 @@ class AnalyticsService:
                     'rgba(54, 162, 235, 0.2)',
                     'rgba(255, 206, 86, 0.2)',
                     'rgba(75, 192, 192, 0.2)',
+                    'rgba(153, 102, 255, 0.2)',
+                    'rgba(255, 159, 64, 0.2)'
                 ],
                 'borderColor': [
                     'rgba(255, 99, 132, 1)',
                     'rgba(54, 162, 235, 1)',
                     'rgba(255, 206, 86, 1)',
                     'rgba(75, 192, 192, 1)',
+                    'rgba(153, 102, 255, 1)',
+                    'rgba(255, 159, 64, 1)'
                 ],
                 'borderWidth': 1
             }]

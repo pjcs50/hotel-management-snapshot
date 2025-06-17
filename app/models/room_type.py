@@ -37,9 +37,15 @@ class RoomType(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    # Relationships - these will be defined by SQLAlchemy backref
-    # rooms: One-to-many relationship with Room model
-    # pricing_rules: One-to-many relationship with SeasonalRate model
+    # Relationships
+    rooms = db.relationship(
+        'Room',
+        back_populates='room_type',
+        cascade="save-update, merge",
+        passive_deletes=True
+    )
+    
+    # pricing_rules relationship will be defined by backref from SeasonalRate model
 
     def __repr__(self):
         """Return a helpful representation of this instance."""

@@ -1,220 +1,297 @@
-{% extends 'base.html' %}
+{% extends 'dashboard_sidebar_base.html' %}
 
 {% block title %}Loyalty History - {{ customer.name }} - {{ super() }}{% endblock %}
+{% block page_title %}Loyalty Program{% endblock %}
+{% block sidebar_title %}Customer Menu{% endblock %}
+
+{% block sidebar_links %}
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('customer.dashboard') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-speedometer2"></i>
+        </div>
+        <span class="sidebar-nav-text">Dashboard</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('customer.bookings') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-calendar-check"></i>
+        </div>
+        <span class="sidebar-nav-text">My Bookings</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('customer.new_booking') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-calendar-plus"></i>
+        </div>
+        <span class="sidebar-nav-text">New Booking</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('customer.room_types') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-building"></i>
+        </div>
+        <span class="sidebar-nav-text">Room Types</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('customer.profile') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-person-gear"></i>
+        </div>
+        <span class="sidebar-nav-text">Edit Profile</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('customer.loyalty_history') }}" class="sidebar-nav-link active">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-award"></i>
+        </div>
+        <span class="sidebar-nav-text">Loyalty Program</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('customer.feedback') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-star"></i>
+        </div>
+        <span class="sidebar-nav-text">Leave Feedback</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('customer.help_page') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-question-circle"></i>
+        </div>
+        <span class="sidebar-nav-text">Help & FAQs</span>
+    </a>
+</li>
+{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="row mb-3">
-        <div class="col">
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{ url_for('customer.dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ url_for('customer.profile') }}">Profile</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Loyalty History</li>
-                </ol>
-            </nav>
-        </div>
+<div class="fade-in">
+    <!-- Header Section -->
+    <div class="dashboard-header-compact">
+        <h2 class="dashboard-title-compact">Loyalty Program</h2>
+        <p class="dashboard-subtitle-compact">Track your rewards and tier benefits</p>
     </div>
 
-    <div class="row">
-        <div class="col-md-10 offset-md-1">
-            <div class="card shadow mb-4">
-                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                    <h2 class="h4 mb-0">Loyalty Program Summary</h2>
-                    <div>
-                        <a href="{{ url_for('customer.loyalty_rewards') }}" class="btn btn-light btn-sm">
-                            <i class="bi bi-gift"></i> Redeem Rewards
-                        </a>
-                        <a href="{{ url_for('customer.tier_benefits') }}" class="btn btn-outline-light btn-sm ms-2">
-                            <i class="bi bi-stars"></i> Tier Benefits
-                        </a>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-4 text-center">
-                            <p class="text-muted mb-1">Current Tier</p>
-                            <h3 class="mb-0">{{ customer.loyalty_tier or 'N/A' }}</h3>
-                        </div>
-                        <div class="col-md-4 text-center border-start border-end">
-                            <p class="text-muted mb-1">Loyalty Points</p>
-                            <h3 class="mb-0">{{ customer.loyalty_points or 0 }} pts</h3>
-                        </div>
-                        <div class="col-md-4 text-center">
-                            <p class="text-muted mb-1">Member Since</p>
-                            <h3 class="mb-0">{{ customer.created_at.strftime('%Y-%m-%d') if customer.created_at else 'N/A'}}</h3>
-                        </div>
-                    </div>
-                    
-                    {% if tier_progress and tier_progress.next_tier %}
-                    <div class="mt-4">
-                        <p class="text-muted mb-1 text-center">Progress to {{ tier_progress.next_tier }} Tier</p>
-                        <div class="progress" style="height: 20px;">
-                            <div class="progress-bar bg-success" role="progressbar" 
-                                 style="width: {{ tier_progress.progress_percent }}%;" 
-                                 aria-valuenow="{{ tier_progress.progress_percent }}" 
-                                 aria-valuemin="0" aria-valuemax="100">
-                                {{ tier_progress.progress_percent|round|int }}%
-                            </div>
-                        </div>
-                        <p class="text-end mt-1 text-muted">
-                            {{ tier_progress.points_to_next_tier }} more points needed
-                        </p>
-                    </div>
-                    {% elif tier_progress and not tier_progress.next_tier %}
-                    <div class="mt-4 alert alert-success">
-                        <i class="bi bi-trophy-fill me-2"></i>
-                        Congratulations! You have reached our highest loyalty tier.
-                    </div>
-                    {% endif %}
+    <div class="dashboard-container-optimized">
+        <!-- Loyalty Summary -->
+        <div class="card dashboard-card-compact mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h3 class="mb-0">Loyalty Program Summary</h3>
+                <div>
+                    <a href="{{ url_for('customer.loyalty_rewards') }}" class="btn btn-primary btn-sm">
+                        <i class="bi bi-gift"></i> Redeem Rewards
+                    </a>
+                    <a href="{{ url_for('customer.tier_benefits') }}" class="btn btn-outline-primary btn-sm ms-2">
+                        <i class="bi bi-stars"></i> Tier Benefits
+                    </a>
                 </div>
             </div>
-            
-            <div class="row mb-4">
-                <div class="col-12">
-                    <div class="card shadow">
-                        <div class="card-header bg-light">
-                            <h3 class="h5 mb-0">{{ customer.loyalty_tier }} Tier Benefits</h3>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-4">
+                        <div class="status-card-compact">
+                            <div class="status-icon-compact">
+                                <i class="bi bi-award"></i>
+                            </div>
+                            <div class="status-content-compact">
+                                <h4 class="status-title-compact">Current Tier</h4>
+                                <div class="status-value-compact">{{ customer.loyalty_tier or 'N/A' }}</div>
+                            </div>
                         </div>
-                        <div class="card-body">
-                            <div class="row">
-                                {% if tier_benefits %}
-                                <div class="col-md-6">
-                                    <ul class="list-group">
-                                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                                            <span><i class="bi bi-coin me-2"></i> Points Multiplier</span>
-                                            <span class="badge bg-primary">{{ tier_benefits.point_multiplier }}x</span>
-                                        </li>
-                                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                                            <span><i class="bi bi-clock me-2"></i> Late Checkout</span>
-                                            {% if tier_benefits.late_checkout %}
-                                            <span class="badge bg-success"><i class="bi bi-check-lg"></i></span>
-                                            {% else %}
-                                            <span class="badge bg-secondary"><i class="bi bi-x-lg"></i></span>
-                                            {% endif %}
-                                        </li>
-                                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                                            <span><i class="bi bi-arrow-up-right-square me-2"></i> Room Upgrades</span>
-                                            {% if tier_benefits.room_upgrades %}
-                                            <span class="badge bg-success"><i class="bi bi-check-lg"></i></span>
-                                            {% else %}
-                                            <span class="badge bg-secondary"><i class="bi bi-x-lg"></i></span>
-                                            {% endif %}
-                                        </li>
-                                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                                            <span><i class="bi bi-gift me-2"></i> Welcome Gift</span>
-                                            {% if tier_benefits.welcome_gift %}
-                                            <span class="badge bg-success"><i class="bi bi-check-lg"></i></span>
-                                            {% else %}
-                                            <span class="badge bg-secondary"><i class="bi bi-x-lg"></i></span>
-                                            {% endif %}
-                                        </li>
-                                    </ul>
-                                </div>
-                                <div class="col-md-6">
-                                    <ul class="list-group">
-                                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                                            <span><i class="bi bi-cup-hot me-2"></i> Free Breakfast</span>
-                                            {% if tier_benefits.free_breakfast %}
-                                            <span class="badge bg-success"><i class="bi bi-check-lg"></i></span>
-                                            {% else %}
-                                            <span class="badge bg-secondary"><i class="bi bi-x-lg"></i></span>
-                                            {% endif %}
-                                        </li>
-                                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                                            <span><i class="bi bi-wifi me-2"></i> Free WiFi</span>
-                                            {% if tier_benefits.free_wifi %}
-                                            <span class="badge bg-success"><i class="bi bi-check-lg"></i></span>
-                                            {% else %}
-                                            <span class="badge bg-secondary"><i class="bi bi-x-lg"></i></span>
-                                            {% endif %}
-                                        </li>
-                                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                                            <span><i class="bi bi-tag me-2"></i> Exclusive Offers</span>
-                                            {% if tier_benefits.exclusive_offers %}
-                                            <span class="badge bg-success"><i class="bi bi-check-lg"></i></span>
-                                            {% else %}
-                                            <span class="badge bg-secondary"><i class="bi bi-x-lg"></i></span>
-                                            {% endif %}
-                                        </li>
-                                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                                            <span><i class="bi bi-door-open me-2"></i> Lounge Access</span>
-                                            {% if tier_benefits.lounge_access %}
-                                            <span class="badge bg-success"><i class="bi bi-check-lg"></i></span>
-                                            {% else %}
-                                            <span class="badge bg-secondary"><i class="bi bi-x-lg"></i></span>
-                                            {% endif %}
-                                        </li>
-                                    </ul>
-                                </div>
-                                <div class="col-12 mt-3 text-center">
-                                    <a href="{{ url_for('customer.tier_benefits') }}" class="btn btn-outline-primary btn-sm">
-                                        <i class="bi bi-table"></i> View All Tier Benefits
-                                    </a>
-                                </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="status-card-compact">
+                            <div class="status-icon-compact">
+                                <i class="bi bi-coin"></i>
+                            </div>
+                            <div class="status-content-compact">
+                                <h4 class="status-title-compact">Loyalty Points</h4>
+                                <div class="status-value-compact">{{ customer.loyalty_points or 0 }} pts</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="status-card-compact">
+                            <div class="status-icon-compact">
+                                <i class="bi bi-calendar-check"></i>
+                            </div>
+                            <div class="status-content-compact">
+                                <h4 class="status-title-compact">Member Since</h4>
+                                <div class="status-value-compact">{{ customer.created_at.strftime('%Y-%m-%d') if customer.created_at else 'N/A'}}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                {% if tier_progress and tier_progress.next_tier %}
+                <div class="mt-3">
+                    <p class="text-muted mb-1 text-center">Progress to {{ tier_progress.next_tier }} Tier</p>
+                    <div class="progress" style="height: 15px;">
+                        <div class="progress-bar bg-success" role="progressbar" 
+                             style="width: {{ tier_progress.progress_percent }}%;" 
+                             aria-valuenow="{{ tier_progress.progress_percent }}" 
+                             aria-valuemin="0" aria-valuemax="100">
+                            {{ tier_progress.progress_percent|round|int }}%
+                        </div>
+                    </div>
+                    <p class="text-end mt-1 text-muted small">
+                        {{ tier_progress.points_to_next_tier }} more points needed
+                    </p>
+                </div>
+                {% elif tier_progress and not tier_progress.next_tier %}
+                <div class="mt-3 alert alert-success">
+                    <i class="bi bi-trophy-fill me-2"></i>
+                    Congratulations! You have reached our highest loyalty tier.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Tier Benefits -->
+        <div class="card dashboard-card-compact mb-3">
+            <div class="card-header">
+                <h3 class="mb-0">{{ customer.loyalty_tier }} Tier Benefits</h3>
+            </div>
+            <div class="card-body">
+                {% if tier_benefits %}
+                <div class="row g-2">
+                    <div class="col-md-6">
+                        <div class="list-group list-group-flush">
+                            <div class="list-group-item d-flex justify-content-between align-items-center py-2">
+                                <span><i class="bi bi-coin me-2"></i> Points Multiplier</span>
+                                <span class="badge badge-primary">{{ tier_benefits.point_multiplier }}x</span>
+                            </div>
+                            <div class="list-group-item d-flex justify-content-between align-items-center py-2">
+                                <span><i class="bi bi-clock me-2"></i> Late Checkout</span>
+                                {% if tier_benefits.late_checkout %}
+                                <span class="badge badge-success"><i class="bi bi-check-lg"></i></span>
                                 {% else %}
-                                <div class="col-12">
-                                    <div class="alert alert-info">
-                                        <i class="bi bi-info-circle me-2"></i>
-                                        Tier benefits information not available.
-                                    </div>
-                                </div>
+                                <span class="badge badge-secondary"><i class="bi bi-x-lg"></i></span>
+                                {% endif %}
+                            </div>
+                            <div class="list-group-item d-flex justify-content-between align-items-center py-2">
+                                <span><i class="bi bi-arrow-up-right-square me-2"></i> Room Upgrades</span>
+                                {% if tier_benefits.room_upgrades %}
+                                <span class="badge badge-success"><i class="bi bi-check-lg"></i></span>
+                                {% else %}
+                                <span class="badge badge-secondary"><i class="bi bi-x-lg"></i></span>
+                                {% endif %}
+                            </div>
+                            <div class="list-group-item d-flex justify-content-between align-items-center py-2">
+                                <span><i class="bi bi-gift me-2"></i> Welcome Gift</span>
+                                {% if tier_benefits.welcome_gift %}
+                                <span class="badge badge-success"><i class="bi bi-check-lg"></i></span>
+                                {% else %}
+                                <span class="badge badge-secondary"><i class="bi bi-x-lg"></i></span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="list-group list-group-flush">
+                            <div class="list-group-item d-flex justify-content-between align-items-center py-2">
+                                <span><i class="bi bi-cup-hot me-2"></i> Free Breakfast</span>
+                                {% if tier_benefits.free_breakfast %}
+                                <span class="badge badge-success"><i class="bi bi-check-lg"></i></span>
+                                {% else %}
+                                <span class="badge badge-secondary"><i class="bi bi-x-lg"></i></span>
+                                {% endif %}
+                            </div>
+                            <div class="list-group-item d-flex justify-content-between align-items-center py-2">
+                                <span><i class="bi bi-wifi me-2"></i> Free WiFi</span>
+                                {% if tier_benefits.free_wifi %}
+                                <span class="badge badge-success"><i class="bi bi-check-lg"></i></span>
+                                {% else %}
+                                <span class="badge badge-secondary"><i class="bi bi-x-lg"></i></span>
+                                {% endif %}
+                            </div>
+                            <div class="list-group-item d-flex justify-content-between align-items-center py-2">
+                                <span><i class="bi bi-tag me-2"></i> Exclusive Offers</span>
+                                {% if tier_benefits.exclusive_offers %}
+                                <span class="badge badge-success"><i class="bi bi-check-lg"></i></span>
+                                {% else %}
+                                <span class="badge badge-secondary"><i class="bi bi-x-lg"></i></span>
+                                {% endif %}
+                            </div>
+                            <div class="list-group-item d-flex justify-content-between align-items-center py-2">
+                                <span><i class="bi bi-door-open me-2"></i> Lounge Access</span>
+                                {% if tier_benefits.lounge_access %}
+                                <span class="badge badge-success"><i class="bi bi-check-lg"></i></span>
+                                {% else %}
+                                <span class="badge badge-secondary"><i class="bi bi-x-lg"></i></span>
                                 {% endif %}
                             </div>
                         </div>
                     </div>
                 </div>
+                <div class="text-center mt-3">
+                    <a href="{{ url_for('customer.tier_benefits') }}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-table"></i> View All Tier Benefits
+                    </a>
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Tier benefits information not available.
+                </div>
+                {% endif %}
             </div>
+        </div>
 
-            <div class="card shadow">
-                <div class="card-header bg-light">
-                    <h3 class="h5 mb-0">Points Transaction History</h3>
-                </div>
-                <div class="card-body">
-                    {% if history %}
-                        <div class="table-responsive">
-                            <table class="table table-striped table-hover">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Date</th>
-                                        <th>Description</th>
-                                        <th class="text-end">Points Change</th>
-                                        <th class="text-end">Resulting Balance</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for entry in history %}
-                                    <tr>
-                                        <td>{{ entry.transaction_date.strftime('%Y-%m-%d %H:%M') if entry.transaction_date else 'N/A' }}</td>
-                                        <td>{{ entry.description or 'N/A' }}</td>
-                                        <td class="text-end">
-                                            <span class="badge {{ 'bg-success' if entry.points_change > 0 else 'bg-danger' if entry.points_change < 0 else 'bg-secondary' }}">
-                                                {{ '{:+}'.format(entry.points_change) if entry.points_change != 0 else '0' }} pts
-                                            </span>
-                                        </td>
-                                        <td class="text-end">{{ entry.balance_after_transaction }} pts</td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
+        <!-- Points History -->
+        <div class="card dashboard-card-compact">
+            <div class="card-header">
+                <h3 class="mb-0">Points Transaction History</h3>
+            </div>
+            <div class="card-body">
+                {% if history %}
+                    <div class="table-responsive">
+                        <table class="table table-compact">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Description</th>
+                                    <th class="text-end">Points Change</th>
+                                    <th class="text-end">Balance</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for entry in history %}
+                                <tr>
+                                    <td>{{ entry.transaction_date.strftime('%Y-%m-%d %H:%M') if entry.transaction_date else 'N/A' }}</td>
+                                    <td>{{ entry.description or 'N/A' }}</td>
+                                    <td class="text-end">
+                                        <span class="badge {{ 'badge-success' if entry.points_change > 0 else 'badge-danger' if entry.points_change < 0 else 'badge-secondary' }}">
+                                            {{ '{:+}'.format(entry.points_change) if entry.points_change != 0 else '0' }} pts
+                                        </span>
+                                    </td>
+                                    <td class="text-end">{{ entry.balance_after_transaction }} pts</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <div class="status-icon-compact mx-auto mb-3" style="width: 4rem; height: 4rem;">
+                            <i class="bi bi-clock-history" style="font-size: 2rem;"></i>
                         </div>
-                    {% else %}
-                        <div class="alert alert-info">
-                            <i class="bi bi-info-circle-fill me-2"></i>
-                            You have no loyalty point transactions yet.
-                        </div>
-                    {% endif %}
-                </div>
-                <div class="card-footer d-flex justify-content-between">
-                    <a href="{{ url_for('customer.dashboard') }}" class="btn btn-outline-secondary">
-                        <i class="bi bi-arrow-left"></i> Back to Dashboard
-                    </a>
-                    <a href="{{ url_for('customer.loyalty_rewards') }}" class="btn btn-primary">
-                        <i class="bi bi-gift"></i> Browse Rewards
-                    </a>
-                </div>
+                        <h4>No Transaction History</h4>
+                        <p class="text-muted">Your loyalty points transaction history will appear here once you start earning points.</p>
+                        <a href="{{ url_for('customer.new_booking') }}" class="btn btn-primary">
+                            <i class="bi bi-calendar-plus"></i> Make Your First Booking
+                        </a>
+                    </div>
+                {% endif %}
             </div>
         </div>
     </div>
 </div>
-{% endblock %} 
+{% endblock %}

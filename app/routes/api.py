@@ -20,9 +20,16 @@ from app.services.booking_service import BookingService, RoomNotAvailableError
 from app.services.room_service import RoomService
 from app.services.customer_service import CustomerService
 from app.utils.decorators import role_required
+from app.utils.csrf_protection import csrf_required, csrf_exempt, get_csrf_token
 
 # Create blueprint
 api_bp = Blueprint('api', __name__)
+
+# Add CSRF token endpoint
+@api_bp.route('/csrf-token', methods=['GET'])
+def csrf_token():
+    """Get a CSRF token for API requests."""
+    return get_csrf_token()
 
 
 @api_bp.route('/availability', methods=['GET'])
@@ -107,6 +114,7 @@ def get_availability():
 
 @api_bp.route('/bookings', methods=['POST'])
 @login_required
+@csrf_required
 def create_booking():
     """
     Create a new booking.
@@ -247,6 +255,7 @@ def get_booking(booking_id):
 
 @api_bp.route('/bookings/<int:booking_id>', methods=['PUT'])
 @login_required
+@csrf_required
 def update_booking(booking_id):
     """
     Update a booking.
@@ -322,6 +331,7 @@ def update_booking(booking_id):
 @api_bp.route('/bookings/<int:booking_id>/status', methods=['PATCH'])
 @login_required
 @role_required(['admin', 'receptionist'])
+@csrf_required
 def update_booking_status(booking_id):
     """
     Update booking status.

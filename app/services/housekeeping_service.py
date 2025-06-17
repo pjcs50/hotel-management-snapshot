@@ -11,6 +11,12 @@ from app.models.room import Room
 from app.models.user import User
 from app.models.booking import Booking
 from app.models.room_status_log import RoomStatusLog
+from app.models.maintenance_request import MaintenanceRequest
+
+
+class HousekeepingError(Exception):
+    """Exception raised for housekeeping operation errors."""
+    pass
 
 
 class HousekeepingService:
@@ -206,7 +212,7 @@ class HousekeepingService:
     
     def assign_housekeeping_task(self, task_id, staff_id):
         """
-        Assign a housekeeping task to a staff member.
+        Assign a housekeeping task to a staff member with proper validation.
         
         Args:
             task_id: ID of the housekeeping task to assign
@@ -214,10 +220,101 @@ class HousekeepingService:
             
         Returns:
             Updated housekeeping task
+            
+        Raises:
+            ValueError: If task or staff member is invalid
+            HousekeepingError: If assignment is not allowed
         """
+        # Get and validate the task
+        task = self.get_housekeeping_task(task_id)
+        if not task:
+            raise ValueError(f"Housekeeping task with ID {task_id} not found")
+        
+        # Validate staff member
+        staff_member = self.db_session.query(User).get(staff_id)
+        if not staff_member:
+            raise ValueError(f"Staff member with ID {staff_id} not found")
+        
+        # Check if staff member is active and has appropriate role
+        if not staff_member.is_active:
+            raise HousekeepingError(f"Cannot assign task to inactive staff member: {staff_member.username}")
+        
+        # Validate staff role for housekeeping tasks
+        valid_roles = ['housekeeping', 'manager', 'admin']
+        if staff_member.role not in valid_roles:
+            raise HousekeepingError(
+                f"Staff member {staff_member.username} (role: {staff_member.role}) "
+                f"cannot be assigned housekeeping tasks. Valid roles: {', '.join(valid_roles)}"
+            )
+        
+        # Check if staff member is available (not overloaded)
+        current_tasks = self.db_session.query(HousekeepingTask).filter(
+            HousekeepingTask.assigned_to == staff_id,
+            HousekeepingTask.status.in_(['pending', 'in_progress'])
+        ).count()
+        
+        max_concurrent_tasks = 10  # Configurable limit
+        if current_tasks >= max_concurrent_tasks:
+            raise HousekeepingError(
+                f"Staff member {staff_member.username} already has {current_tasks} active tasks. "
+                f"Maximum allowed: {max_concurrent_tasks}"
+            )
+        
+        # Check for room-specific conflicts
+        if task.room_id:
+            room = self.db_session.query(Room).get(task.room_id)
+            if room:
+                # Check if room has conflicting status
+                if room.status == Room.STATUS_OCCUPIED:
+                    raise HousekeepingError(
+                        f"Cannot assign cleaning task for room {room.number} - room is currently occupied"
+                    )
+                
+                # Check for pending maintenance that would conflict
+                if self._has_conflicting_maintenance(task.room_id, task.task_type):
+                    raise HousekeepingError(
+                        f"Cannot assign {task.task_type} task for room {room.number} - "
+                        f"conflicting maintenance request exists"
+                    )
+        
+        # Assign the task
         return self.update_housekeeping_task(task_id, {
-            'assigned_to': staff_id
+            'assigned_to': staff_id,
+            'status': 'pending',  # Ensure status is set correctly
+            'assigned_at': datetime.now()
         })
+    
+    def _has_conflicting_maintenance(self, room_id, task_type):
+        """
+        Check if room has maintenance requests that conflict with housekeeping task.
+        
+        Args:
+            room_id: Room ID to check
+            task_type: Type of housekeeping task
+            
+        Returns:
+            bool: True if there are conflicting maintenance requests
+        """
+        # Define which maintenance types conflict with which housekeeping tasks
+        conflicts = {
+            'regular_cleaning': ['plumbing', 'electrical'],  # Can't clean if major work needed
+            'deep_cleaning': ['plumbing', 'electrical', 'furniture'],  # Deep clean conflicts with more
+            'turnover': ['plumbing', 'electrical'],  # Turnover needs working utilities
+            'maintenance_cleaning': []  # Maintenance cleaning can work around issues
+        }
+        
+        conflicting_types = conflicts.get(task_type, [])
+        if not conflicting_types:
+            return False
+        
+        # Check for active maintenance requests of conflicting types
+        conflicting_count = self.db_session.query(MaintenanceRequest).filter(
+            MaintenanceRequest.room_id == room_id,
+            MaintenanceRequest.issue_type.in_(conflicting_types),
+            MaintenanceRequest.status.in_(['pending', 'in_progress'])
+        ).count()
+        
+        return conflicting_count > 0
     
     def mark_in_progress(self, task_id, notes=None):
         """
@@ -248,7 +345,7 @@ class HousekeepingService:
     
     def complete_housekeeping_task(self, task_id, notes=None):
         """
-        Mark a housekeeping task as completed.
+        Mark a housekeeping task as completed with enhanced validation.
         
         Args:
             task_id: ID of the housekeeping task
@@ -256,29 +353,69 @@ class HousekeepingService:
             
         Returns:
             Updated housekeeping task
+            
+        Raises:
+            HousekeepingError: If completion is not allowed due to conflicts
         """
         task = self.get_housekeeping_task(task_id)
         if not task:
-            return None
+            raise ValueError(f"Housekeeping task with ID {task_id} not found")
+        
+        # Validate task can be completed
+        if task.status not in ['pending', 'in_progress']:
+            raise HousekeepingError(f"Task cannot be completed - current status: {task.status}")
+        
+        # Check for room-specific validation
+        if task.room_id:
+            room = self.db_session.query(Room).get(task.room_id)
+            if not room:
+                raise HousekeepingError(f"Room {task.room_id} not found")
+            
+            # Validate room status allows completion
+            if room.status == Room.STATUS_OCCUPIED:
+                raise HousekeepingError(
+                    f"Cannot complete cleaning task for room {room.number} - room is currently occupied"
+                )
+            
+            # Check for maintenance conflicts before marking as clean
+            if task.task_type in ['regular_cleaning', 'deep_cleaning', 'turnover']:
+                if self._has_pending_maintenance_blocking_completion(task.room_id):
+                    raise HousekeepingError(
+                        f"Cannot mark room {room.number} as clean - pending maintenance requests must be resolved first"
+                    )
+                
+                # Validate room state transition
+                from app.utils.room_state_machine import RoomStateMachine, RoomTransitionError
+                state_machine = RoomStateMachine(self.db_session)
+                
+                try:
+                    # Check if room can transition to available
+                    if not state_machine.can_transition(room.status, Room.STATUS_AVAILABLE):
+                        raise HousekeepingError(
+                            f"Room {room.number} cannot be marked as available from current status: {room.status}"
+                        )
+                except RoomTransitionError as e:
+                    raise HousekeepingError(f"Room status conflict: {str(e)}")
         
         # Update room status if this was a room cleaning task
-        if task.task_type in ['regular_cleaning', 'deep_cleaning', 'turnover']:
+        if task.room_id and task.task_type in ['regular_cleaning', 'deep_cleaning', 'turnover']:
             room = self.db_session.query(Room).get(task.room_id)
-            if room and room.status in ['dirty', 'checkout']:
-                # Save the old status for the log
-                old_status = room.status
-                
-                # Update room status
-                room.status = 'clean'
-                
-                # Log the status change
-                status_log = RoomStatusLog(
-                    room_id=room.id,
-                    old_status=old_status,
-                    new_status='clean',
-                    changed_by=task.assigned_to
-                )
-                self.db_session.add(status_log)
+            if room:
+                try:
+                    # Use state machine for safe status transition
+                    from app.utils.room_state_machine import RoomStateMachine
+                    state_machine = RoomStateMachine(self.db_session)
+                    
+                    # Transition room to available with proper validation
+                    state_machine.change_room_status(
+                        room.id,
+                        Room.STATUS_AVAILABLE,
+                        user_id=task.assigned_to,
+                        notes=f"Completed {task.task_type} task #{task.id}"
+                    )
+                    
+                except Exception as e:
+                    raise HousekeepingError(f"Failed to update room status: {str(e)}")
         
         # Prepare task update data
         data = {
@@ -299,6 +436,34 @@ class HousekeepingService:
         updated_task = self.update_housekeeping_task(task_id, data)
         
         return updated_task
+    
+    def _has_pending_maintenance_blocking_completion(self, room_id):
+        """
+        Check if room has maintenance requests that block cleaning completion.
+        
+        Args:
+            room_id: Room ID to check
+            
+        Returns:
+            bool: True if there are blocking maintenance requests
+        """
+        try:
+            # Critical maintenance types that must be resolved before room can be marked clean
+            blocking_types = ['plumbing', 'electrical', 'hvac', 'safety']
+            
+            # Check for active maintenance requests of blocking types
+            blocking_count = self.db_session.query(MaintenanceRequest).filter(
+                MaintenanceRequest.room_id == room_id,
+                MaintenanceRequest.issue_type.in_(blocking_types),
+                MaintenanceRequest.status.in_(['pending', 'in_progress']),
+                MaintenanceRequest.priority.in_(['high', 'urgent'])  # Only high priority blocks
+            ).count()
+            
+            return blocking_count > 0
+            
+        except Exception:
+            # If maintenance model doesn't exist, assume no blocking maintenance
+            return False
     
     def verify_housekeeping_task(self, task_id, verified_by, notes=None):
         """

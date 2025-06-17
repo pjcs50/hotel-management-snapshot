@@ -5,7 +5,7 @@ This module provides services for dashboard data and metrics.
 """
 
 from datetime import datetime, timedelta
-from sqlalchemy import func, and_, or_, select
+from sqlalchemy import func, and_, or_, select, text, distinct
 
 from app.models.booking import Booking
 from app.models.room import Room
@@ -15,6 +15,8 @@ from app.models.user import User
 from app.models.room_type import RoomType
 from app.services.analytics_service import AnalyticsService
 from app.services.notification_service import NotificationService
+from app.models.booking_log import BookingLog
+from app.models.payment import Payment
 
 
 class DashboardService:
@@ -48,19 +50,31 @@ class DashboardService:
                 "error": "Customer profile not found"
             }
         
-        # Get upcoming bookings
+        # Get upcoming bookings with eager loading to prevent N+1 queries
         today = datetime.now().date()
+        from sqlalchemy.orm import joinedload
+        
         upcoming_bookings = self.db_session.execute(
-            select(Booking).filter(
+            select(Booking)
+            .options(
+                joinedload(Booking.room).joinedload(Room.room_type),
+                joinedload(Booking.customer)
+            )
+            .filter(
                 Booking.customer_id == customer.id,
                 Booking.check_in_date >= today,
                 Booking.status == Booking.STATUS_RESERVED
             ).order_by(Booking.check_in_date)
         ).scalars().all()
         
-        # Get active booking (currently checked in)
+        # Get active booking (currently checked in) with eager loading
         active_booking = self.db_session.execute(
-            select(Booking).filter(
+            select(Booking)
+            .options(
+                joinedload(Booking.room).joinedload(Room.room_type),
+                joinedload(Booking.customer)
+            )
+            .filter(
                 Booking.customer_id == customer.id,
                 Booking.status == Booking.STATUS_CHECKED_IN,
                 Booking.check_in_date <= today,
@@ -68,9 +82,14 @@ class DashboardService:
             )
         ).scalar_one_or_none()
         
-        # Get past bookings (checked out or cancelled)
+        # Get past bookings (checked out or cancelled) with eager loading
         past_bookings = self.db_session.execute(
-            select(Booking).filter(
+            select(Booking)
+            .options(
+                joinedload(Booking.room).joinedload(Room.room_type),
+                joinedload(Booking.customer)
+            )
+            .filter(
                 Booking.customer_id == customer.id,
                 Booking.status.in_([Booking.STATUS_CHECKED_OUT, Booking.STATUS_CANCELLED, Booking.STATUS_NO_SHOW])
             ).order_by(Booking.check_out_date.desc()).limit(5)
@@ -343,8 +362,12 @@ class DashboardService:
             "occupied_rooms": occupied_rooms,
             "available_rooms": available_rooms,
             "cleaning_rooms": cleaning_rooms,
+            "maintenance_rooms": self.db_session.execute(
+                select(func.count(Room.id)).filter(Room.status == Room.STATUS_MAINTENANCE)
+            ).scalar_one() or 0,
             "total_rooms": total_rooms,
             "occupancy_rate": occupancy_rate,
+            "current_time": datetime.now(),
             "recent_bookings": recent_bookings_data,
             "room_status": room_status_data,
             "todays_checkin_list": todays_checkin_data,
@@ -426,6 +449,15 @@ class DashboardService:
         adr_value = analytics_service.calculate_adr(period_start_date, period_end_date)
         revpar_value = analytics_service.calculate_revpar(period_start_date, period_end_date)
         
+        # Get real revenue data
+        revenue_data = self._get_revenue_analytics()
+        
+        # Get recent activity timeline
+        recent_activities = self._get_recent_activities()
+        
+        # Calculate guest satisfaction score from recent bookings
+        guest_satisfaction = self._calculate_guest_satisfaction()
+        
         return {
             "occupancy_rate": occupancy_rate,
             "customer_count": customer_count,
@@ -439,36 +471,88 @@ class DashboardService:
             "booking_forecast": booking_forecast,
             "maintenance_status": maintenance_status,
             "housekeeping_status": housekeeping_status,
-            "adr": adr_value if adr_value is not None else 0.0,  # Ensure key exists and is float
-            "revpar": revpar_value if revpar_value is not None else 0.0 # Ensure key exists and is float
+            "adr": adr_value if adr_value is not None else 0.0,
+            "revpar": revpar_value if revpar_value is not None else 0.0,
+            "revenue_data": revenue_data,
+            "recent_activities": recent_activities,
+            "guest_satisfaction": guest_satisfaction
         }
     
     def _get_top_staff_performers(self, limit=5):
-        """Get top-performing staff based on task completion and ratings."""
-        # This is a placeholder - in a real system this would query actual performance metrics
-        # from the database based on tasks completed, response times, and customer ratings
+        """Get top-performing staff based on real task completion, booking activities, and performance metrics."""
+        from sqlalchemy import func, case, distinct
+        from app.models.booking_log import BookingLog
+        from app.models.room_status_log import RoomStatusLog
+        from app.models.payment import Payment
+        import datetime
         
-        # Get actual staff users from the database
-        staff_users = self.db_session.execute(
-            select(User).filter(User.role != 'customer').limit(limit)
-        ).scalars().all()
+        # Get the last 30 days for performance calculation
+        start_date = datetime.datetime.now() - datetime.timedelta(days=30)
         
-        # Create performance metrics (sample data for demonstration)
-        import random
+        # Query staff users with their activity counts
+        staff_performance = self.db_session.execute(
+            select(
+                User.id,
+                User.username,
+                User.role,
+                # Count booking-related activities
+                func.count(distinct(BookingLog.id)).label('booking_activities'),
+                # Count room status changes they made
+                func.count(distinct(RoomStatusLog.id)).label('room_activities'),
+                # Count payments they processed
+                func.count(distinct(Payment.id)).label('payment_activities'),
+                # Calculate total activities
+                (func.count(distinct(BookingLog.id)) + 
+                 func.count(distinct(RoomStatusLog.id)) + 
+                 func.count(distinct(Payment.id))).label('total_activities')
+            )
+            .outerjoin(BookingLog, and_(
+                BookingLog.user_id == User.id,
+                BookingLog.action_time >= start_date
+            ))
+            .outerjoin(RoomStatusLog, and_(
+                RoomStatusLog.changed_by == User.id,
+                RoomStatusLog.change_time >= start_date
+            ))
+            .outerjoin(Payment, and_(
+                Payment.processed_by == User.id,
+                Payment.payment_date >= start_date
+            ))
+            .filter(User.role.in_(['receptionist', 'housekeeping', 'manager']))
+            .group_by(User.id, User.username, User.role)
+            .order_by(text('total_activities DESC'))
+            .limit(limit)
+        ).all()
+        
         performers = []
-        
-        for user in staff_users:
-            performers.append({
-                'id': user.id,
-                'username': user.username,
-                'role': user.role,
-                'tasks_completed': random.randint(10, 50),
-                'efficiency_score': random.uniform(80, 99),
-                'customer_rating': round(random.uniform(3.5, 5.0), 1)
-            })
+        for row in staff_performance:
+            user_id, username, role, booking_activities, room_activities, payment_activities, total_activities = row
             
-        # Sort by efficiency score
-        performers.sort(key=lambda x: x['efficiency_score'], reverse=True)
+            # Calculate efficiency score based on activities (normalize to 100 scale)
+            max_possible_activities = 50  # Reasonable max for 30 days
+            efficiency_score = min(95, (total_activities / max_possible_activities) * 100) if total_activities > 0 else 0
+            efficiency_score = max(50, efficiency_score)  # Minimum score of 50 for active staff
+            
+            # Calculate customer rating based on successful completions
+            # This is a simplified calculation - in real system would use actual customer feedback
+            successful_operations = booking_activities + room_activities + payment_activities
+            if successful_operations > 0:
+                # Higher activity = better assumed performance
+                customer_rating = min(5.0, 3.5 + (successful_operations / 20))
+            else:
+                customer_rating = 3.5  # Default rating
+            
+            performers.append({
+                'id': user_id,
+                'username': username,
+                'role': role,
+                'tasks_completed': total_activities,
+                'efficiency_score': round(efficiency_score, 1),
+                'customer_rating': round(customer_rating, 1),
+                'booking_activities': booking_activities,
+                'room_activities': room_activities,
+                'payment_activities': payment_activities
+            })
         
         return performers
         
@@ -747,6 +831,18 @@ class DashboardService:
         # Get user registration history
         user_registration_history = self.get_user_registration_history(days=30)
         
+        # Get real revenue analytics for admin dashboard
+        revenue_analytics = self._get_admin_revenue_analytics()
+        
+        # Get system health metrics
+        system_health = self._get_system_health_metrics()
+        
+        # Get performance statistics
+        performance_stats = self._get_admin_performance_stats()
+        
+        # Get recent booking analytics
+        booking_analytics = self._get_admin_booking_analytics()
+        
         return {
             "user_counts": user_data,
             "total_users": total_users,
@@ -755,7 +851,259 @@ class DashboardService:
             "room_type_counts": room_type_data,
             "total_bookings": total_bookings,
             "active_bookings": active_bookings,
-            "user_registration_history": user_registration_history
+            "user_registration_history": user_registration_history,
+            "revenue_analytics": revenue_analytics,
+            "system_health": system_health,
+            "performance_stats": performance_stats,
+            "booking_analytics": booking_analytics
+        }
+    
+    def _get_admin_revenue_analytics(self):
+        """Get comprehensive revenue analytics for admin dashboard."""
+        today = datetime.now().date()
+        start_of_month = datetime(today.year, today.month, 1).date()
+        start_of_year = datetime(today.year, 1, 1).date()
+        
+        # Monthly revenue
+        monthly_revenue = self.db_session.execute(
+            select(func.sum(Booking.total_price))
+            .filter(
+                Booking.check_in_date >= start_of_month,
+                Booking.check_in_date <= today,
+                Booking.status.in_([Booking.STATUS_CHECKED_IN, Booking.STATUS_CHECKED_OUT, Booking.STATUS_RESERVED])
+            )
+        ).scalar_one() or 0
+        
+        # Yearly revenue
+        yearly_revenue = self.db_session.execute(
+            select(func.sum(Booking.total_price))
+            .filter(
+                Booking.check_in_date >= start_of_year,
+                Booking.check_in_date <= today,
+                Booking.status.in_([Booking.STATUS_CHECKED_IN, Booking.STATUS_CHECKED_OUT, Booking.STATUS_RESERVED])
+            )
+        ).scalar_one() or 0
+        
+        # Revenue by room type for current month
+        revenue_by_room_type = self.db_session.execute(
+            select(RoomType.name, func.sum(Booking.total_price))
+            .join(Room, Booking.room_id == Room.id)
+            .join(RoomType, Room.room_type_id == RoomType.id)
+            .filter(
+                Booking.check_in_date >= start_of_month,
+                Booking.check_in_date <= today,
+                Booking.status.in_([Booking.STATUS_CHECKED_IN, Booking.STATUS_CHECKED_OUT, Booking.STATUS_RESERVED])
+            )
+            .group_by(RoomType.name)
+        ).all()
+        
+        # Daily revenue trend for last 7 days
+        daily_revenue_trend = []
+        for i in range(6, -1, -1):
+            date = today - timedelta(days=i)
+            day_revenue = self.db_session.execute(
+                select(func.sum(Booking.total_price))
+                .filter(
+                    Booking.check_in_date == date,
+                    Booking.status.in_([Booking.STATUS_CHECKED_IN, Booking.STATUS_CHECKED_OUT, Booking.STATUS_RESERVED])
+                )
+            ).scalar_one() or 0
+            daily_revenue_trend.append({
+                'date': date.strftime('%Y-%m-%d'),
+                'revenue': float(day_revenue)
+            })
+        
+        return {
+            'monthly_revenue': float(monthly_revenue),
+            'yearly_revenue': float(yearly_revenue),
+            'revenue_by_room_type': {name: float(revenue) for name, revenue in revenue_by_room_type},
+            'daily_revenue_trend': daily_revenue_trend
+        }
+    
+    def _get_system_health_metrics(self):
+        """Get system health and performance metrics."""
+        # Room utilization rate
+        total_rooms = self.db_session.execute(select(func.count(Room.id))).scalar_one()
+        occupied_rooms = self.db_session.execute(
+            select(func.count(Room.id)).filter(Room.status == Room.STATUS_OCCUPIED)
+        ).scalar_one()
+        
+        room_utilization = (occupied_rooms / total_rooms * 100) if total_rooms > 0 else 0
+        
+        # Staff utilization (active vs total staff)
+        total_staff = self.db_session.execute(
+            select(func.count(User.id)).filter(User.role.in_(['receptionist', 'housekeeping', 'manager']))
+        ).scalar_one()
+        
+        active_staff = self.db_session.execute(
+            select(func.count(User.id)).filter(
+                User.role.in_(['receptionist', 'housekeeping', 'manager']),
+                User.is_active == True
+            )
+        ).scalar_one()
+        
+        staff_utilization = (active_staff / total_staff * 100) if total_staff > 0 else 0
+        
+        # Payment processing health (successful vs failed)
+        successful_payments = self.db_session.execute(
+            select(func.count(Payment.id)).filter(Payment.status == 'completed')
+        ).scalar_one() or 0
+        
+        total_payments = self.db_session.execute(select(func.count(Payment.id))).scalar_one() or 1
+        payment_success_rate = (successful_payments / total_payments * 100)
+        
+        # Booking completion rate
+        completed_bookings = self.db_session.execute(
+            select(func.count(Booking.id)).filter(Booking.status == Booking.STATUS_CHECKED_OUT)
+        ).scalar_one() or 0
+        
+        total_resolved_bookings = self.db_session.execute(
+            select(func.count(Booking.id)).filter(
+                Booking.status.in_([Booking.STATUS_CHECKED_OUT, Booking.STATUS_CANCELLED])
+            )
+        ).scalar_one() or 1
+        
+        booking_completion_rate = (completed_bookings / total_resolved_bookings * 100)
+        
+        return {
+            'room_utilization': round(room_utilization, 1),
+            'staff_utilization': round(staff_utilization, 1),
+            'payment_success_rate': round(payment_success_rate, 1),
+            'booking_completion_rate': round(booking_completion_rate, 1)
+        }
+    
+    def _get_admin_performance_stats(self):
+        """Get performance statistics for admin dashboard."""
+        today = datetime.now().date()
+        last_30_days = today - timedelta(days=30)
+        
+        # Average stay duration
+        avg_stay_duration = self.db_session.execute(
+            select(func.avg(
+                func.julianday(Booking.check_out_date) - func.julianday(Booking.check_in_date)
+            ))
+            .filter(
+                Booking.check_in_date >= last_30_days,
+                Booking.status == Booking.STATUS_CHECKED_OUT
+            )
+        ).scalar_one() or 0
+        
+        # Average booking value
+        avg_booking_value = self.db_session.execute(
+            select(func.avg(Booking.total_price))
+            .filter(
+                Booking.check_in_date >= last_30_days,
+                Booking.status.in_([Booking.STATUS_CHECKED_IN, Booking.STATUS_CHECKED_OUT, Booking.STATUS_RESERVED])
+            )
+        ).scalar_one() or 0
+        
+        # Repeat customer rate
+        total_customers = self.db_session.execute(
+            select(func.count(distinct(Booking.customer_id)))
+            .filter(
+                Booking.check_in_date >= last_30_days,
+                Booking.status.in_([Booking.STATUS_CHECKED_IN, Booking.STATUS_CHECKED_OUT, Booking.STATUS_RESERVED])
+            )
+        ).scalar_one() or 1
+        
+        # Count customers with more than one booking
+        repeat_customers_subquery = self.db_session.execute(
+            select(Booking.customer_id)
+            .filter(
+                Booking.check_in_date >= last_30_days,
+                Booking.status.in_([Booking.STATUS_CHECKED_IN, Booking.STATUS_CHECKED_OUT, Booking.STATUS_RESERVED])
+            )
+            .group_by(Booking.customer_id)
+            .having(func.count(Booking.id) > 1)
+        ).all()
+        
+        repeat_customers = len(repeat_customers_subquery)
+        
+        repeat_customer_rate = (repeat_customers / total_customers * 100)
+        
+        # Cancellation rate
+        total_bookings = self.db_session.execute(
+            select(func.count(Booking.id))
+            .filter(Booking.check_in_date >= last_30_days)
+        ).scalar_one() or 1
+        
+        cancelled_bookings = self.db_session.execute(
+            select(func.count(Booking.id))
+            .filter(
+                Booking.check_in_date >= last_30_days,
+                Booking.status.in_([Booking.STATUS_CANCELLED, Booking.STATUS_NO_SHOW])
+            )
+        ).scalar_one() or 0
+        
+        cancellation_rate = (cancelled_bookings / total_bookings * 100)
+        
+        return {
+            'avg_stay_duration': round(avg_stay_duration, 1),
+            'avg_booking_value': round(float(avg_booking_value), 2),
+            'repeat_customer_rate': round(repeat_customer_rate, 1),
+            'cancellation_rate': round(cancellation_rate, 1)
+        }
+    
+    def _get_admin_booking_analytics(self):
+        """Get booking analytics and forecasts for admin dashboard."""
+        today = datetime.now().date()
+        
+        # Upcoming arrivals (next 7 days)
+        upcoming_arrivals = []
+        for i in range(7):
+            date = today + timedelta(days=i)
+            arrivals = self.db_session.execute(
+                select(func.count(Booking.id))
+                .filter(
+                    Booking.check_in_date == date,
+                    Booking.status == Booking.STATUS_RESERVED
+                )
+            ).scalar_one()
+            upcoming_arrivals.append({
+                'date': date.strftime('%Y-%m-%d'),
+                'arrivals': arrivals
+            })
+        
+        # Upcoming departures (next 7 days)
+        upcoming_departures = []
+        for i in range(7):
+            date = today + timedelta(days=i)
+            departures = self.db_session.execute(
+                select(func.count(Booking.id))
+                .filter(
+                    Booking.check_out_date == date,
+                    Booking.status == Booking.STATUS_CHECKED_IN
+                )
+            ).scalar_one()
+            upcoming_departures.append({
+                'date': date.strftime('%Y-%m-%d'),
+                'departures': departures
+            })
+        
+        # Occupancy forecast (next 14 days)
+        total_rooms = self.db_session.execute(select(func.count(Room.id))).scalar_one()
+        occupancy_forecast = []
+        for i in range(14):
+            date = today + timedelta(days=i)
+            occupied = self.db_session.execute(
+                select(func.count(distinct(Booking.room_id)))
+                .filter(
+                    Booking.check_in_date <= date,
+                    Booking.check_out_date > date,
+                    Booking.status.in_([Booking.STATUS_RESERVED, Booking.STATUS_CHECKED_IN])
+                )
+            ).scalar_one()
+            
+            occupancy_rate = (occupied / total_rooms * 100) if total_rooms > 0 else 0
+            occupancy_forecast.append({
+                'date': date.strftime('%Y-%m-%d'),
+                'occupancy_rate': round(occupancy_rate, 1)
+            })
+        
+        return {
+            'upcoming_arrivals': upcoming_arrivals,
+            'upcoming_departures': upcoming_departures,
+            'occupancy_forecast': occupancy_forecast
         }
     
     def get_historical_occupancy(self, days=14):
@@ -877,4 +1225,168 @@ class DashboardService:
             
             result[date.strftime("%Y-%m-%d")] = registration_count
         
-        return result 
+        return result
+    
+    def _get_revenue_analytics(self):
+        """Get real revenue analytics data for the manager dashboard."""
+        today = datetime.now().date()
+        start_of_month = datetime(today.year, today.month, 1).date()
+        
+        # Monthly revenue calculation
+        monthly_revenue = self.db_session.execute(
+            select(func.sum(Booking.total_price))
+            .filter(
+                Booking.check_in_date >= start_of_month,
+                Booking.check_in_date <= today,
+                Booking.status.in_([Booking.STATUS_CHECKED_IN, Booking.STATUS_CHECKED_OUT, Booking.STATUS_RESERVED])
+            )
+        ).scalar_one() or 0
+        
+        # Previous month for comparison
+        prev_month_start = (start_of_month.replace(day=1) - timedelta(days=1)).replace(day=1)
+        prev_month_end = start_of_month - timedelta(days=1)
+        
+        prev_monthly_revenue = self.db_session.execute(
+            select(func.sum(Booking.total_price))
+            .filter(
+                Booking.check_in_date >= prev_month_start,
+                Booking.check_in_date <= prev_month_end,
+                Booking.status.in_([Booking.STATUS_CHECKED_IN, Booking.STATUS_CHECKED_OUT, Booking.STATUS_RESERVED])
+            )
+        ).scalar_one() or 0
+        
+        # Calculate growth percentage
+        if prev_monthly_revenue > 0:
+            growth_percentage = ((monthly_revenue - prev_monthly_revenue) / prev_monthly_revenue) * 100
+        else:
+            growth_percentage = 0 if monthly_revenue == 0 else 100
+            
+        # Daily average this month
+        days_in_month = (today - start_of_month).days + 1
+        daily_average = monthly_revenue / days_in_month if days_in_month > 0 else 0
+        
+        # Revenue by day for the last 7 days
+        daily_revenue = []
+        for i in range(6, -1, -1):
+            date = today - timedelta(days=i)
+            day_revenue = self.db_session.execute(
+                select(func.sum(Booking.total_price))
+                .filter(
+                    Booking.check_in_date == date,
+                    Booking.status.in_([Booking.STATUS_CHECKED_IN, Booking.STATUS_CHECKED_OUT, Booking.STATUS_RESERVED])
+                )
+            ).scalar_one() or 0
+            daily_revenue.append({
+                'date': date.strftime('%Y-%m-%d'),
+                'revenue': float(day_revenue)
+            })
+        
+        return {
+            'total_revenue': float(monthly_revenue),
+            'growth_percentage': round(growth_percentage, 1),
+            'daily_average': round(float(daily_average), 2),
+            'daily_revenue': daily_revenue
+        }
+    
+    def _get_recent_activities(self, limit=10):
+        """Get recent activities across the hotel for the activity timeline."""
+        activities = []
+        
+        # Recent booking activities
+        recent_bookings = self.db_session.execute(
+            select(BookingLog, Booking, User)
+            .join(Booking, BookingLog.booking_id == Booking.id)
+            .outerjoin(User, BookingLog.user_id == User.id)
+            .order_by(BookingLog.action_time.desc())
+            .limit(limit)
+        ).all()
+        
+        for log, booking, user in recent_bookings:
+            activities.append({
+                'type': 'booking',
+                'action': log.action,
+                'description': f"Booking {booking.id} {log.action.replace('_', ' ')}",
+                'time': log.action_time,
+                'user': user.username if user else 'System',
+                'details': f"Room {booking.room.number}" if booking.room else ""
+            })
+        
+        # Recent room status changes
+        recent_room_changes = self.db_session.execute(
+            select(RoomStatusLog, Room, User)
+            .join(Room, RoomStatusLog.room_id == Room.id)
+            .outerjoin(User, RoomStatusLog.changed_by == User.id)
+            .order_by(RoomStatusLog.change_time.desc())
+            .limit(limit)
+        ).all()
+        
+        for log, room, user in recent_room_changes:
+            activities.append({
+                'type': 'room',
+                'action': 'status_change',
+                'description': f"Room {room.number} status changed to {log.new_status}",
+                'time': log.change_time,
+                'user': user.username if user else 'System',
+                'details': f"From {log.old_status}" if log.old_status else ""
+            })
+        
+        # Recent payments
+        recent_payments = self.db_session.execute(
+            select(Payment, Booking, User)
+            .join(Booking, Payment.booking_id == Booking.id)
+            .outerjoin(User, Payment.processed_by == User.id)
+            .order_by(Payment.payment_date.desc())
+            .limit(limit)
+        ).all()
+        
+        for payment, booking, user in recent_payments:
+            activities.append({
+                'type': 'payment',
+                'action': 'payment_processed',
+                'description': f"Payment of ${payment.amount} processed for booking {booking.id}",
+                'time': payment.payment_date,
+                'user': user.username if user else 'System',
+                'details': f"Method: {payment.payment_type}"
+            })
+        
+        # Sort all activities by time and return the most recent
+        activities.sort(key=lambda x: x['time'], reverse=True)
+        return activities[:limit]
+    
+    def _calculate_guest_satisfaction(self):
+        """Calculate guest satisfaction score based on completed stays and ratings."""
+        # This is a simplified calculation - in a real system you'd have actual guest feedback
+        # For now, we'll use successful bookings vs cancellations as a proxy
+        
+        # Get bookings from the last 30 days
+        thirty_days_ago = datetime.now().date() - timedelta(days=30)
+        
+        total_bookings = self.db_session.execute(
+            select(func.count(Booking.id))
+            .filter(
+                Booking.check_in_date >= thirty_days_ago,
+                Booking.status.in_([
+                    Booking.STATUS_CHECKED_OUT, 
+                    Booking.STATUS_CANCELLED, 
+                    Booking.STATUS_NO_SHOW
+                ])
+            )
+        ).scalar_one() or 0
+        
+        successful_bookings = self.db_session.execute(
+            select(func.count(Booking.id))
+            .filter(
+                Booking.check_in_date >= thirty_days_ago,
+                Booking.status == Booking.STATUS_CHECKED_OUT
+            )
+        ).scalar_one() or 0
+        
+        if total_bookings > 0:
+            # Calculate satisfaction as percentage of successful vs total bookings
+            # Scale to a 1-5 rating system
+            success_rate = successful_bookings / total_bookings
+            satisfaction_score = 3.0 + (success_rate * 2.0)  # Range: 3.0 to 5.0
+        else:
+            satisfaction_score = 4.5  # Default good rating
+        
+        return round(satisfaction_score, 1) 

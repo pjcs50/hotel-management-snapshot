@@ -1,80 +1,207 @@
-{% extends 'base.html' %}
+{% extends "dashboard_sidebar_base.html" %}
 
-{% block title %}Check Out Guest{% endblock %}
+{% block title %}Guest Check-out - Horizon Hotel Management{% endblock %}
+{% block sidebar_title %}Horizon{% endblock %}
+{% block page_title %}Guest Check-out{% endblock %}
+
+{% block sidebar_links %}
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('receptionist.dashboard') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-speedometer2"></i>
+        </div>
+        <span class="sidebar-nav-text">Dashboard</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('receptionist.new_booking') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-plus-circle"></i>
+        </div>
+        <span class="sidebar-nav-text">New Booking</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('receptionist.bookings') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-calendar-check"></i>
+        </div>
+        <span class="sidebar-nav-text">Bookings</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('receptionist.check_in') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-box-arrow-in-right"></i>
+        </div>
+        <span class="sidebar-nav-text">Check-in</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('receptionist.check_out') }}" class="sidebar-nav-link active">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-box-arrow-right"></i>
+        </div>
+        <span class="sidebar-nav-text">Check-out</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('receptionist.guest_list') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-people"></i>
+        </div>
+        <span class="sidebar-nav-text">Guest List</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('receptionist.room_inventory') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-building"></i>
+        </div>
+        <span class="sidebar-nav-text">Room Status</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('receptionist.room_availability') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-calendar3"></i>
+        </div>
+        <span class="sidebar-nav-text">Availability</span>
+    </a>
+</li>
+{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="row">
-        <div class="col-md-12">
-            <h1>Guest Check-Out</h1>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{ url_for('receptionist.dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ url_for('receptionist.check_out') }}">Check-Out List</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Check-Out Guest</li>
-                </ol>
-            </nav>
+<div class="fade-in">
+    <!-- Header Section -->
+    <div class="checkout-header">
+        <div class="header-content">
+            <h2 class="header-title">Guest Check-out</h2>
+            <p class="header-subtitle">Complete the check-out process for {{ booking.customer.name if booking.customer else 'Guest' }}</p>
+        </div>
+        <div class="header-badge">
+            <span class="status-badge status-processing">
+                <i class="bi bi-clock me-1"></i>Processing Check-out
+            </span>
         </div>
     </div>
 
-    <div class="row">
-        <div class="col-md-6">
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5>Booking Information</h5>
-                </div>
-                <div class="card-body">
-                    <p><strong>Guest:</strong> {{ booking.customer.name }}</p>
-                    <p><strong>Room:</strong> {{ booking.room.number }} ({{ booking.room.room_type.name }})</p>
-                    <p><strong>Check-in Date:</strong> {{ booking.check_in_date.strftime('%Y-%m-%d') }}</p>
-                    <p><strong>Check-out Date:</strong> {{ booking.check_out_date.strftime('%Y-%m-%d') }}</p>
-                    <p><strong>Status:</strong> {{ booking.status }}</p>
-                    <p><strong>Confirmation Code:</strong> {{ booking.confirmation_code }}</p>
+    <div class="checkout-container">
+        <!-- Booking Information Card -->
+        <div class="info-card">
+            <div class="card-header">
+                <h3><i class="bi bi-info-circle me-2"></i>Booking Information</h3>
+            </div>
+            <div class="card-body">
+                <div class="booking-details">
+                    <div class="detail-row">
+                        <span class="detail-label">Guest Name</span>
+                        <span class="detail-value">{{ booking.customer.name if booking.customer else 'Unknown Guest' }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Room</span>
+                        <span class="detail-value">{{ booking.room.number if booking.room else 'TBD' }} ({{ booking.room.room_type.name if booking.room and booking.room.room_type else 'Standard' }})</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Check-in Date</span>
+                        <span class="detail-value">{{ booking.check_in_date.strftime('%Y-%m-%d') if booking.check_in_date else 'TBD' }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Check-out Date</span>
+                        <span class="detail-value">{{ booking.check_out_date.strftime('%Y-%m-%d') if booking.check_out_date else 'TBD' }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Status</span>
+                        <span class="detail-value">
+                            <span class="status-badge status-{{ booking.status.lower().replace(' ', '-') if booking.status else 'active' }}">
+                                {{ booking.status if booking.status else 'Active' }}
+                            </span>
+                        </span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Confirmation Code</span>
+                        <span class="detail-value code">{{ booking.confirmation_code if booking.confirmation_code else 'N/A' }}</span>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-6">
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5>Folio Summary</h5>
-                </div>
-                <div class="card-body">
-                    <p><strong>Total Charges:</strong> ${{ "%.2f"|format(total_charges) }}</p>
-                    <p><strong>Total Paid:</strong> ${{ "%.2f"|format(total_paid) }}</p>
-                    <p><strong>Balance Due:</strong> ${{ "%.2f"|format(balance_due) }}</p>
-                    <a href="{{ url_for('receptionist.view_folio', booking_id=booking.id) }}" class="btn btn-info btn-sm">View Full Folio</a>
-                </div>
+        <!-- Folio Summary Card -->
+        <div class="folio-card">
+            <div class="card-header">
+                <h3><i class="bi bi-receipt me-2"></i>Folio Summary</h3>
+                <a href="{{ url_for('receptionist.view_folio', booking_id=booking.id) }}" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-eye me-1"></i>View Full Folio
+                </a>
             </div>
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col-md-12">
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5>Check-Out Form</h5>
-                </div>
-                <div class="card-body">
-                    <form method="POST" action="{{ url_for('receptionist.check_out_guest', booking_id=booking.id) }}">
-                        <div class="form-group mb-3">
-                            <label for="late_checkout_hours">Late Check-out Hours (if applicable):</label>
-                            <input type="number" class="form-control" id="late_checkout_hours" name="late_checkout_hours" min="0" max="24" value="0">
-                            <small class="form-text text-muted">Each hour will be charged at 10% of the room rate.</small>
+            <div class="card-body">
+                <div class="folio-summary">
+                    <div class="summary-item">
+                        <div class="summary-icon">
+                            <i class="bi bi-credit-card"></i>
                         </div>
+                        <div class="summary-content">
+                            <div class="summary-label">Total Charges</div>
+                            <div class="summary-value">${{ "%.2f"|format(total_charges) if total_charges else '0.00' }}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="summary-item">
+                        <div class="summary-icon paid">
+                            <i class="bi bi-check-circle"></i>
+                        </div>
+                        <div class="summary-content">
+                            <div class="summary-label">Total Paid</div>
+                            <div class="summary-value paid">${{ "%.2f"|format(total_paid) if total_paid else '0.00' }}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="summary-item balance">
+                        <div class="summary-icon balance">
+                            <i class="bi bi-exclamation-triangle"></i>
+                        </div>
+                        <div class="summary-content">
+                            <div class="summary-label">Balance Due</div>
+                            <div class="summary-value balance">${{ "%.2f"|format(balance_due) if balance_due else '0.00' }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-                        <div class="form-group mb-3">
-                            <label for="payment_amount">Payment Amount:</label>
-                            <div class="input-group">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text">$</span>
-                                </div>
-                                <input type="number" step="0.01" class="form-control" id="payment_amount" name="payment_amount" value="{{ balance_due }}" min="0">
+        <!-- Check-out Form Card -->
+        <div class="checkout-form-card">
+            <div class="card-header">
+                <h3><i class="bi bi-box-arrow-right me-2"></i>Complete Check-out</h3>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('receptionist.check_out_guest', booking_id=booking.id) }}" class="checkout-form">
+                    <div class="form-section">
+                        <h5 class="section-title">Additional Charges</h5>
+                        
+                        <div class="form-group">
+                            <label for="late_checkout_hours" class="form-label">Late Check-out Hours</label>
+                            <input type="number" class="form-control" id="late_checkout_hours" name="late_checkout_hours" 
+                                   min="0" max="24" value="0" placeholder="0">
+                            <div class="form-help">Each hour will be charged at 10% of the room rate</div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h5 class="section-title">Payment Information</h5>
+                        
+                        <div class="form-group">
+                            <label for="payment_amount" class="form-label">Payment Amount</label>
+                            <div class="input-wrapper">
+                                <span class="input-prefix">$</span>
+                                <input type="number" step="0.01" class="form-control" id="payment_amount" name="payment_amount" 
+                                       value="{{ balance_due if balance_due else 0 }}" min="0" placeholder="0.00">
                             </div>
+                            <div class="form-help">Current balance due: ${{ "%.2f"|format(balance_due) if balance_due else '0.00' }}</div>
                         </div>
 
-                        <div class="form-group mb-3">
-                            <label for="payment_type">Payment Method:</label>
+                        <div class="form-group">
+                            <label for="payment_type" class="form-label">Payment Method</label>
                             <select class="form-control" id="payment_type" name="payment_type" required>
                                 <option value="Credit Card">Credit Card</option>
                                 <option value="Debit Card">Debit Card</option>
@@ -84,24 +211,463 @@
                                 <option value="Other">Other</option>
                             </select>
                         </div>
+                    </div>
 
-                        <div class="form-group mb-3">
-                            <label for="checkout_notes">Check-out Notes:</label>
-                            <textarea class="form-control" id="checkout_notes" name="checkout_notes" rows="3"></textarea>
-                        </div>
-
-                        <div class="alert alert-warning">
-                            <strong>Note:</strong> Check-out will only be completed if the balance is fully paid.
-                        </div>
-
+                    <div class="form-section">
                         <div class="form-group">
-                            <button type="submit" class="btn btn-primary">Complete Check-Out</button>
-                            <a href="{{ url_for('receptionist.check_out') }}" class="btn btn-secondary">Cancel</a>
+                            <label for="checkout_notes" class="form-label">Check-out Notes</label>
+                            <textarea class="form-control" id="checkout_notes" name="checkout_notes" rows="3" 
+                                      placeholder="Enter any additional notes or feedback..."></textarea>
                         </div>
-                    </form>
-                </div>
+                    </div>
+
+                    <div class="form-notice">
+                        <div class="notice-icon">
+                            <i class="bi bi-info-circle"></i>
+                        </div>
+                        <div class="notice-content">
+                            <strong>Important:</strong> Check-out will only be completed if the balance is fully paid.
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <a href="{{ url_for('receptionist.check_out') }}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left me-1"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle me-1"></i>Complete Check-out
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+/* Check-out Page Styles */
+.checkout-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.header-content h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: hsl(var(--foreground));
+}
+
+.header-content p {
+    margin: 0.25rem 0 0 0;
+    color: hsl(var(--muted-foreground));
+}
+
+.header-badge .status-badge {
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius);
+    font-size: 0.875rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+}
+
+.status-processing {
+    background: hsl(var(--chart-3) / 0.1);
+    color: hsl(var(--chart-3));
+}
+
+.status-active {
+    background: hsl(var(--chart-2) / 0.1);
+    color: hsl(var(--chart-2));
+}
+
+.checkout-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.info-card,
+.folio-card,
+.checkout-form-card {
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.card-header {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid hsl(var(--border));
+    background: hsl(var(--muted) / 0.3);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.card-header h3 {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: hsl(var(--foreground));
+    display: flex;
+    align-items: center;
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+.booking-details {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid hsl(var(--border));
+}
+
+.detail-row:last-child {
+    border-bottom: none;
+}
+
+.detail-label {
+    font-size: 0.875rem;
+    color: hsl(var(--muted-foreground));
+    font-weight: 500;
+}
+
+.detail-value {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: hsl(var(--foreground));
+    text-align: right;
+}
+
+.detail-value.code {
+    font-family: monospace;
+    background: hsl(var(--muted));
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8125rem;
+}
+
+.folio-summary {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.summary-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: hsl(var(--muted) / 0.3);
+    border-radius: var(--radius);
+}
+
+.summary-item.balance {
+    background: hsl(var(--chart-1) / 0.1);
+}
+
+.summary-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: hsl(var(--muted));
+    color: hsl(var(--muted-foreground));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+}
+
+.summary-icon.paid {
+    background: hsl(var(--chart-2));
+    color: white;
+}
+
+.summary-icon.balance {
+    background: hsl(var(--chart-1));
+    color: white;
+}
+
+.summary-content {
+    flex: 1;
+}
+
+.summary-label {
+    font-size: 0.875rem;
+    color: hsl(var(--muted-foreground));
+    margin-bottom: 0.25rem;
+}
+
+.summary-value {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: hsl(var(--foreground));
+}
+
+.summary-value.paid {
+    color: hsl(var(--chart-2));
+}
+
+.summary-value.balance {
+    color: hsl(var(--chart-1));
+}
+
+.checkout-form-card {
+    grid-column: 1 / -1;
+}
+
+.checkout-form {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.form-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.section-title {
+    margin: 0 0 1rem 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: hsl(var(--foreground));
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid hsl(var(--border));
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: hsl(var(--foreground));
+}
+
+.form-control {
+    padding: 0.75rem 1rem;
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+    background: hsl(var(--background));
+    color: hsl(var(--foreground));
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: hsl(var(--accent));
+    box-shadow: 0 0 0 2px hsl(var(--accent) / 0.2);
+}
+
+.input-wrapper {
+    position: relative;
+}
+
+.input-prefix {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.875rem;
+    color: hsl(var(--muted-foreground));
+    pointer-events: none;
+}
+
+.input-wrapper .form-control {
+    padding-left: 2.5rem;
+}
+
+.form-help {
+    font-size: 0.75rem;
+    color: hsl(var(--muted-foreground));
+}
+
+.form-notice {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 1rem;
+    background: hsl(var(--chart-3) / 0.1);
+    border: 1px solid hsl(var(--chart-3) / 0.2);
+    border-radius: var(--radius);
+}
+
+.notice-icon {
+    color: hsl(var(--chart-3));
+    font-size: 1rem;
+    flex-shrink: 0;
+    margin-top: 0.125rem;
+}
+
+.notice-content {
+    font-size: 0.875rem;
+    color: hsl(var(--foreground));
+    line-height: 1.4;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid hsl(var(--border));
+}
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius);
+    font-weight: 500;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+    cursor: pointer;
+    font-size: 0.875rem;
+}
+
+.btn-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.8125rem;
+}
+
+.btn-primary {
+    background: hsl(var(--accent));
+    color: hsl(var(--accent-foreground));
+    border-color: hsl(var(--accent));
+}
+
+.btn-primary:hover {
+    background: hsl(var(--accent) / 0.9);
+}
+
+.btn-secondary {
+    background: hsl(var(--muted));
+    color: hsl(var(--muted-foreground));
+    border-color: hsl(var(--border));
+}
+
+.btn-secondary:hover {
+    background: hsl(var(--muted) / 0.8);
+}
+
+.btn-outline-primary {
+    background: transparent;
+    color: hsl(var(--accent));
+    border-color: hsl(var(--accent));
+}
+
+.btn-outline-primary:hover {
+    background: hsl(var(--accent));
+    color: hsl(var(--accent-foreground));
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .checkout-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .checkout-container {
+        grid-template-columns: 1fr;
+    }
+    
+    .folio-summary {
+        gap: 1rem;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .btn {
+        width: 100%;
+    }
+    
+    .card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-calculate late checkout charges
+    const lateCheckoutInput = document.getElementById('late_checkout_hours');
+    const paymentAmountInput = document.getElementById('payment_amount');
+    const balanceDue = {{ balance_due if balance_due else 0 }};
+    const roomRate = {{ booking.room.room_type.base_rate if booking.room and booking.room.room_type else 100 }};
+    
+    if (lateCheckoutInput && paymentAmountInput) {
+        lateCheckoutInput.addEventListener('input', function() {
+            const hours = parseInt(this.value) || 0;
+            const lateCharges = hours * (roomRate * 0.1);
+            const newTotal = balanceDue + lateCharges;
+            
+            paymentAmountInput.value = newTotal.toFixed(2);
+            
+            // Update help text
+            const helpText = this.nextElementSibling;
+            if (hours > 0) {
+                helpText.textContent = `${hours} hour(s) × $${(roomRate * 0.1).toFixed(2)} = $${lateCharges.toFixed(2)} additional charge`;
+            } else {
+                helpText.textContent = 'Each hour will be charged at 10% of the room rate';
+            }
+        });
+    }
+    
+    // Form validation
+    const form = document.querySelector('.checkout-form');
+    
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const paymentAmount = parseFloat(paymentAmountInput.value) || 0;
+            const currentBalance = parseFloat(balanceDue) || 0;
+            const lateHours = parseInt(lateCheckoutInput.value) || 0;
+            const lateCharges = lateHours * (roomRate * 0.1);
+            const totalDue = currentBalance + lateCharges;
+            
+            if (paymentAmount < totalDue) {
+                e.preventDefault();
+                alert(`Payment amount ($${paymentAmount.toFixed(2)}) is less than the total amount due ($${totalDue.toFixed(2)}). Please adjust the payment amount.`);
+                paymentAmountInput.focus();
+                return false;
+            }
+        });
+    }
+    
+    console.log('Check-out form initialized successfully');
+});
+</script>
 {% endblock %}

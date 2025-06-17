@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Horizon Hotel Management{% endblock %}</title>
+    
+    <!-- Preload Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/clean-customer.css') }}">
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar-wrapper" id="sidebarWrapper">
+        <nav class="sidebar" id="sidebar">
+            <!-- Sidebar Header -->
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <i class="bi bi-building"></i>
+                </div>
+                <h1 class="sidebar-title">{% block sidebar_title %}Horizon{% endblock %}</h1>
+            </div>
+            
+            <!-- Sidebar Toggle Button -->
+            <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle Sidebar">
+                <i class="bi bi-chevron-left"></i>
+            </button>
+            
+            <!-- Sidebar Navigation -->
+            <div class="sidebar-nav">
+                <ul class="sidebar-nav-list">
+                    {% block sidebar_links %}
+                    <!-- Default links will be overridden by child templates -->
+                    {% endblock %}
+                </ul>
+            </div>
+            
+            <!-- Sidebar Footer -->
+            <div class="sidebar-footer">
+                <div class="sidebar-nav">
+                    <ul class="sidebar-nav-list">
+                        <li class="sidebar-nav-item">
+                            {% if session.get('role') == 'customer' %}
+                            <a href="{{ url_for('customer.profile') }}" class="sidebar-nav-link">
+                            {% elif session.get('role') == 'admin' %}
+                            <a href="{{ url_for('admin.dashboard') }}" class="sidebar-nav-link">
+                            {% elif session.get('role') == 'manager' %}
+                            <a href="{{ url_for('manager.dashboard') }}" class="sidebar-nav-link">
+                            {% elif session.get('role') == 'receptionist' %}
+                            <a href="{{ url_for('receptionist.dashboard') }}" class="sidebar-nav-link">
+                            {% elif session.get('role') == 'housekeeping' %}
+                            <a href="{{ url_for('housekeeping.dashboard') }}" class="sidebar-nav-link">
+                            {% else %}
+                            <a href="#" class="sidebar-nav-link">
+                            {% endif %}
+                                <div class="sidebar-nav-icon">
+                                    <i class="bi bi-person-circle"></i>
+                                </div>
+                                <span class="sidebar-nav-text">Profile</span>
+                            </a>
+                        </li>
+                        <li class="sidebar-nav-item">
+                            <a href="{{ url_for('auth.logout') }}" class="sidebar-nav-link">
+                                <div class="sidebar-nav-icon">
+                                    <i class="bi bi-box-arrow-right"></i>
+                                </div>
+                                <span class="sidebar-nav-text">Logout</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </div>
+    
+    <!-- Sidebar Overlay for Mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    
+    <!-- Main Content -->
+    <main class="main-content" id="mainContent">
+        <!-- Top Navigation Bar -->
+        <header class="top-nav">
+            <div class="top-nav-content">
+                <div class="top-nav-left">
+                    <button class="mobile-sidebar-toggle" id="mobileSidebarToggle" aria-label="Open Sidebar">
+                        <i class="bi bi-list"></i>
+                    </button>
+                    <h1 class="page-title">{% block page_title %}Dashboard{% endblock %}</h1>
+                </div>
+                
+                <div class="top-nav-right">
+                    <!-- User Info -->
+                    <div class="user-info">
+                        <span class="user-name">{{ session.get('username', 'User') }}</span>
+                        <span class="user-role badge badge-secondary">{{ session.get('role', 'Guest').title() }}</span>
+                    </div>
+                    
+                    <!-- Notifications -->
+                    <div class="notifications">
+                        {% if session.get('role') == 'customer' %}
+                        <a href="{{ url_for('customer.notifications_list') }}" class="notification-btn" aria-label="Notifications">
+                        {% elif session.get('role') == 'admin' %}
+                        <a href="{{ url_for('admin.dashboard') }}" class="notification-btn" aria-label="Notifications">
+                        {% elif session.get('role') == 'manager' %}
+                        <a href="{{ url_for('manager.dashboard') }}" class="notification-btn" aria-label="Notifications">
+                        {% elif session.get('role') == 'receptionist' %}
+                        <a href="{{ url_for('receptionist.dashboard') }}" class="notification-btn" aria-label="Notifications">
+                        {% elif session.get('role') == 'housekeeping' %}
+                        <a href="{{ url_for('housekeeping.dashboard') }}" class="notification-btn" aria-label="Notifications">
+                        {% else %}
+                        <button class="notification-btn" aria-label="Notifications" disabled>
+                        {% endif %}
+                            <i class="bi bi-bell"></i>
+                            <span class="notification-badge">3</span>
+                        {% if session.get('role') %}
+                        </a>
+                        {% else %}
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Page Content -->
+        <div class="page-content">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="flash-messages">
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ 'danger' if category == 'error' else category }} fade-in" role="alert">
+                                <div class="d-flex align-items-center gap-2">
+                                    {% if category == 'success' %}
+                                        <i class="bi bi-check-circle-fill"></i>
+                                    {% elif category == 'error' %}
+                                        <i class="bi bi-exclamation-triangle-fill"></i>
+                                    {% elif category == 'warning' %}
+                                        <i class="bi bi-exclamation-circle-fill"></i>
+                                    {% else %}
+                                        <i class="bi bi-info-circle-fill"></i>
+                                    {% endif %}
+                                    <span>{{ message }}</span>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+            
+            {% block content %}
+            <!-- Page content will be inserted here -->
+            {% endblock %}
+        </div>
+    </main>
+    
+    <!-- JavaScript -->
+    <script src="{{ url_for('static', filename='js/sidebar.js') }}"></script>
+    
+    <script>
+        // Initialize sidebar
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = new Sidebar();
+            
+            // Auto-hide flash messages
+            const flashMessages = document.querySelectorAll('.flash-messages .alert');
+            flashMessages.forEach(message => {
+                setTimeout(() => {
+                    message.style.opacity = '0';
+                    message.style.transform = 'translateY(-10px)';
+                    setTimeout(() => {
+                        message.remove();
+                    }, 300);
+                }, 5000);
+            });
+            
+            // Set active sidebar link based on current page
+            const currentPath = window.location.pathname;
+            const sidebarLinks = document.querySelectorAll('.sidebar-nav-link');
+            
+            sidebarLinks.forEach(link => {
+                if (link.getAttribute('href') === currentPath) {
+                    link.classList.add('active');
+                }
+            });
+        });
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html> 
+ 
+ 

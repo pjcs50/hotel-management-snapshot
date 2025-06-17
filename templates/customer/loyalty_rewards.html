@@ -1,8 +1,695 @@
-{% extends 'base.html' %}
+{% extends 'dashboard_sidebar_base.html' %}
 
 {% block title %}Loyalty Rewards - {{ customer.name }} - {{ super() }}{% endblock %}
+{% block page_title %}Loyalty Rewards Catalog{% endblock %}
+{% block sidebar_title %}Customer Menu{% endblock %}
+
+{% block sidebar_links %}
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('customer.dashboard') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-speedometer2"></i>
+        </div>
+        <span class="sidebar-nav-text">Dashboard</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('customer.bookings') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-calendar-check"></i>
+        </div>
+        <span class="sidebar-nav-text">My Bookings</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('customer.new_booking') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-calendar-plus"></i>
+        </div>
+        <span class="sidebar-nav-text">New Booking</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('customer.room_types') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-building"></i>
+        </div>
+        <span class="sidebar-nav-text">Room Types</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('customer.profile') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-person-gear"></i>
+        </div>
+        <span class="sidebar-nav-text">Edit Profile</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('customer.loyalty_history') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-award"></i>
+        </div>
+        <span class="sidebar-nav-text">Loyalty Program</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('customer.feedback') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-star"></i>
+        </div>
+        <span class="sidebar-nav-text">Leave Feedback</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('customer.help_page') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-question-circle"></i>
+        </div>
+        <span class="sidebar-nav-text">Help & FAQs</span>
+    </a>
+</li>
+{% endblock %}
 
 {% block content %}
+<div class="loyalty-rewards-container">
+    <!-- Customer Points Summary -->
+    <div class="card mb-3">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h3 class="mb-0">Your Points Balance</h3>
+            <a href="{{ url_for('customer.loyalty_redemptions') }}" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-clock-history"></i> My Redemptions
+            </a>
+        </div>
+        <div class="card-body">
+            <div class="row text-center">
+                <div class="col-md-4">
+                    <div class="points-card">
+                        <div class="points-icon">
+                            <i class="bi bi-coin text-warning"></i>
+                        </div>
+                        <div class="points-content">
+                            <h5 class="points-label">Available Points</h5>
+                            <div class="points-value">{{ customer.loyalty_points or 0 }}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="points-card">
+                        <div class="points-icon">
+                            <i class="bi bi-award text-primary"></i>
+                        </div>
+                        <div class="points-content">
+                            <h5 class="points-label">Current Tier</h5>
+                            <div class="points-value">{{ customer.loyalty_tier or 'Standard' }}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="points-card">
+                        <div class="points-icon">
+                            <i class="bi bi-gift text-success"></i>
+                        </div>
+                        <div class="points-content">
+                            <h5 class="points-label">Rewards Available</h5>
+                            <div class="points-value">{{ rewards|length if rewards else 0 }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Category Filter -->
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="category-filters">
+                <a href="{{ url_for('customer.loyalty_rewards', category='all') }}" 
+                   class="filter-btn {% if selected_category == 'all' %}active{% endif %}">
+                    <i class="bi bi-grid"></i> All Rewards
+                </a>
+                <a href="{{ url_for('customer.loyalty_rewards', category='room_upgrade') }}" 
+                   class="filter-btn {% if selected_category == 'room_upgrade' %}active{% endif %}">
+                    <i class="bi bi-house-up"></i> Room Upgrades
+                </a>
+                <a href="{{ url_for('customer.loyalty_rewards', category='dining') }}" 
+                   class="filter-btn {% if selected_category == 'dining' %}active{% endif %}">
+                    <i class="bi bi-cup-hot"></i> Dining
+                </a>
+                <a href="{{ url_for('customer.loyalty_rewards', category='spa') }}" 
+                   class="filter-btn {% if selected_category == 'spa' %}active{% endif %}">
+                    <i class="bi bi-flower1"></i> Spa & Wellness
+                </a>
+                <a href="{{ url_for('customer.loyalty_rewards', category='amenity') }}" 
+                   class="filter-btn {% if selected_category == 'amenity' %}active{% endif %}">
+                    <i class="bi bi-star"></i> Amenities
+                </a>
+                <a href="{{ url_for('customer.loyalty_rewards', category='service') }}" 
+                   class="filter-btn {% if selected_category == 'service' %}active{% endif %}">
+                    <i class="bi bi-concierge-bell"></i> Services
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rewards Grid -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="mb-0">
+                {% if selected_category == 'all' %}
+                All Available Rewards
+                {% elif selected_category == 'room_upgrade' %}
+                Room Upgrades
+                {% elif selected_category == 'dining' %}
+                Dining Rewards
+                {% elif selected_category == 'spa' %}
+                Spa & Wellness
+                {% elif selected_category == 'amenity' %}
+                Hotel Amenities
+                {% elif selected_category == 'service' %}
+                Premium Services
+                {% else %}
+                Available Rewards
+                {% endif %}
+            </h3>
+        </div>
+        <div class="card-body">
+            {% if rewards %}
+            <div class="rewards-grid">
+                {% for reward in rewards %}
+                <div class="reward-card">
+                    <div class="reward-image">
+                        {% if reward.image_url %}
+                        <img src="{{ reward.image_url }}" alt="{{ reward.name }}">
+                        {% else %}
+                        <div class="reward-icon">
+                            {% if reward.category == 'room_upgrade' %}
+                            <i class="bi bi-house-up"></i>
+                            {% elif reward.category == 'dining' %}
+                            <i class="bi bi-cup-hot"></i>
+                            {% elif reward.category == 'spa' %}
+                            <i class="bi bi-flower1"></i>
+                            {% elif reward.category == 'amenity' %}
+                            <i class="bi bi-star"></i>
+                            {% elif reward.category == 'service' %}
+                            <i class="bi bi-concierge-bell"></i>
+                            {% else %}
+                            <i class="bi bi-gift"></i>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="reward-content">
+                        <h5 class="reward-title">{{ reward.name }}</h5>
+                        <p class="reward-description">{{ reward.description[:100] }}{% if reward.description|length > 100 %}...{% endif %}</p>
+                        
+                        <div class="reward-details">
+                            <div class="reward-badges">
+                                <span class="badge badge-primary">{{ reward.points_cost }} points</span>
+                                <span class="badge badge-secondary">{{ reward.min_tier }} tier</span>
+                            </div>
+                            
+                            {% if reward.limited_quantity %}
+                            <div class="reward-availability">
+                                <small class="text-warning">
+                                    <i class="bi bi-exclamation-triangle"></i> 
+                                    Limited: {{ reward.quantity_remaining or 0 }} remaining
+                                </small>
+                            </div>
+                            {% endif %}
+                            
+                            <div class="reward-action">
+                                {% if customer.loyalty_points >= reward.points_cost %}
+                                    {% if reward.is_available_for_customer(customer) %}
+                                    <a href="{{ url_for('customer.loyalty_reward_detail', reward_id=reward.id) }}" 
+                                       class="btn btn-primary btn-sm w-100">
+                                        <i class="bi bi-gift"></i> Redeem Now
+                                    </a>
+                                    {% else %}
+                                    <button class="btn btn-secondary btn-sm w-100" disabled>
+                                        <i class="bi bi-lock"></i> Not Available
+                                    </button>
+                                    {% endif %}
+                                {% else %}
+                                <button class="btn btn-outline-secondary btn-sm w-100" disabled>
+                                    <i class="bi bi-coin"></i> Insufficient Points
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <!-- Sample Rewards if none exist -->
+            <div class="rewards-grid">
+                <!-- Room Upgrade Rewards -->
+                <div class="reward-card">
+                    <div class="reward-image">
+                        <div class="reward-icon">
+                            <i class="bi bi-house-up"></i>
+                        </div>
+                    </div>
+                    <div class="reward-content">
+                        <h5 class="reward-title">Suite Upgrade</h5>
+                        <p class="reward-description">Upgrade your next stay to a luxurious suite with panoramic city views and premium amenities.</p>
+                        <div class="reward-details">
+                            <div class="reward-badges">
+                                <span class="badge badge-primary">2500 points</span>
+                                <span class="badge badge-secondary">Gold tier</span>
+                            </div>
+                            <div class="reward-action">
+                                <button class="btn btn-outline-secondary btn-sm w-100" disabled>
+                                    <i class="bi bi-coin"></i> Sample Reward
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dining Rewards -->
+                <div class="reward-card">
+                    <div class="reward-image">
+                        <div class="reward-icon">
+                            <i class="bi bi-cup-hot"></i>
+                        </div>
+                    </div>
+                    <div class="reward-content">
+                        <h5 class="reward-title">Complimentary Breakfast</h5>
+                        <p class="reward-description">Enjoy a delicious complimentary breakfast for two at our award-winning restaurant.</p>
+                        <div class="reward-details">
+                            <div class="reward-badges">
+                                <span class="badge badge-primary">800 points</span>
+                                <span class="badge badge-secondary">Silver tier</span>
+                            </div>
+                            <div class="reward-action">
+                                <button class="btn btn-outline-secondary btn-sm w-100" disabled>
+                                    <i class="bi bi-coin"></i> Sample Reward
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Spa Rewards -->
+                <div class="reward-card">
+                    <div class="reward-image">
+                        <div class="reward-icon">
+                            <i class="bi bi-flower1"></i>
+                        </div>
+                    </div>
+                    <div class="reward-content">
+                        <h5 class="reward-title">Spa Treatment</h5>
+                        <p class="reward-description">Relax and rejuvenate with a 60-minute massage at our world-class spa facility.</p>
+                        <div class="reward-details">
+                            <div class="reward-badges">
+                                <span class="badge badge-primary">1500 points</span>
+                                <span class="badge badge-secondary">Standard tier</span>
+                            </div>
+                            <div class="reward-action">
+                                <button class="btn btn-outline-secondary btn-sm w-100" disabled>
+                                    <i class="bi bi-coin"></i> Sample Reward
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Amenity Rewards -->
+                <div class="reward-card">
+                    <div class="reward-image">
+                        <div class="reward-icon">
+                            <i class="bi bi-wifi"></i>
+                        </div>
+                    </div>
+                    <div class="reward-content">
+                        <h5 class="reward-title">Premium WiFi</h5>
+                        <p class="reward-description">Upgrade to high-speed premium WiFi for your entire stay with unlimited bandwidth.</p>
+                        <div class="reward-details">
+                            <div class="reward-badges">
+                                <span class="badge badge-primary">300 points</span>
+                                <span class="badge badge-secondary">Standard tier</span>
+                            </div>
+                            <div class="reward-action">
+                                <button class="btn btn-outline-secondary btn-sm w-100" disabled>
+                                    <i class="bi bi-coin"></i> Sample Reward
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Service Rewards -->
+                <div class="reward-card">
+                    <div class="reward-image">
+                        <div class="reward-icon">
+                            <i class="bi bi-concierge-bell"></i>
+                        </div>
+                    </div>
+                    <div class="reward-content">
+                        <h5 class="reward-title">Personal Concierge</h5>
+                        <p class="reward-description">Enjoy dedicated concierge service to help plan your activities and reservations.</p>
+                        <div class="reward-details">
+                            <div class="reward-badges">
+                                <span class="badge badge-primary">1200 points</span>
+                                <span class="badge badge-secondary">Gold tier</span>
+                            </div>
+                            <div class="reward-action">
+                                <button class="btn btn-outline-secondary btn-sm w-100" disabled>
+                                    <i class="bi bi-coin"></i> Sample Reward
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Late Checkout -->
+                <div class="reward-card">
+                    <div class="reward-image">
+                        <div class="reward-icon">
+                            <i class="bi bi-clock"></i>
+                        </div>
+                    </div>
+                    <div class="reward-content">
+                        <h5 class="reward-title">Late Checkout</h5>
+                        <p class="reward-description">Extend your stay with late checkout until 4 PM at no additional charge.</p>
+                        <div class="reward-details">
+                            <div class="reward-badges">
+                                <span class="badge badge-primary">500 points</span>
+                                <span class="badge badge-secondary">Standard tier</span>
+                            </div>
+                            <div class="reward-action">
+                                <button class="btn btn-outline-secondary btn-sm w-100" disabled>
+                                    <i class="bi bi-coin"></i> Sample Reward
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center mt-4">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle me-2"></i>
+                    These are sample rewards. Actual rewards will be loaded from the database once configured.
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Recent Redemptions -->
+    {% if redemptions %}
+    <div class="card mt-3">
+        <div class="card-header">
+            <h3 class="mb-0">Recent Redemptions</h3>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Date</th>
+                            <th>Reward</th>
+                            <th>Points</th>
+                            <th>Status</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for redemption in redemptions %}
+                        <tr>
+                            <td>{{ redemption.redemption_date.strftime('%Y-%m-%d') }}</td>
+                            <td>{{ redemption.reward.name }}</td>
+                            <td>{{ redemption.points_spent }}</td>
+                            <td>
+                                {% if redemption.status == 'pending' %}
+                                <span class="badge badge-warning">Pending</span>
+                                {% elif redemption.status == 'approved' %}
+                                <span class="badge badge-info">Approved</span>
+                                {% elif redemption.status == 'fulfilled' %}
+                                <span class="badge badge-success">Fulfilled</span>
+                                {% elif redemption.status == 'cancelled' %}
+                                <span class="badge badge-danger">Cancelled</span>
+                                {% elif redemption.status == 'rejected' %}
+                                <span class="badge badge-danger">Rejected</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                {% if redemption.status == 'pending' %}
+                                <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#cancelModal{{ redemption.id }}">
+                                    Cancel
+                                </button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="text-end mt-3">
+                <a href="{{ url_for('customer.loyalty_redemptions') }}" class="btn btn-outline-primary btn-sm">
+                    View All Redemptions
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.loyalty-rewards-container {
+    padding: 1rem;
+    max-width: 100%;
+}
+
+/* Points Cards */
+.points-card {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.points-card:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.points-icon {
+    margin-right: 1rem;
+    font-size: 2rem;
+}
+
+.points-content {
+    text-align: left;
+}
+
+.points-label {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin-bottom: 0.25rem;
+    font-weight: 500;
+}
+
+.points-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1f2937;
+}
+
+/* Category Filters */
+.category-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.filter-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: white;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    color: #374151;
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.filter-btn:hover {
+    background: #f9fafb;
+    border-color: #9ca3af;
+    color: #374151;
+    text-decoration: none;
+}
+
+.filter-btn.active {
+    background: #3b82f6;
+    border-color: #3b82f6;
+    color: white;
+}
+
+/* Rewards Grid */
+.rewards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.reward-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.reward-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.reward-image {
+    height: 120px;
+    overflow: hidden;
+    background: #f9fafb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.reward-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.reward-icon {
+    font-size: 3rem;
+    color: #6b7280;
+}
+
+.reward-content {
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.reward-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 0.5rem;
+}
+
+.reward-description {
+    color: #6b7280;
+    font-size: 0.875rem;
+    line-height: 1.4;
+    margin-bottom: 1rem;
+    flex-grow: 1;
+}
+
+.reward-details {
+    margin-top: auto;
+}
+
+.reward-badges {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.reward-availability {
+    margin-bottom: 0.75rem;
+}
+
+.reward-action {
+    margin-top: 0.5rem;
+}
+
+/* Badge Styles */
+.badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    border-radius: 0.25rem;
+}
+
+.badge-primary {
+    background-color: #3b82f6;
+    color: white;
+}
+
+.badge-secondary {
+    background-color: #6b7280;
+    color: white;
+}
+
+.badge-warning {
+    background-color: #f59e0b;
+    color: white;
+}
+
+.badge-info {
+    background-color: #06b6d4;
+    color: white;
+}
+
+.badge-success {
+    background-color: #10b981;
+    color: white;
+}
+
+.badge-danger {
+    background-color: #ef4444;
+    color: white;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .loyalty-rewards-container {
+        padding: 0.5rem;
+    }
+    
+    .rewards-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .category-filters {
+        justify-content: center;
+    }
+    
+    .filter-btn {
+        font-size: 0.75rem;
+        padding: 0.375rem 0.75rem;
+    }
+    
+    .points-card {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .points-icon {
+        margin-right: 0;
+        margin-bottom: 0.5rem;
+    }
+}
+</style>
+{% endblock %} 
 <div class="container mt-4">
     <div class="row mb-3">
         <div class="col">

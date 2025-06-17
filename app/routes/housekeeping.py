@@ -19,6 +19,7 @@ from app.models.room_status_log import RoomStatusLog
 from app.models.user import User
 from app.models.booking import Booking
 from db import db
+from app.utils.room_state_machine import RoomStateMachine, RoomTransitionError
 
 # Create blueprint
 housekeeping_bp = Blueprint('housekeeping', __name__)
@@ -174,7 +175,7 @@ def maintenance_requests():
             return redirect(url_for('housekeeping.maintenance_requests'))
 
     # Get all maintenance requests
-    requests = maintenance_service.get_maintenance_requests()
+    requests = maintenance_service.get_all_maintenance_requests().items
 
     # Get all rooms for the form
     rooms = db.session.query(Room).order_by(Room.number).all()
@@ -227,7 +228,7 @@ def report_maintenance_issue():
 @login_required
 @role_required('housekeeping')
 def room_status():
-    """Update room cleaning status."""
+    """Update room cleaning status with enhanced validation."""
     if request.method == 'POST':
         room_id = request.form.get('room_id', type=int)
         new_status = request.form.get('new_status')
@@ -242,30 +243,43 @@ def room_status():
             flash('Room not found', 'danger')
             return redirect(url_for('housekeeping.room_status'))
 
-        old_status = room.status
-        room.status = new_status
+        try:
+            # Use enhanced room state machine for validation
+            state_machine = RoomStateMachine(db.session)
+            old_status = room.status
+            
+            # Attempt to change status with validation
+            updated_room = state_machine.change_room_status(
+                room_id=room.id,
+                new_status=new_status,
+                user_id=current_user.id,
+                notes=notes
+            )
+            
+            flash(f'Room {room.number} status updated from {old_status} to {new_status}', 'success')
+            
+        except RoomTransitionError as e:
+            flash(f'Invalid status change: {str(e)}', 'danger')
+            return redirect(url_for('housekeeping.room_status'))
+        except ValueError as e:
+            flash(f'Error: {str(e)}', 'danger')
+            return redirect(url_for('housekeeping.room_status'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Unexpected error: {str(e)}', 'danger')
+            return redirect(url_for('housekeeping.room_status'))
 
-        # Create status log
-        status_log = RoomStatusLog(
-            room_id=room_id,
-            old_status=old_status,
-            new_status=new_status,
-            changed_by=current_user.id,
-            notes=notes
-        )
-
-        # If marking as clean, update last_cleaned timestamp
-        if new_status == 'clean':
-            room.last_cleaned = datetime.now()
-
-        db.session.add(status_log)
-        db.session.commit()
-
-        flash(f'Room {room.number} status updated from {old_status} to {new_status}', 'success')
         return redirect(url_for('housekeeping.room_status'))
 
-    # Get all rooms
+    # Get all rooms with enhanced status information
     rooms = db.session.query(Room).order_by(Room.number).all()
+    
+    # Add valid transitions for each room
+    state_machine = RoomStateMachine(db.session)
+    
+    for room in rooms:
+        room.valid_transitions = state_machine.get_valid_transitions(room.status)
+        room.status_description = state_machine.get_status_description(room.status)
 
     # Get recent status changes
     recent_changes = (
@@ -279,7 +293,7 @@ def room_status():
         'housekeeping/room_status.html',
         rooms=rooms,
         recent_changes=recent_changes,
-        statuses=['clean', 'dirty', 'maintenance', 'out_of_service']
+        all_statuses=Room.STATUS_CHOICES
     )
 
 
@@ -406,7 +420,9 @@ def view_lost_and_found():
 @login_required
 @role_required('housekeeping')
 def assign_tasks():
-    """Assign cleaning tasks to housekeeping staff."""
+    """Assign cleaning tasks to housekeeping staff with enhanced validation."""
+    from app.services.housekeeping_service import HousekeepingError
+    
     housekeeping_service = HousekeepingService(db.session)
 
     if request.method == 'POST':
@@ -414,35 +430,52 @@ def assign_tasks():
         task_id = request.form.get('task_id', type=int)
         staff_id = request.form.get('staff_id', type=int)
 
-        if task_id and staff_id:
-            # Assign task to staff member
-            housekeeping_service.assign_housekeeping_task(task_id, staff_id)
-            flash('Task assigned successfully', 'success')
-        else:
+        if not task_id or not staff_id:
             flash('Task ID and Staff ID are required', 'danger')
+            return redirect(url_for('housekeeping.assign_tasks'))
+
+        try:
+            # Use enhanced assignment validation
+            updated_task = housekeeping_service.assign_housekeeping_task(task_id, staff_id)
+            
+            # Get staff member name for confirmation
+            staff_member = db.session.query(User).get(staff_id)
+            staff_name = staff_member.username if staff_member else f"ID {staff_id}"
+            
+            flash(f'Task #{task_id} successfully assigned to {staff_name}', 'success')
+            
+        except ValueError as e:
+            flash(f'Error: {str(e)}', 'danger')
+        except HousekeepingError as e:
+            flash(f'Assignment failed: {str(e)}', 'warning')
+        except Exception as e:
+            flash(f'Unexpected error: {str(e)}', 'danger')
 
         return redirect(url_for('housekeeping.assign_tasks'))
 
     # Get unassigned tasks
-    unassigned_tasks = housekeeping_service.get_all_housekeeping_tasks({'assigned_to': None}, page=1, per_page=100).items
+    unassigned_tasks = housekeeping_service.get_all_housekeeping_tasks(
+        filters={'status': 'pending', 'assigned_to': None}
+    ).items
 
-    # Get housekeeping staff
-    housekeeping_staff = db.session.query(User).filter(User.role == 'housekeeping').all()
+    # Get available housekeeping staff (active users with housekeeping role)
+    available_staff = db.session.query(User).filter(
+        User.role.in_(['housekeeping', 'manager']),
+        User.is_active == True
+    ).all()
 
-    # Get rooms for reference
-    rooms = db.session.query(Room).all()
-    room_dict = {room.id: room for room in rooms}
-
-    # Add a helper function to get current date for template
-    def now():
-        return datetime.now()
+    # Get current task assignments for staff workload display
+    staff_workload = {}
+    for staff in available_staff:
+        active_tasks = db.session.query(HousekeepingTask).filter(
+            HousekeepingTask.assigned_to == staff.id,
+            HousekeepingTask.status.in_(['pending', 'in_progress'])
+        ).count()
+        staff_workload[staff.id] = active_tasks
 
     return render_template(
         'housekeeping/assign_tasks.html',
         unassigned_tasks=unassigned_tasks,
-        housekeeping_staff=housekeeping_staff,
-        rooms=room_dict,
-        task_types=['regular_cleaning', 'deep_cleaning', 'turnover', 'restocking', 'maintenance_followup'],
-        priorities=['low', 'normal', 'high', 'urgent'],
-        now=now
+        available_staff=available_staff,
+        staff_workload=staff_workload
     )

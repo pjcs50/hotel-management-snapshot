@@ -586,13 +586,98 @@ class ReportService:
         return output.getvalue().encode('utf-8')
 
     def export_to_excel(self, data, title):
-        """Exports report data to Excel (XLSX) format. Placeholder."""
-        # Placeholder: In a real app, use a library like openpyxl
-        # For now, just return a CSV-like string indicating it's an Excel export
-        csv_data = self.export_to_csv(data, title) # Leverage CSV export for content
-        # Typically, you'd use a proper Excel library here.
-        # This is just a stub.
-        return csv_data # Returning CSV bytes for now, as actual Excel generation is complex
+        """Exports report data to Excel (XLSX) format."""
+        try:
+            import pandas as pd
+            from io import BytesIO
+            
+            output = BytesIO()
+            
+            # Handle different data formats
+            if isinstance(data, list) and data:
+                # If it's a list of lists (like from forecast export)
+                if isinstance(data[0], list):
+                    # First row is headers, rest is data
+                    headers = data[0]
+                    rows = data[1:]
+                    df = pd.DataFrame(rows, columns=headers)
+                else:
+                    # List of dictionaries
+                    df = pd.DataFrame(data)
+            elif isinstance(data, dict):
+                # Handle dictionary data (like report data)
+                if 'daily_occupancy' in data:
+                    # Occupancy report format
+                    df_data = []
+                    for date_str, rate in data['daily_occupancy'].items():
+                        df_data.append({'Date': date_str, 'Occupancy Rate': f"{rate:.2f}%"})
+                    df = pd.DataFrame(df_data)
+                else:
+                    # Generic dictionary - convert to key-value pairs
+                    df_data = []
+                    for key, value in data.items():
+                        if isinstance(value, (dict, list)):
+                            df_data.append({'Metric': key, 'Value': str(value)})
+                        else:
+                            df_data.append({'Metric': key, 'Value': value})
+                    df = pd.DataFrame(df_data)
+            else:
+                # Fallback - create a simple dataframe
+                df = pd.DataFrame([{'Data': str(data)}])
+            
+            # Create Excel writer
+            with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+                # Write the main data
+                df.to_excel(writer, sheet_name='Data', index=False)
+                
+                # Add title sheet
+                title_df = pd.DataFrame({
+                    'Report Information': [
+                        title,
+                        f'Generated on: {pd.Timestamp.now().strftime("%Y-%m-%d %H:%M:%S")}',
+                        f'Total Records: {len(df)}'
+                    ]
+                })
+                title_df.to_excel(writer, sheet_name='Report Info', index=False)
+                
+                # Format the sheets
+                workbook = writer.book
+                
+                # Header format
+                header_format = workbook.add_format({
+                    'bold': True,
+                    'text_wrap': True,
+                    'valign': 'top',
+                    'fg_color': '#D7E4BC',
+                    'border': 1
+                })
+                
+                # Title format
+                title_format = workbook.add_format({
+                    'bold': True,
+                    'font_size': 14,
+                    'fg_color': '#B8CCE4'
+                })
+                
+                # Format Data sheet
+                data_worksheet = writer.sheets['Data']
+                for col_num, column in enumerate(df.columns):
+                    data_worksheet.set_column(col_num, col_num, 18)
+                    data_worksheet.write(0, col_num, column, header_format)
+                
+                # Format Report Info sheet
+                info_worksheet = writer.sheets['Report Info']
+                info_worksheet.set_column(0, 0, 40)
+                info_worksheet.write(0, 0, 'Report Information', header_format)
+                for row_num in range(len(title_df)):
+                    info_worksheet.write(row_num + 1, 0, title_df.iloc[row_num, 0], title_format if row_num == 0 else None)
+            
+            output.seek(0)
+            return output.getvalue()
+            
+        except ImportError:
+            # Fallback to CSV if pandas/xlsxwriter not available
+            return self.export_to_csv(data, title)
 
     def export_to_pdf(self, data, title):
         """Exports report data to PDF format. Placeholder."""

@@ -1,0 +1,441 @@
+/* ==============================================
+   CLEAN AUTHENTICATION PAGES STYLING
+   ============================================== */
+
+/* CSS Custom Properties */
+:root {
+    --clean-white: #ffffff;
+    --clean-background: #f8fafc;
+    --clean-border: #e5e7eb;
+    --clean-text: #1f2937;
+    --clean-text-muted: #6b7280;
+    --clean-text-light: #9ca3af;
+    --clean-primary: #3b82f6;
+    --clean-primary-hover: #2563eb;
+    --clean-primary-light: rgba(59, 130, 246, 0.1);
+    --clean-success: #10b981;
+    --clean-danger: #ef4444;
+    --clean-warning: #f59e0b;
+    --clean-info: #8b5cf6;
+    --clean-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    --clean-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --clean-radius: 8px;
+    --clean-radius-lg: 12px;
+    --clean-space-1: 4px;
+    --clean-space-2: 8px;
+    --clean-space-3: 12px;
+    --clean-space-4: 16px;
+    --clean-space-5: 20px;
+    --clean-space-6: 24px;
+    --clean-space-8: 32px;
+    --clean-space-10: 40px;
+    --clean-space-12: 48px;
+    --clean-font-sm: 14px;
+    --clean-font-base: 16px;
+    --clean-font-lg: 18px;
+    --clean-font-xl: 20px;
+    --clean-font-2xl: 24px;
+    --clean-font-3xl: 30px;
+}
+
+/* Reset and base styles */
+* {
+    box-sizing: border-box;
+}
+
+/* Clean Auth Container */
+.clean-auth-container {
+    min-height: 100vh;
+    background: var(--clean-background);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--clean-space-6);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+}
+
+/* Clean Auth Card - Remove white background and border */
+.clean-auth-card {
+    width: 100%;
+    max-width: 480px;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    overflow: visible;
+}
+
+/* Clean Auth Header */
+.clean-auth-header {
+    text-align: center;
+    padding: var(--clean-space-10) 0 var(--clean-space-8);
+    border-bottom: none;
+}
+
+.clean-auth-title {
+    font-size: var(--clean-font-3xl);
+    font-weight: 700;
+    color: var(--clean-text);
+    margin: 0 0 var(--clean-space-2) 0;
+    letter-spacing: -0.025em;
+}
+
+.clean-auth-subtitle {
+    font-size: var(--clean-font-sm);
+    color: var(--clean-text-muted);
+    margin: 0;
+    font-weight: 400;
+}
+
+/* Clean Auth Body */
+.clean-auth-body {
+    padding: 0;
+}
+
+/* Clean Auth Form */
+.clean-auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--clean-space-6);
+}
+
+/* Clean Form Groups */
+.clean-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--clean-space-2);
+}
+
+.clean-form-label {
+    font-size: var(--clean-font-sm);
+    font-weight: 600;
+    color: var(--clean-text);
+    display: flex;
+    align-items: center;
+    gap: var(--clean-space-2);
+}
+
+.clean-form-label i {
+    color: var(--clean-text-muted);
+    font-size: var(--clean-font-sm);
+}
+
+/* Clean Form Controls - Make all inputs consistent size */
+.clean-form-control,
+.clean-form-select {
+    padding: var(--clean-space-4) var(--clean-space-4);
+    border: 1px solid var(--clean-border);
+    border-radius: var(--clean-radius);
+    background: var(--clean-white);
+    color: var(--clean-text);
+    font-size: var(--clean-font-base);
+    transition: all 0.2s ease;
+    outline: none;
+    height: 48px;
+    line-height: 1.5;
+}
+
+.clean-form-control:focus,
+.clean-form-select:focus {
+    border-color: var(--clean-primary);
+    box-shadow: 0 0 0 3px var(--clean-primary-light);
+}
+
+.clean-form-control::placeholder {
+    color: var(--clean-text-light);
+}
+
+/* Clean Password Field - Make consistent with other inputs */
+.clean-password-field {
+    position: relative;
+    width: 100%;
+}
+
+.clean-password-field .clean-form-control {
+    padding: var(--clean-space-4) 48px var(--clean-space-4) var(--clean-space-4) !important;
+    height: 48px !important;
+    line-height: 1.5 !important;
+    font-size: var(--clean-font-base) !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+.clean-password-toggle {
+    position: absolute;
+    right: var(--clean-space-3);
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--clean-text-muted);
+    cursor: pointer;
+    padding: var(--clean-space-2);
+    border-radius: var(--clean-radius);
+    transition: color 0.2s ease;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.clean-password-toggle:hover {
+    color: var(--clean-primary);
+}
+
+/* Clean Form Text */
+.clean-form-text {
+    font-size: 12px;
+    color: var(--clean-text-muted);
+    margin-top: var(--clean-space-1);
+}
+
+/* Clean Grid */
+.clean-grid {
+    display: grid;
+    gap: var(--clean-space-4);
+}
+
+.clean-grid-2 {
+    grid-template-columns: 1fr 1fr;
+}
+
+/* Clean Checkbox */
+.clean-checkbox-wrapper {
+    display: flex;
+    align-items: center;
+    gap: var(--clean-space-3);
+    margin: var(--clean-space-2) 0;
+}
+
+.clean-checkbox {
+    width: 18px;
+    height: 18px;
+    border: 1px solid var(--clean-border);
+    border-radius: 4px;
+    background: var(--clean-white);
+    cursor: pointer;
+    appearance: none;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.clean-checkbox:checked {
+    background: var(--clean-primary);
+    border-color: var(--clean-primary);
+}
+
+.clean-checkbox:checked::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.clean-checkbox-label {
+    font-size: var(--clean-font-sm);
+    color: var(--clean-text);
+    cursor: pointer;
+}
+
+/* Clean Buttons */
+.clean-btn {
+    padding: var(--clean-space-4) var(--clean-space-6);
+    border: none;
+    border-radius: var(--clean-radius);
+    font-size: var(--clean-font-base);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--clean-space-2);
+    text-decoration: none;
+    outline: none;
+    height: 48px;
+}
+
+.clean-btn-primary {
+    background: var(--clean-primary);
+    color: white;
+}
+
+.clean-btn-primary:hover {
+    background: var(--clean-primary-hover);
+    transform: translateY(-1px);
+    box-shadow: var(--clean-shadow-lg);
+}
+
+.clean-btn-outline {
+    background: transparent;
+    color: var(--clean-primary);
+    border: 1px solid var(--clean-border);
+}
+
+.clean-btn-outline:hover {
+    background: var(--clean-primary-light);
+    border-color: var(--clean-primary);
+}
+
+.clean-btn-secondary {
+    background: var(--clean-text-muted);
+    color: white;
+}
+
+.clean-btn-secondary:hover {
+    background: var(--clean-text);
+    transform: translateY(-1px);
+}
+
+/* Clean Alert */
+.clean-alert {
+    padding: var(--clean-space-4);
+    border-radius: var(--clean-radius);
+    font-size: var(--clean-font-sm);
+    display: flex;
+    align-items: center;
+    gap: var(--clean-space-3);
+    margin-bottom: var(--clean-space-6);
+}
+
+.clean-alert-info {
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--clean-primary);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+/* Password Strength */
+.clean-password-strength {
+    display: flex;
+    gap: var(--clean-space-1);
+    margin-bottom: var(--clean-space-2);
+}
+
+.clean-strength-bar {
+    height: 4px;
+    flex: 1;
+    background: var(--clean-border);
+    border-radius: 2px;
+    transition: all 0.3s ease;
+}
+
+.clean-strength-bar.weak { background: var(--clean-danger); }
+.clean-strength-bar.fair { background: var(--clean-warning); }
+.clean-strength-bar.good { background: var(--clean-success); }
+.clean-strength-bar.strong { background: var(--clean-success); }
+
+/* Clean Auth Footer - Remove background */
+.clean-auth-footer {
+    padding: var(--clean-space-8) 0 0;
+    border-top: none;
+    text-align: center;
+    background: transparent;
+}
+
+.clean-auth-link {
+    margin-bottom: var(--clean-space-4);
+    font-size: var(--clean-font-sm);
+    color: var(--clean-text-muted);
+}
+
+.clean-auth-link:last-child {
+    margin-bottom: 0;
+}
+
+.clean-auth-link a {
+    color: var(--clean-primary);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.clean-auth-link a:hover {
+    text-decoration: underline;
+}
+
+.clean-auth-divider {
+    margin: var(--clean-space-4) 0;
+    font-size: var(--clean-font-sm);
+    color: var(--clean-text-muted);
+}
+
+.clean-auth-actions {
+    display: flex;
+    gap: var(--clean-space-3);
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* Full width button for main action */
+.clean-btn-full {
+    width: 100%;
+    padding: var(--clean-space-4) var(--clean-space-6);
+    font-size: var(--clean-font-base);
+}
+
+/* Responsive Design */
+@media (max-width: 640px) {
+    .clean-auth-container {
+        padding: var(--clean-space-4);
+    }
+    
+    .clean-auth-card {
+        max-width: 100%;
+    }
+    
+    .clean-auth-header {
+        padding: var(--clean-space-6) 0 var(--clean-space-6);
+    }
+    
+    .clean-grid-2 {
+        grid-template-columns: 1fr;
+    }
+    
+    .clean-auth-title {
+        font-size: var(--clean-font-2xl);
+    }
+    
+    .clean-auth-actions {
+        flex-direction: column;
+    }
+}
+
+/* Animation */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.clean-auth-card {
+    animation: fadeInUp 0.5s ease-out;
+}
+
+/* Focus states for accessibility */
+.clean-form-control:focus,
+.clean-form-select:focus,
+.clean-checkbox:focus,
+.clean-btn:focus {
+    outline: 2px solid var(--clean-primary);
+    outline-offset: 2px;
+}
+
+/* Link styling */
+.clean-link {
+    color: var(--clean-primary);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.clean-link:hover {
+    text-decoration: underline;
+} 

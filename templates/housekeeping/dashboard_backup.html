@@ -1,0 +1,451 @@
+{% extends "dashboard_sidebar_base.html" %}
+
+{% block title %}Housekeeping Dashboard - Horizon Hotel Management{% endblock %}
+{% block sidebar_title %}Housekeeping Panel{% endblock %}
+{% block page_title %}Housekeeping Dashboard{% endblock %}
+
+{% block sidebar_links %}
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('housekeeping.dashboard') }}" class="sidebar-nav-link active">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-speedometer2"></i>
+        </div>
+        <span class="sidebar-nav-text">Dashboard</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('housekeeping.rooms_to_clean_view') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-brush"></i>
+        </div>
+        <span class="sidebar-nav-text">Rooms to Clean</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('housekeeping.checkout_rooms_view') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-door-open"></i>
+        </div>
+        <span class="sidebar-nav-text">Check-outs Today</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('housekeeping.cleaning_schedule') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-calendar-check"></i>
+        </div>
+        <span class="sidebar-nav-text">Cleaning Schedule</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('housekeeping.room_status') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-house-door"></i>
+        </div>
+        <span class="sidebar-nav-text">Room Status</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('housekeeping.tasks') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-list-task"></i>
+        </div>
+        <span class="sidebar-nav-text">My Tasks</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('housekeeping.maintenance_requests') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-tools"></i>
+        </div>
+        <span class="sidebar-nav-text">Maintenance</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('housekeeping.inventory') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-box-seam"></i>
+        </div>
+        <span class="sidebar-nav-text">Inventory</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('housekeeping.assign_tasks') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-person-plus"></i>
+        </div>
+        <span class="sidebar-nav-text">Assign Tasks</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('housekeeping.view_lost_and_found') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-search"></i>
+        </div>
+        <span class="sidebar-nav-text">Lost & Found</span>
+    </a>
+</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h2 class="mb-4 fw-bold">Housekeeping Dashboard</h2>
+
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <a href="{{ url_for('housekeeping.dashboard') }}" class="text-decoration-none">
+                <div class="card bg-primary text-white h-100 dashboard-card">
+                    <div class="card-body text-center">
+                        <i class="bi bi-speedometer2 display-4"></i>
+                        <h5 class="mt-2">Dashboard</h5>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-3 mb-3">
+            <a href="{{ url_for('housekeeping.rooms_to_clean_view') }}" class="text-decoration-none">
+                <div class="card bg-info text-white h-100 dashboard-card">
+                    <div class="card-body text-center">
+                        <i class="bi bi-brush display-4"></i>
+                        <h5 class="mt-2">Rooms to Clean</h5>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-3 mb-3">
+            <a href="{{ url_for('housekeeping.checkout_rooms_view') }}" class="text-decoration-none">
+                <div class="card bg-warning text-white h-100 dashboard-card">
+                    <div class="card-body text-center">
+                        <i class="bi bi-door-open display-4"></i>
+                        <h5 class="mt-2">Check-outs Today</h5>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-3 mb-3">
+            <a href="{{ url_for('housekeeping.cleaning_schedule') }}" class="text-decoration-none">
+                <div class="card bg-success text-white h-100 dashboard-card">
+                    <div class="card-body text-center">
+                        <i class="bi bi-calendar-check display-4"></i>
+                        <h5 class="mt-2">Cleaning Schedule</h5>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+    
+    <!-- Metrics Summary -->
+    <div class="row g-3 mb-4">
+        {% if metrics.error %}
+        <div class="col-12">
+            <div class="alert alert-danger" role="alert">
+                {{ metrics.error }}
+            </div>
+        </div>
+        {% else %}
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Rooms to Clean Now</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ metrics.rooms_to_clean_count | default(0) }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-broom fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Check-outs Today (Need Cleaning)</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ metrics.checkout_rooms_count | default(0) }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-door-open fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Recently Cleaned (24h)</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ metrics.recently_cleaned_count | default(0) }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-4">
+            <a href="{{ url_for('housekeeping.cleaning_schedule') }}" class="text-decoration-none">
+                <div class="card border-left-warning shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                    View Full Cleaning Schedule</div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">&nbsp;</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-calendar-alt fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% endif %}
+    </div>
+    
+    {% if not metrics.error %}
+    <div class="row">
+        <!-- Rooms to Clean Table -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Rooms to Clean Now</h6>
+                </div>
+                <div class="card-body">
+                    {% if metrics.rooms_to_clean %}
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="roomsToCleanTable" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Room No.</th>
+                                    <th>Type</th>
+                                    <th>Last Cleaned</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for room in metrics.rooms_to_clean %}
+                                <tr>
+                                    <td>{{ room.number }}</td>
+                                    <td>{{ room.type }}</td>
+                                    <td>{{ room.last_cleaned if room.last_cleaned else 'N/A' }}</td>
+                                    <td>
+                                        <form method="POST" action="{{ url_for('housekeeping.update_room_status_action') }}" style="display:inline;">
+                                            <input type="hidden" name="room_id" value="{{ room.id }}">
+                                            <input type="hidden" name="new_status" value="Available">
+                                            <button type="submit" class="btn btn-sm btn-success">Mark Cleaned</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p>No rooms currently marked for cleaning.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Checkout Rooms Table -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-success">Today's Check-outs (Will Need Cleaning)</h6>
+                </div>
+                <div class="card-body">
+                    {% if metrics.checkout_rooms %}
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="checkoutRoomsTable" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Room No.</th>
+                                    <th>Type</th>
+                                    <th>Guest</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for room in metrics.checkout_rooms %}
+                                <tr>
+                                    <td>{{ room.number }}</td>
+                                    <td>{{ room.type }}</td>
+                                    <td>{{ room.guest_name if room.guest_name else 'N/A' }}</td>
+                                    <td>
+                                        <form method="POST" action="{{ url_for('housekeeping.update_room_status_action') }}" style="display:inline;">
+                                            <input type="hidden" name="room_id" value="{{ room.id }}">
+                                            <input type="hidden" name="new_status" value="Cleaning">
+                                            <button type="submit" class="btn btn-sm btn-info">Mark for Cleaning</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p>No check-outs scheduled for today that are still in room.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Recently Cleaned Rooms Chart -->
+        <div class="col-lg-12 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-info">Daily Cleaning History (Last 7 Days)</h6>
+                </div>
+                <div class="card-body">
+                    {% if metrics.cleaning_history %}
+                    <canvas id="cleaningHistoryChart"></canvas>
+                    {% else %}
+                    <p>No cleaning history available for the last 7 days.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block additional_info %}
+<div class="col-md-6">
+    <div class="card">
+        <div class="card-header bg-secondary text-white">
+            <h5 class="mb-0">Key Links & Actions</h5>
+        </div>
+        <div class="list-group list-group-flush">
+            <a href="{{ url_for('housekeeping.assign_tasks') }}" class="list-group-item list-group-item-action">Assign Cleaning Tasks</a>
+            <a href="{{ url_for('housekeeping.report_maintenance_issue') }}" class="list-group-item list-group-item-action">Report Maintenance Issue</a>
+            <a href="{{ url_for('housekeeping.view_lost_and_found') }}" class="list-group-item list-group-item-action">View Lost & Found</a>
+        </div>
+    </div>
+</div>
+<div class="col-md-6">
+    <div class="card">
+        <div class="card-header bg-dark text-white">
+            <h5 class="mb-0">System Notes</h5>
+        </div>
+        <div class="card-body">
+            <p class="small">Remember to log all status changes accurately.</p>
+            <p class="small">Check inventory levels regularly.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block dashboard_js %}
+{% if not metrics.error and metrics.cleaning_history %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Cleaning History Chart
+        const ctxCleaningHistory = document.getElementById('cleaningHistoryChart');
+        if (ctxCleaningHistory) {
+            const cleaningHistoryData = {{ metrics.cleaning_history | tojson }};
+            new Chart(ctxCleaningHistory, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(cleaningHistoryData),
+                    datasets: [{
+                        label: 'Rooms Cleaned',
+                        data: Object.values(cleaningHistoryData),
+                        backgroundColor: 'rgba(23, 162, 184, 0.5)',
+                        borderColor: 'rgba(23, 162, 184, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Number of Rooms Cleaned'
+                            }
+                        },
+                        x: {
+                             title: {
+                                display: true,
+                                text: 'Date'
+                            }
+                        }
+                    },
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+
+        // AJAX for Mark Cleaned buttons (if they exist)
+        document.querySelectorAll('.mark-cleaned-btn').forEach(button => {
+            button.addEventListener('click', function(event) {
+                event.preventDefault(); // Prevent default form submission
+                const form = this.closest('form');
+                const roomId = form.querySelector('input[name="room_id"]').value;
+                const newStatus = form.querySelector('input[name="new_status"]').value;
+                
+                // Basic confirmation
+                if (!confirm(`Mark room ${roomId} as ${newStatus}?`)) {
+                    return;
+                }
+
+                fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded', // Flask forms expect this
+                        // Add CSRF token if you have one in a meta tag or JS variable
+                        // 'X-CSRFToken': csrfToken 
+                    },
+                    body: new URLSearchParams(new FormData(form)).toString()
+                })
+                .then(response => {
+                    if (response.ok) {
+                        // Check if response is JSON, then parse, otherwise assume simple success message might come
+                        const contentType = response.headers.get("content-type");
+                        if (contentType && contentType.indexOf("application/json") !== -1) {
+                            return response.json();
+                        } else {
+                            return { success: true, message: "Action successful, reloading page." }; 
+                            // Assume success if not JSON, or if redirect happened (response.ok true)
+                        }
+                    } else {
+                        // Try to parse error if JSON, otherwise generic error
+                         return response.json().catch(() => ({ success: false, message: `Request failed with status: ${response.status}` }));
+                    }
+                })
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message || 'Room status updated successfully!');
+                        location.reload(); 
+                    } else {
+                        alert('Error updating room status: ' + (data.message || 'Unknown error'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An unexpected error occurred: ' + error);
+                });
+            });
+        });
+    });
+</script>
+{% endif %}
+{% endblock %} 

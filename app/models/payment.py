@@ -66,9 +66,9 @@ class Payment(BaseModel):
     refunded_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
 
     # Relationships
-    booking = db.relationship('Booking', backref='payments')
-    processor = db.relationship('User', foreign_keys=[processed_by], backref='processed_payments')
-    refunder = db.relationship('User', foreign_keys=[refunded_by], backref='refunded_payments')
+    booking = db.relationship('Booking', back_populates='payments')
+    processor = db.relationship('User', foreign_keys=[processed_by], back_populates='processed_payments')
+    refunder = db.relationship('User', foreign_keys=[refunded_by], back_populates='refunded_payments')
 
     def __repr__(self):
         """Provide a readable representation of a Payment instance."""

@@ -67,7 +67,7 @@ class BookingLog(BaseModel):
     reference = db.Column(db.String(100), nullable=True)  # For payment/refund actions
 
     # Relationships
-    booking = db.relationship('Booking', backref='logs')
+    booking = db.relationship('Booking', back_populates='booking_logs')
     user = db.relationship('User', backref='booking_logs')
 
     def __repr__(self):

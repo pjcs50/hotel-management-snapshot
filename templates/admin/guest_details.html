@@ -1,150 +1,307 @@
-{% extends "base.html" %}
+{% extends "dashboard_sidebar_base.html" %}
 
 {% block title %}Guest Details - {{ customer.name }}{% endblock %}
+{% block page_title %}Guest Details{% endblock %}
+{% block sidebar_title %}Admin Panel{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/clean-admin.css') }}">
+{% endblock %}
+
+{% block sidebar_links %}
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('admin.dashboard') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-speedometer2"></i>
+        </div>
+        <span class="sidebar-nav-text">Dashboard</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('admin.users') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-people"></i>
+        </div>
+        <span class="sidebar-nav-text">Manage Users</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('admin.roles') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-shield-check"></i>
+        </div>
+        <span class="sidebar-nav-text">User Roles</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('admin.guests') }}" class="sidebar-nav-link active">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-people-fill"></i>
+        </div>
+        <span class="sidebar-nav-text">Guest Management</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('admin.reservations') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-calendar-check"></i>
+        </div>
+        <span class="sidebar-nav-text">Reservations</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('admin.reports') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-graph-up"></i>
+        </div>
+        <span class="sidebar-nav-text">Reports</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('admin.logs') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-journal-text"></i>
+        </div>
+        <span class="sidebar-nav-text">System Logs</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('admin.backup') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-cloud-arrow-up"></i>
+        </div>
+        <span class="sidebar-nav-text">Backup & Restore</span>
+    </a>
+</li>
+{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Guest Details</h1>
-        <a href="{{ url_for('admin.guests') }}" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left"></i> Back to Guests
-        </a>
+<div class="clean-page">
+    <!-- Clean Header with Back Button -->
+    <div class="clean-header">
+        <div class="clean-flex clean-justify-between clean-items-center">
+            <div>
+                <h1 class="clean-page-title">Guest Details</h1>
+                <p class="clean-page-subtitle">Complete guest profile and booking history</p>
+            </div>
+            <a href="{{ url_for('admin.guests') }}" class="clean-btn clean-btn-outline">
+                <i class="bi bi-arrow-left"></i> Back to Guests
+            </a>
+        </div>
     </div>
-    
-    <div class="row">
-        <!-- Guest Information -->
-        <div class="col-md-5">
-            <div class="card mb-4">
-                <div class="card-header bg-primary text-white">
-                    <h3 class="h5 mb-0">Guest Information</h3>
+
+    <!-- Guest Overview Card -->
+    <div class="clean-card">
+        <div class="clean-card-body">
+            <div class="clean-flex clean-gap-6 clean-items-center">
+                <div class="clean-permission-icon" style="background: rgba(59, 130, 246, 0.1); color: var(--clean-primary); width: 80px; height: 80px;">
+                    <i class="bi bi-person" style="font-size: 2rem;"></i>
                 </div>
-                <div class="card-body">
-                    <div class="row mb-3">
-                        <div class="col-5 text-muted">Name:</div>
-                        <div class="col-7 fw-bold">{{ customer.name }}</div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-5 text-muted">Email:</div>
-                        <div class="col-7">{{ customer.user.email }}</div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-5 text-muted">Phone:</div>
-                        <div class="col-7">{{ customer.phone or 'Not provided' }}</div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-5 text-muted">Address:</div>
-                        <div class="col-7">{{ customer.address or 'Not provided' }}</div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-5 text-muted">Emergency Contact:</div>
-                        <div class="col-7">{{ customer.emergency_contact or 'Not provided' }}</div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-5 text-muted">Profile Status:</div>
-                        <div class="col-7">
-                            {% if customer.profile_complete %}
-                            <span class="badge bg-success">Complete</span>
-                            {% else %}
-                            <span class="badge bg-warning text-dark">Incomplete</span>
-                            {% endif %}
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-5 text-muted">Account Created:</div>
-                        <div class="col-7">{{ customer.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
-                    </div>
-                    <div class="row">
-                        <div class="col-5 text-muted">Last Updated:</div>
-                        <div class="col-7">{{ customer.updated_at.strftime('%Y-%m-%d %H:%M') }}</div>
+                <div>
+                    <h2 class="clean-font-bold" style="font-size: var(--clean-font-2xl); margin-bottom: var(--clean-space-2);">
+                        {{ customer.name }}
+                    </h2>
+                    <div class="clean-flex clean-gap-4 clean-items-center">
+                        <span class="clean-text-muted">{{ customer.user.email }}</span>
+                        {% if customer.profile_complete %}
+                            <span class="clean-badge clean-badge-success">Complete Profile</span>
+                        {% else %}
+                            <span class="clean-badge clean-badge-warning">Incomplete Profile</span>
+                        {% endif %}
                     </div>
                 </div>
             </div>
-            
-            <!-- Guest Statistics -->
-            <div class="card mb-4">
-                <div class="card-header bg-info text-white">
-                    <h3 class="h5 mb-0">Guest Statistics</h3>
+        </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="clean-grid clean-grid-2">
+        <!-- Guest Information Card -->
+        <div class="clean-card">
+            <div class="clean-card-header">
+                <h3 class="clean-card-title">
+                    <i class="bi bi-person"></i> Guest Information
+                </h3>
+            </div>
+            <div class="clean-card-body">
+                <div class="clean-space-y-4">
+                    <div class="clean-detail-item">
+                        <div class="clean-detail-label">Full Name</div>
+                        <div class="clean-detail-value clean-font-bold">{{ customer.name }}</div>
+                    </div>
+                    <div class="clean-detail-item">
+                        <div class="clean-detail-label">Email Address</div>
+                        <div class="clean-detail-value">{{ customer.user.email }}</div>
+                    </div>
+                    <div class="clean-detail-item">
+                        <div class="clean-detail-label">Phone Number</div>
+                        <div class="clean-detail-value">{{ customer.phone or 'Not provided' }}</div>
+                    </div>
+                    <div class="clean-detail-item">
+                        <div class="clean-detail-label">Address</div>
+                        <div class="clean-detail-value">{{ customer.address or 'Not provided' }}</div>
+                    </div>
+                    <div class="clean-detail-item">
+                        <div class="clean-detail-label">Emergency Contact</div>
+                        <div class="clean-detail-value">{{ customer.emergency_contact or 'Not provided' }}</div>
+                    </div>
+                    <div class="clean-detail-item">
+                        <div class="clean-detail-label">Account Created</div>
+                        <div class="clean-detail-value">{{ customer.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
+                    </div>
+                    <div class="clean-detail-item">
+                        <div class="clean-detail-label">Last Updated</div>
+                        <div class="clean-detail-value">{{ customer.updated_at.strftime('%Y-%m-%d %H:%M') }}</div>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <div class="row text-center">
-                        <div class="col-6 mb-3">
-                            <h5 class="h6 text-muted">Total Bookings</h5>
-                            <div class="h3">{{ stats.total_bookings }}</div>
+            </div>
+        </div>
+
+        <!-- Guest Statistics Card -->
+        <div class="clean-card">
+            <div class="clean-card-header">
+                <h3 class="clean-card-title">
+                    <i class="bi bi-bar-chart"></i> Guest Statistics
+                </h3>
+            </div>
+            <div class="clean-card-body">
+                <div class="clean-grid clean-grid-2">
+                    <div class="clean-text-center">
+                        <div class="clean-permission-icon" style="background: rgba(16, 185, 129, 0.1); color: var(--clean-success); margin: 0 auto var(--clean-space-3) auto;">
+                            <i class="bi bi-calendar-check"></i>
                         </div>
-                        <div class="col-6 mb-3">
-                            <h5 class="h6 text-muted">Total Nights</h5>
-                            <div class="h3">{{ stats.total_nights }}</div>
+                        <h4 class="clean-font-semibold clean-mb-2">Total Bookings</h4>
+                        <div class="clean-font-bold" style="font-size: var(--clean-font-2xl); color: var(--clean-text);">
+                            {{ stats.total_bookings }}
                         </div>
-                        <div class="col-6">
-                            <h5 class="h6 text-muted">Completed Stays</h5>
-                            <div class="h3">{{ stats.completed_stays }}</div>
+                    </div>
+                    
+                    <div class="clean-text-center">
+                        <div class="clean-permission-icon" style="background: rgba(59, 130, 246, 0.1); color: var(--clean-primary); margin: 0 auto var(--clean-space-3) auto;">
+                            <i class="bi bi-moon"></i>
                         </div>
-                        <div class="col-6">
-                            <h5 class="h6 text-muted">Cancellations</h5>
-                            <div class="h3">{{ stats.cancelled_bookings }}</div>
+                        <h4 class="clean-font-semibold clean-mb-2">Total Nights</h4>
+                        <div class="clean-font-bold" style="font-size: var(--clean-font-2xl); color: var(--clean-text);">
+                            {{ stats.total_nights }}
+                        </div>
+                    </div>
+                    
+                    <div class="clean-text-center">
+                        <div class="clean-permission-icon" style="background: rgba(139, 92, 246, 0.1); color: var(--clean-info); margin: 0 auto var(--clean-space-3) auto;">
+                            <i class="bi bi-check-circle"></i>
+                        </div>
+                        <h4 class="clean-font-semibold clean-mb-2">Completed Stays</h4>
+                        <div class="clean-font-bold" style="font-size: var(--clean-font-2xl); color: var(--clean-text);">
+                            {{ stats.completed_stays }}
+                        </div>
+                    </div>
+                    
+                    <div class="clean-text-center">
+                        <div class="clean-permission-icon" style="background: rgba(239, 68, 68, 0.1); color: var(--clean-danger); margin: 0 auto var(--clean-space-3) auto;">
+                            <i class="bi bi-x-circle"></i>
+                        </div>
+                        <h4 class="clean-font-semibold clean-mb-2">Cancellations</h4>
+                        <div class="clean-font-bold" style="font-size: var(--clean-font-2xl); color: var(--clean-text);">
+                            {{ stats.cancelled_bookings }}
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- Booking History Card -->
+    <div class="clean-card">
+        <div class="clean-card-header">
+            <h3 class="clean-card-title">
+                <i class="bi bi-clock-history"></i> Booking History
+            </h3>
+        </div>
+        <div class="clean-card-body">
+            {% if bookings %}
+            <div class="clean-table-container">
+                <table class="clean-table">
+                    <thead>
+                        <tr>
+                            <th>Room</th>
+                            <th>Check-in</th>
+                            <th>Check-out</th>
+                            <th>Nights</th>
+                            <th>Status</th>
+                            <th class="clean-text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for booking in bookings %}
+                        <tr>
+                            <td class="clean-font-medium">Room {{ booking.room.number }}</td>
+                            <td>{{ booking.check_in_date.strftime('%Y-%m-%d') }}</td>
+                            <td>{{ booking.check_out_date.strftime('%Y-%m-%d') }}</td>
+                            <td class="clean-font-medium">{{ booking.nights }}</td>
+                            <td>
+                                {% if booking.status == 'Reserved' %}
+                                    <span class="clean-badge clean-badge-primary">Reserved</span>
+                                {% elif booking.status == 'Checked In' %}
+                                    <span class="clean-badge clean-badge-success">Checked In</span>
+                                {% elif booking.status == 'Checked Out' %}
+                                    <span class="clean-badge clean-badge-secondary">Checked Out</span>
+                                {% elif booking.status == 'Cancelled' %}
+                                    <span class="clean-badge clean-badge-danger">Cancelled</span>
+                                {% elif booking.status == 'No Show' %}
+                                    <span class="clean-badge clean-badge-warning">No Show</span>
+                                {% endif %}
+                            </td>
+                            <td class="clean-text-center">
+                                <a href="{{ url_for('admin.reservation_details', booking_id=booking.id) }}" 
+                                   class="clean-btn clean-btn-outline clean-btn-sm"
+                                   title="View Details">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="clean-empty-state">
+                <div class="clean-empty-icon">
+                    <i class="bi bi-calendar-x"></i>
+                </div>
+                <h4 class="clean-empty-title">No Booking History</h4>
+                <p class="clean-empty-text">This guest has no booking history yet.</p>
+            </div>
+            {% endif %}
+        </div>
         
-        <!-- Booking History -->
-        <div class="col-md-7">
-            <div class="card">
-                <div class="card-header bg-success text-white">
-                    <h3 class="h5 mb-0">Booking History</h3>
-                </div>
-                <div class="card-body">
-                    {% if bookings %}
-                    <div class="table-responsive">
-                        <table class="table table-striped table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Room</th>
-                                    <th>Check-in</th>
-                                    <th>Check-out</th>
-                                    <th>Nights</th>
-                                    <th>Status</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for booking in bookings %}
-                                <tr>
-                                    <td>{{ booking.room.number }}</td>
-                                    <td>{{ booking.check_in_date.strftime('%Y-%m-%d') }}</td>
-                                    <td>{{ booking.check_out_date.strftime('%Y-%m-%d') }}</td>
-                                    <td>{{ booking.nights }}</td>
-                                    <td>
-                                        {% if booking.status == 'Reserved' %}
-                                        <span class="badge bg-primary">{{ booking.status }}</span>
-                                        {% elif booking.status == 'Checked In' %}
-                                        <span class="badge bg-success">{{ booking.status }}</span>
-                                        {% elif booking.status == 'Checked Out' %}
-                                        <span class="badge bg-secondary">{{ booking.status }}</span>
-                                        {% elif booking.status == 'Cancelled' %}
-                                        <span class="badge bg-danger">{{ booking.status }}</span>
-                                        {% elif booking.status == 'No Show' %}
-                                        <span class="badge bg-warning text-dark">{{ booking.status }}</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        <a href="{{ url_for('admin.reservation_details', booking_id=booking.id) }}" class="btn btn-sm btn-info">
-                                            <i class="bi bi-eye"></i> View
-                                        </a>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                    {% else %}
-                    <div class="alert alert-info text-center">
-                        <i class="bi bi-info-circle me-2"></i>
-                        This guest has no booking history.
-                    </div>
-                    {% endif %}
-                </div>
+        {% if bookings %}
+        <div class="clean-card-footer">
+            <div class="clean-text-muted clean-font-sm">
+                Showing {{ bookings|length }} booking(s) for this guest
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Quick Actions Card -->
+    <div class="clean-card">
+        <div class="clean-card-header">
+            <h3 class="clean-card-title">Quick Actions</h3>
+        </div>
+        <div class="clean-card-body">
+            <div class="clean-grid clean-grid-4">
+                <a href="{{ url_for('admin.guests') }}" class="clean-btn clean-btn-outline">
+                    <i class="bi bi-people"></i> All Guests
+                </a>
+                <button class="clean-btn clean-btn-outline" onclick="alert('Contact guest functionality would be implemented here')">
+                    <i class="bi bi-envelope"></i> Contact Guest
+                </button>
+                <button class="clean-btn clean-btn-outline" onclick="alert('Export guest data functionality would be implemented here')">
+                    <i class="bi bi-download"></i> Export Data
+                </button>
+                <a href="{{ url_for('admin.reservations') }}" class="clean-btn clean-btn-outline">
+                    <i class="bi bi-calendar-check"></i> View Reservations
+                </a>
             </div>
         </div>
     </div>

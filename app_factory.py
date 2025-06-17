@@ -15,6 +15,7 @@ from flask_jwt_extended import JWTManager
 from flask_mail import Mail
 from flask_wtf.csrf import CSRFProtect
 from apscheduler.schedulers.background import BackgroundScheduler
+from app.tasks.auto_checkout import auto_check_out_overdue
 
 from config import get_config
 from db import init_db, db
@@ -92,6 +93,22 @@ def create_app(config_class=None):
     # Register blueprints
     register_blueprints(app)
 
+    # Ensure test accounts exist (after database initialization)
+    with app.app_context():
+        try:
+            # Import here to avoid circular imports
+            from app.utils.test_accounts import ensure_test_accounts_exist, log_test_credentials
+            
+            # Ensure test accounts are available
+            if ensure_test_accounts_exist():
+                if not app.testing:  # Only log in non-testing mode
+                    log_test_credentials()
+            else:
+                app.logger.warning("Failed to ensure test accounts exist")
+                
+        except Exception as e:
+            app.logger.error(f"Error setting up test accounts: {e}")
+
     # Add a simple index route to resolve url_for('index')
     @app.route('/')
     def index():
@@ -125,6 +142,7 @@ def create_app(config_class=None):
     # Start scheduler for background tasks
     if not app.testing and not scheduler.running:
         scheduler.start()
+        scheduler.add_job(auto_check_out_overdue, 'cron', hour=0, minute=0)
 
     # Shell context for flask cli
     @app.shell_context_processor

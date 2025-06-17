@@ -1,426 +1,468 @@
-{% extends 'receptionist/base.html' %}
-{% from '_form_macros.html' import render_field %}
+{% extends "dashboard_sidebar_base.html" %}
 
-{% block title %}New Booking - Horizon Hotel{% endblock %}
+{% block title %}New Booking - Horizon Hotel Management{% endblock %}
+{% block sidebar_title %}Horizon{% endblock %}
+{% block page_title %}New Booking{% endblock %}
 
-{% block dashboard_content %}
-<div class="row">
-    <div class="col-md-12">
-        <div class="card shadow">
-            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                <h2 class="h4 mb-0">Create New Booking</h2>
-                <a href="{{ url_for('receptionist.bookings') }}" class="btn btn-sm btn-light">
-                    <i class="bi bi-arrow-left"></i> Back to Bookings
-                </a>
-            </div>
-            <div class="card-body">
-                <form method="post" action="{{ url_for('receptionist.new_booking') }}" id="newBookingForm">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    {{ form.status(type="hidden") }}
-                    
-                    <div class="row mb-4">
-                        <div class="col-md-12">
-                            <h5 class="border-bottom pb-2 mb-3">Guest Information</h5>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="customer_search" class="form-label">Search Guest</label>
-                                <div class="input-group">
-                                    <input type="text" class="form-control" id="customer_search" placeholder="Search by name, email, or phone">
-                                    <button class="btn btn-outline-secondary" type="button" id="searchCustomerBtn">
-                                        <i class="bi bi-search"></i>
-                                    </button>
-                                </div>
-                                <div class="form-text">Search for existing guest or create a new one</div>
-                            </div>
-                            
-                            <div id="customerSearchResults" class="list-group mb-3" style="display: none; max-height: 200px; overflow-y: auto;">
-                                <!-- Search results will be populated here -->
-                            </div>
-                            
-                            {{ form.customer_id(type="hidden", id="selected_customer_id") }}
-                            
-                            <div id="selectedCustomerInfo" class="alert alert-info" style="display: none;">
-                                <h6 class="alert-heading">Selected Guest</h6>
-                                <p id="selectedCustomerName" class="mb-1"></p>
-                                <p id="selectedCustomerEmail" class="mb-1 small"></p>
-                                <p id="selectedCustomerPhone" class="mb-1 small"></p>
-                                <button type="button" class="btn btn-sm btn-outline-secondary mt-2" id="clearCustomerBtn">
-                                    <i class="bi bi-x"></i> Clear Selection
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <div id="newCustomerForm" class="border rounded p-3">
-                                <h6 class="mb-3">New Guest Information</h6>
-                                <div class="mb-3">
-                                    <label for="guest_name" class="form-label">Guest Name <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="guest_name" name="guest_name" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="guest_email" class="form-label">Email</label>
-                                    <input type="email" class="form-control" id="guest_email" name="guest_email">
-                                </div>
-                                <div class="mb-3">
-                                    <label for="guest_phone" class="form-label">Phone</label>
-                                    <input type="tel" class="form-control" id="guest_phone" name="guest_phone">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="row mb-4">
-                        <div class="col-md-12">
-                            <h5 class="border-bottom pb-2 mb-3">Booking Details</h5>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    {{ render_field(form.check_in_date, label_visible=true, class="form-control", type="date", min=today) }}
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    {{ render_field(form.check_out_date, label_visible=true, class="form-control", type="date", min=tomorrow) }}
-                                </div>
-                            </div>
-                            
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    {{ render_field(form.room_id, label_visible=true, class="form-select", id="room_id_select") }}
-                                    {% if not form.room_id.choices and request.method == 'POST' %}
-                                        <div class="alert alert-warning mt-2">
-                                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                                            No rooms available for the selected dates.
-                                        </div>
-                                    {% endif %}
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    {{ render_field(form.num_guests, label_visible=true, class="form-control", type="number", min=1, max=10) }}
-                                </div>
-                            </div>
-                            
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    {{ render_field(form.early_hours, label_visible=true, class="form-control", type="number", min=0, max=12) }}
-                                    <div class="form-text">Standard check-in 3:00 PM. Fees may apply.</div>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    {{ render_field(form.late_hours, label_visible=true, class="form-control", type="number", min=0, max=12) }}
-                                    <div class="form-text">Standard check-out 11:00 AM. Fees may apply.</div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                {{ render_field(form.special_requests, label_visible=true, class="form-control", rows="4", placeholder=form.special_requests.description) }}
-                            </div>
-                            
-                            <div id="roomDetails" class="card mb-3" style="display: none;">
-                                <div class="card-header bg-light">
-                                    <h6 class="mb-0">Room Details</h6>
-                                </div>
-                                <div class="card-body">
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <p><strong>Room Number:</strong> <span id="roomNumber"></span></p>
-                                            <p><strong>Room Type:</strong> <span id="roomType"></span></p>
-                                            <p><strong>Capacity:</strong> <span id="roomCapacity"></span> person(s)</p>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <p><strong>Base Rate:</strong> $<span id="roomRate"></span>/night</p>
-                                            <p><strong>Amenities:</strong> <span id="roomAmenities"></span></p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            {% if estimated_price and form.room_id.data %}
-                            <div class="alert alert-info">
-                                <h6 class="alert-heading">Pricing Information</h6>
-                                <p class="mb-1"><strong>Base Rate:</strong> ${{ "%.2f"|format(base_rate) }}/night</p>
-                                <p class="mb-1"><strong>Number of Nights:</strong> {{ nights }}</p>
-                                {% if early_fee > 0 %}
-                                <p class="mb-1"><strong>Early Check-in Fee:</strong> ${{ "%.2f"|format(early_fee) }}</p>
-                                {% endif %}
-                                {% if late_fee > 0 %}
-                                <p class="mb-1"><strong>Late Check-out Fee:</strong> ${{ "%.2f"|format(late_fee) }}</p>
-                                {% endif %}
-                                <p class="mb-0"><strong>Estimated Total:</strong> ${{ "%.2f"|format(estimated_price) }}</p>
-                            </div>
-                            {% endif %}
-                        </div>
-                    </div>
-                    
-                    <div class="d-flex justify-content-between mt-4">
-                        <button type="button" class="btn btn-outline-secondary" onclick="window.history.back();">
-                            <i class="bi bi-x-circle"></i> Cancel
-                        </button>
-                        
-                        <div>
-                            <button type="submit" name="action" value="update_options" class="btn btn-outline-primary me-2">
-                                <i class="bi bi-calculator"></i> Calculate Price
-                            </button>
-                            
-                            {% if (not form.room_id.choices and request.method == 'POST') %}
-                                <button type="button" class="btn btn-secondary" disabled>
-                                    <i class="bi bi-calendar-x"></i> No Rooms Available
-                                </button>
-                            {% else %}
-                                <button type="submit" name="action" value="create_booking" class="btn btn-primary" id="createBookingBtn">
-                                    <i class="bi bi-calendar-check"></i> Create Booking
-                                </button>
-                            {% endif %}
-                        </div>
-                    </div>
-                </form>
-            </div>
+{% block sidebar_links %}
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('receptionist.dashboard') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-speedometer2"></i>
         </div>
-    </div>
-</div>
-
-<!-- Room Availability Modal -->
-<div class="modal fade" id="roomAvailabilityModal" tabindex="-1" aria-labelledby="roomAvailabilityModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title" id="roomAvailabilityModalLabel">Room Availability</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div id="availabilityCalendar"></div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            </div>
+        <span class="sidebar-nav-text">Dashboard</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('receptionist.new_booking') }}" class="sidebar-nav-link active">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-plus-circle"></i>
         </div>
-    </div>
-</div>
+        <span class="sidebar-nav-text">New Booking</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('receptionist.bookings') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-calendar-check"></i>
+        </div>
+        <span class="sidebar-nav-text">Bookings</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('receptionist.check_in') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-box-arrow-in-right"></i>
+        </div>
+        <span class="sidebar-nav-text">Check-in</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('receptionist.check_out') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-box-arrow-right"></i>
+        </div>
+        <span class="sidebar-nav-text">Check-out</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('receptionist.guest_list') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-people"></i>
+        </div>
+        <span class="sidebar-nav-text">Guest List</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('receptionist.room_inventory') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-building"></i>
+        </div>
+        <span class="sidebar-nav-text">Room Status</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('receptionist.room_availability') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-calendar3"></i>
+        </div>
+        <span class="sidebar-nav-text">Availability</span>
+    </a>
+</li>
 {% endblock %}
 
-{% block scripts %}
-{{ super() }}
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const checkInDateEl = document.getElementById('check_in_date');
-        const checkOutDateEl = document.getElementById('check_out_date');
-        const roomIdSelectEl = document.getElementById('room_id_select');
-        const newBookingForm = document.getElementById('newBookingForm');
-        const customerSearchEl = document.getElementById('customer_search');
-        const searchCustomerBtn = document.getElementById('searchCustomerBtn');
-        const customerSearchResults = document.getElementById('customerSearchResults');
-        const selectedCustomerId = document.getElementById('selected_customer_id');
-        const selectedCustomerInfo = document.getElementById('selectedCustomerInfo');
-        const selectedCustomerName = document.getElementById('selectedCustomerName');
-        const selectedCustomerEmail = document.getElementById('selectedCustomerEmail');
-        const selectedCustomerPhone = document.getElementById('selectedCustomerPhone');
-        const clearCustomerBtn = document.getElementById('clearCustomerBtn');
-        const newCustomerForm = document.getElementById('newCustomerForm');
-        const roomDetails = document.getElementById('roomDetails');
-        const roomNumber = document.getElementById('roomNumber');
-        const roomType = document.getElementById('roomType');
-        const roomCapacity = document.getElementById('roomCapacity');
-        const roomRate = document.getElementById('roomRate');
-        const roomAmenities = document.getElementById('roomAmenities');
+{% block content %}
+<div class="fade-in">
+    <!-- Header Section -->
+    <div class="dashboard-header-compact">
+        <h2 class="dashboard-title-compact">Create New Booking</h2>
+        <p class="dashboard-subtitle-compact">Book a room for your guests with our streamlined process</p>
+    </div>
 
-        // Update room options when dates change
-        function updateRoomOptions() {
-            if (checkInDateEl.value && checkOutDateEl.value) {
-                const formData = new FormData(newBookingForm);
-                formData.append('action', 'update_options');
-                
-                fetch('{{ url_for("receptionist.new_booking") }}', {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    // Update room options
-                    if (data.room_options) {
-                        roomIdSelectEl.innerHTML = '';
-                        data.room_options.forEach(option => {
-                            const optEl = document.createElement('option');
-                            optEl.value = option.value;
-                            optEl.textContent = option.text;
-                            optEl.dataset.roomNumber = option.room_number;
-                            optEl.dataset.roomType = option.room_type;
-                            optEl.dataset.capacity = option.capacity;
-                            optEl.dataset.rate = option.rate;
-                            optEl.dataset.amenities = option.amenities;
-                            roomIdSelectEl.appendChild(optEl);
-                        });
+    <!-- Main Booking Form -->
+    <div class="booking-form-container">
+        <form method="post" action="{{ url_for('receptionist.new_booking') }}" id="newBookingForm">
+            <!-- Step 1: Guest Information -->
+            <div class="form-step-card">
+                <div class="card-header">
+                    <div class="step-header">
+                        <div class="step-number">1</div>
+                        <h3>Guest Information</h3>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="form-group">
+                                <label class="form-label">Search Existing Guest</label>
+                                <input type="text" class="form-control" placeholder="Search by name, email, or phone">
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="form-group">
+                                <label class="form-label">Guest Name *</label>
+                                <input type="text" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Phone</label>
+                                <input type="tel" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: Stay Details -->
+            <div class="form-step-card">
+                <div class="card-header">
+                    <div class="step-header">
+                        <div class="step-number">2</div>
+                        <h3>Stay Details</h3>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label">Check-in Date</label>
+                                <input type="date" class="form-control">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label">Check-out Date</label>
+                                <input type="date" class="form-control">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label">Guests</label>
+                                <select class="form-control">
+                                    <option>1 Guest</option>
+                                    <option>2 Guests</option>
+                                    <option>3 Guests</option>
+                                    <option>4 Guests</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Special Requests</label>
+                        <textarea class="form-control" rows="3" placeholder="Any special requests..."></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: Room Selection -->
+            <div class="form-step-card">
+                <div class="card-header">
+                    <div class="step-header">
+                        <div class="step-number">3</div>
+                        <h3>Select Room</h3>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="room-selection-grid">
+                        <div class="room-card">
+                            <div class="room-header">
+                                <span class="room-number">Room 101</span>
+                                <span class="room-price">$120/night</span>
+                            </div>
+                            <div class="room-type">Standard Room</div>
+                            <div class="room-features">
+                                <span class="feature-tag">2 Guests</span>
+                                <span class="feature-tag">WiFi</span>
+                                <span class="feature-tag">AC</span>
+                            </div>
+                        </div>
                         
-                        // Update room details if a room is selected
-                        updateRoomDetails();
-                    }
-                    
-                    // Update price estimate
-                    if (data.estimated_price) {
-                        // This will be handled by the server-side rendering
-                        // We'll reload the form to show the updated price
-                        newBookingForm.submit();
-                    }
-                })
-                .catch(error => {
-                    console.error('Error updating room options:', error);
-                });
-            }
-        }
-        
-        // Update room details when room selection changes
-        function updateRoomDetails() {
-            const selectedOption = roomIdSelectEl.options[roomIdSelectEl.selectedIndex];
-            if (selectedOption && selectedOption.value) {
-                roomNumber.textContent = selectedOption.dataset.roomNumber || '';
-                roomType.textContent = selectedOption.dataset.roomType || '';
-                roomCapacity.textContent = selectedOption.dataset.capacity || '';
-                roomRate.textContent = selectedOption.dataset.rate || '';
-                roomAmenities.textContent = selectedOption.dataset.amenities || 'None';
-                roomDetails.style.display = 'block';
-            } else {
-                roomDetails.style.display = 'none';
-            }
-        }
-        
-        // Search for customers
-        function searchCustomers() {
-            const searchTerm = customerSearchEl.value.trim();
-            if (searchTerm.length < 2) {
-                customerSearchResults.style.display = 'none';
-                return;
-            }
+                        <div class="room-card">
+                            <div class="room-header">
+                                <span class="room-number">Room 201</span>
+                                <span class="room-price">$180/night</span>
+                            </div>
+                            <div class="room-type">Deluxe Room</div>
+                            <div class="room-features">
+                                <span class="feature-tag">4 Guests</span>
+                                <span class="feature-tag">WiFi</span>
+                                <span class="feature-tag">Balcony</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Booking Summary -->
+            <div class="form-step-card">
+                <div class="card-header">
+                    <h3><i class="bi bi-receipt me-2"></i>Booking Summary</h3>
+                </div>
+                <div class="card-body">
+                    <div class="summary-row">
+                        <span>Room Rate (per night)</span>
+                        <span>$120.00</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Number of Nights</span>
+                        <span>2</span>
+                    </div>
+                    <div class="summary-row total">
+                        <span>Total Amount</span>
+                        <span>$240.00</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="form-actions">
+                <a href="{{ url_for('receptionist.bookings') }}" class="btn btn-secondary">
+                    <i class="bi bi-x-circle me-2"></i>Cancel
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-circle me-2"></i>Create Booking
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+/* New Booking Form Styles */
+.booking-form-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.form-step-card {
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.card-header {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid hsl(var(--border));
+    background: hsl(var(--muted) / 0.3);
+}
+
+.step-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.step-number {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: hsl(var(--accent));
+    color: hsl(var(--accent-foreground));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 1.125rem;
+}
+
+.card-header h3 {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 600;
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: hsl(var(--foreground));
+    font-size: 0.875rem;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+    background: hsl(var(--background));
+    color: hsl(var(--foreground));
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: hsl(var(--accent));
+    box-shadow: 0 0 0 2px hsl(var(--accent) / 0.2);
+}
+
+.room-selection-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1rem;
+}
+
+.room-card {
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    padding: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.room-card:hover {
+    border-color: hsl(var(--accent));
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.room-card.selected {
+    border-color: hsl(var(--accent));
+    background: hsl(var(--accent) / 0.05);
+}
+
+.room-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.room-number {
+    font-weight: 600;
+    font-size: 1.125rem;
+}
+
+.room-price {
+    font-weight: 600;
+    color: hsl(var(--accent));
+}
+
+.room-type {
+    color: hsl(var(--muted-foreground));
+    font-size: 0.875rem;
+    margin-bottom: 0.75rem;
+}
+
+.room-features {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.feature-tag {
+    background: hsl(var(--muted));
+    color: hsl(var(--muted-foreground));
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid hsl(var(--border));
+}
+
+.summary-row.total {
+    border-bottom: none;
+    border-top: 2px solid hsl(var(--border));
+    padding-top: 1rem;
+    margin-top: 0.5rem;
+    font-weight: 600;
+    font-size: 1.125rem;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+}
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius);
+    font-weight: 500;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background: hsl(var(--accent));
+    color: hsl(var(--accent-foreground));
+    border-color: hsl(var(--accent));
+}
+
+.btn-primary:hover {
+    background: hsl(var(--accent) / 0.9);
+}
+
+.btn-secondary {
+    background: hsl(var(--muted));
+    color: hsl(var(--muted-foreground));
+    border-color: hsl(var(--border));
+}
+
+.btn-secondary:hover {
+    background: hsl(var(--muted) / 0.8);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .form-actions {
+        flex-direction: column-reverse;
+    }
+    
+    .btn {
+        width: 100%;
+    }
+    
+    .room-selection-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Room selection functionality
+    const roomCards = document.querySelectorAll('.room-card');
+    
+    roomCards.forEach(card => {
+        card.addEventListener('click', function() {
+            // Remove previous selection
+            roomCards.forEach(c => c.classList.remove('selected'));
             
-            fetch(`{{ url_for("receptionist.search_customers") }}?q=${encodeURIComponent(searchTerm)}`)
-                .then(response => response.json())
-                .then(data => {
-                    customerSearchResults.innerHTML = '';
-                    
-                    if (data.customers && data.customers.length > 0) {
-                        data.customers.forEach(customer => {
-                            const item = document.createElement('a');
-                            item.href = '#';
-                            item.className = 'list-group-item list-group-item-action';
-                            item.innerHTML = `
-                                <div class="d-flex w-100 justify-content-between">
-                                    <h6 class="mb-1">${customer.name}</h6>
-                                </div>
-                                <p class="mb-1 small">${customer.email || ''}</p>
-                                <small>${customer.phone || ''}</small>
-                            `;
-                            item.addEventListener('click', function(e) {
-                                e.preventDefault();
-                                selectCustomer(customer);
-                            });
-                            customerSearchResults.appendChild(item);
-                        });
-                        customerSearchResults.style.display = 'block';
-                    } else {
-                        const item = document.createElement('div');
-                        item.className = 'list-group-item';
-                        item.textContent = 'No customers found';
-                        customerSearchResults.appendChild(item);
-                        customerSearchResults.style.display = 'block';
-                    }
-                })
-                .catch(error => {
-                    console.error('Error searching customers:', error);
-                });
-        }
-        
-        // Select a customer
-        function selectCustomer(customer) {
-            selectedCustomerId.value = customer.id;
-            selectedCustomerName.textContent = customer.name;
-            selectedCustomerEmail.textContent = customer.email || '';
-            selectedCustomerPhone.textContent = customer.phone || '';
-            selectedCustomerInfo.style.display = 'block';
-            customerSearchResults.style.display = 'none';
-            newCustomerForm.style.display = 'none';
-        }
-        
-        // Clear customer selection
-        function clearCustomerSelection() {
-            selectedCustomerId.value = '';
-            selectedCustomerInfo.style.display = 'none';
-            newCustomerForm.style.display = 'block';
-            customerSearchEl.value = '';
-        }
-        
-        // Event listeners
-        if (checkInDateEl) {
-            checkInDateEl.addEventListener('change', function() {
-                // Set minimum check-out date to be after check-in date
-                if (checkInDateEl.value) {
-                    const checkInDate = new Date(checkInDateEl.value);
-                    checkInDate.setDate(checkInDate.getDate() + 1);
-                    const minCheckOutDate = checkInDate.toISOString().split('T')[0];
-                    checkOutDateEl.min = minCheckOutDate;
-                    
-                    // If check-out date is before check-in date, update it
-                    if (checkOutDateEl.value && checkOutDateEl.value <= checkInDateEl.value) {
-                        checkOutDateEl.value = minCheckOutDate;
-                    }
-                }
-                
-                if (checkOutDateEl.value) {
-                    updateRoomOptions();
-                }
-            });
-        }
-        
-        if (checkOutDateEl) {
-            checkOutDateEl.addEventListener('change', function() {
-                if (checkInDateEl.value) {
-                    updateRoomOptions();
-                }
-            });
-        }
-        
-        if (roomIdSelectEl) {
-            roomIdSelectEl.addEventListener('change', updateRoomDetails);
-            // Initialize room details
-            updateRoomDetails();
-        }
-        
-        if (searchCustomerBtn) {
-            searchCustomerBtn.addEventListener('click', searchCustomers);
-        }
-        
-        if (customerSearchEl) {
-            customerSearchEl.addEventListener('keyup', function(e) {
-                if (e.key === 'Enter') {
-                    searchCustomers();
-                } else if (e.key === 'Escape') {
-                    customerSearchResults.style.display = 'none';
-                } else if (customerSearchEl.value.trim().length >= 2) {
-                    searchCustomers();
-                }
-            });
-        }
-        
-        if (clearCustomerBtn) {
-            clearCustomerBtn.addEventListener('click', clearCustomerSelection);
-        }
-        
-        // Initialize the form
-        if (selectedCustomerId.value) {
-            selectedCustomerInfo.style.display = 'block';
-            newCustomerForm.style.display = 'none';
-        } else {
-            selectedCustomerInfo.style.display = 'none';
-            newCustomerForm.style.display = 'block';
-        }
-        
-        // Close search results when clicking outside
-        document.addEventListener('click', function(e) {
-            if (!customerSearchEl.contains(e.target) && !customerSearchResults.contains(e.target) && !searchCustomerBtn.contains(e.target)) {
-                customerSearchResults.style.display = 'none';
-            }
+            // Select this room
+            this.classList.add('selected');
         });
     });
+    
+    console.log('New Booking page initialized successfully');
+});
 </script>
 {% endblock %}

@@ -2,49 +2,125 @@
 
 {% block title %}Login - Horizon Hotel{% endblock %}
 
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/clean-auth.css') }}" rel="stylesheet">
+{% endblock %}
+
 {% block content %}
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-6 col-lg-5">
-            <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white text-center">
-                    <h4 class="mb-0">Login</h4>
+<div class="clean-auth-container">
+    <div class="clean-auth-card">
+        <!-- Clean Header -->
+        <div class="clean-auth-header">
+            <h1 class="clean-auth-title">Welcome Back</h1>
+            <p class="clean-auth-subtitle">Sign in to your Horizon Hotel account</p>
+        </div>
+        
+        <!-- Clean Form Body -->
+        <div class="clean-auth-body">
+            <form method="POST" action="{{ url_for('auth.login') }}" class="clean-auth-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                
+                <!-- Email Field -->
+                <div class="clean-form-group">
+                    <label for="email" class="clean-form-label">
+                        <i class="bi bi-envelope"></i>
+                        Email Address
+                    </label>
+                    <input type="email" 
+                           class="clean-form-control" 
+                           id="email" 
+                           name="email" 
+                           placeholder="Enter your email address" 
+                           required>
                 </div>
-                <div class="card-body">
-                    <form method="POST" action="{{ url_for('auth.login') }}">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        
-                        <div class="mb-3">
-                            <label for="email" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="email" name="email" required>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="password" class="form-label">Password</label>
-                            <input type="password" class="form-control" id="password" name="password" required>
-                        </div>
-                        
-                        <div class="mb-3 form-check">
-                            <input type="checkbox" class="form-check-input" id="remember" name="remember">
-                            <label class="form-check-label" for="remember">Remember me</label>
-                        </div>
-                        
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-primary">Login</button>
-                        </div>
-                    </form>
-                </div>
-                <div class="card-footer text-center">
-                    <a href="{{ url_for('auth.forgot_password') }}" class="text-decoration-none">Forgot Password?</a>
-                    <hr>
-                    <p class="mb-0">Don't have an account?</p>
-                    <div class="d-flex justify-content-center mt-2">
-                        <a href="{{ url_for('auth.register') }}" class="btn btn-outline-primary me-2">Guest Registration</a>
-                        <a href="{{ url_for('auth.staff_register') }}" class="btn btn-outline-secondary">Staff Registration</a>
+                
+                <!-- Password Field -->
+                <div class="clean-form-group">
+                    <label for="password" class="clean-form-label">
+                        <i class="bi bi-lock"></i>
+                        Password
+                    </label>
+                    <div class="clean-password-field">
+                        <input type="password" 
+                               class="clean-form-control" 
+                               id="password" 
+                               name="password" 
+                               placeholder="Enter your password" 
+                               required>
+                        <button type="button" class="clean-password-toggle" onclick="togglePassword()">
+                            <i id="passwordToggle" class="bi bi-eye"></i>
+                        </button>
                     </div>
                 </div>
+                
+                <!-- Remember Me Checkbox -->
+                <div class="clean-checkbox-wrapper">
+                    <input type="checkbox" class="clean-checkbox" id="remember" name="remember">
+                    <label class="clean-checkbox-label" for="remember">Keep me signed in</label>
+                </div>
+                
+                <!-- Submit Button -->
+                <button type="submit" class="clean-btn clean-btn-primary clean-btn-full">
+                    <i class="bi bi-box-arrow-in-right"></i>
+                    Sign In
+                </button>
+            </form>
+        </div>
+        
+        <!-- Clean Footer -->
+        <div class="clean-auth-footer">
+            <div class="clean-auth-link">
+                <a href="{{ url_for('auth.forgot_password') }}" class="clean-link">
+                    <i class="bi bi-key"></i>
+                    Forgot your password?
+                </a>
+            </div>
+            
+            <div class="clean-auth-divider">
+                New to Horizon Hotel?
+            </div>
+            
+            <div class="clean-auth-actions">
+                <a href="{{ url_for('auth.register') }}" class="clean-btn clean-btn-outline">
+                    <i class="bi bi-person-plus"></i>
+                    Guest Registration
+                </a>
+                <a href="{{ url_for('auth.staff_register') }}" class="clean-btn clean-btn-secondary">
+                    <i class="bi bi-briefcase"></i>
+                    Staff Registration
+                </a>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+function togglePassword() {
+    const passwordField = document.getElementById('password');
+    const toggleIcon = document.getElementById('passwordToggle');
+    
+    if (passwordField.type === 'password') {
+        passwordField.type = 'text';
+        toggleIcon.className = 'bi bi-eye-slash';
+    } else {
+        passwordField.type = 'password';
+        toggleIcon.className = 'bi bi-eye';
+    }
+}
+
+// Smooth focus animations
+document.addEventListener('DOMContentLoaded', function() {
+    const inputs = document.querySelectorAll('.clean-form-control');
+    
+    inputs.forEach(input => {
+        input.addEventListener('focus', function() {
+            this.parentElement.style.transform = 'scale(1.01)';
+        });
+        
+        input.addEventListener('blur', function() {
+            this.parentElement.style.transform = 'scale(1)';
+        });
+    });
+});
+</script>
 {% endblock %} 

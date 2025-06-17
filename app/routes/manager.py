@@ -223,19 +223,69 @@ def staff():
     
     staff_role_data = {role: count for role, count in role_counts}
     
-    # Mock performance data - in a real app, this would come from the database
+    # Get real performance data from dashboard service
+    dashboard_service = DashboardService(db.session)
+    top_performers = dashboard_service._get_top_staff_performers(limit=10)
+    
+    # Create performance data with real metrics
     performance_data = []
-    for user in pagination.items[:5]:  # Just show for first 5 users in the list
+    for performer in top_performers:
         performance_data.append({
-            'username': user.username,
-            'role': user.role,
-            'tasks_completed': 0,  # Placeholder
-            'rating': 0  # Placeholder
+            'username': performer['username'],
+            'role': performer['role'],
+            'tasks_completed': performer['tasks_completed'],
+            'rating': performer['customer_rating'],
+            'efficiency_score': performer['efficiency_score'],
+            'booking_activities': performer['booking_activities'],
+            'room_activities': performer['room_activities'],
+            'payment_activities': performer['payment_activities']
         })
     
-    # Mock activity logs - in a real app, this would come from the database
-    activity_logs = []
+    # Get real activity logs from recent activities
+    recent_activities = dashboard_service._get_recent_activities(limit=15)
     
+        # Filter activities for staff-related actions
+    activity_logs = []
+    for activity in recent_activities:
+        if activity['user'] != 'System':  # Only show user activities
+            activity_logs.append({
+                'username': activity['user'],
+                'action': activity['description'],
+                'time': activity['time'],
+                'type': activity['type']
+            })
+
+    # Calculate staff statistics
+    total_staff = User.query.filter(User.role.in_(staff_roles)).count()
+    active_staff = User.query.filter(
+        User.role.in_(staff_roles),
+        User.is_active == True
+    ).count()
+    
+    # Calculate average performance from performance data
+    avg_performance = 0
+    if performance_data:
+        total_rating = sum(p['rating'] for p in performance_data if p['rating'])
+        avg_performance = round(total_rating / len(performance_data), 1) if performance_data else 0
+    
+    # Get pending staff requests count
+    from app.models.staff_request import StaffRequest
+    pending_requests = db.session.query(StaffRequest).filter(
+        StaffRequest.status == 'pending'
+    ).count()
+    
+    # Also count users with pending role requests but no staff request
+    pending_role_users = User.query.filter(User.role_requested.isnot(None)).count()
+    total_pending_requests = pending_requests + pending_role_users
+
+    # Create staff_stats object
+    staff_stats = {
+        'total_staff': total_staff,
+        'active_staff': active_staff,
+        'avg_performance': avg_performance,
+        'pending_requests': total_pending_requests
+    }
+
     return render_template(
         'manager/staff.html',
         staff_members=pagination.items,
@@ -244,6 +294,7 @@ def staff():
         staff_roles=staff_role_data,
         performance_data=performance_data,
         activity_logs=activity_logs,
+        staff_stats=staff_stats,
         current_filters={
             'role': role_filter,
             'status': status_filter,

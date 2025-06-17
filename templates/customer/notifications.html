@@ -1,72 +1,594 @@
-{% extends 'base.html' %}
+{% extends 'dashboard_sidebar_base.html' %}ebar_base.html' %}
 
-{% block title %}My Notifications - {{ super() }}{% endblock %}
-
+{% block title %}Notifications - Horizon Hotel{% endblock %}
+{% block page_title %}Notifications{% endblock %}
+{% block sidebar_title %}Customer Menu{% endblock %}
+{% block page_title %}Notifications{% endblock %}
+{% block sidebar_links %}
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('customer.dashboard') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-speedometer2"></i>
+</li>
+        <span class="sidebar-nav-text">Dashboard</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('customer.bookings') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-calendar-check"></i>
+        </div>
+        <span class="sidebar-nav-text">My Bookings</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('customer.new_booking') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-calendar-plus"></i>
+        </div>
+        <span class="sidebar-nav-text">New Booking</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('customer.room_types') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-building"></i>
+        </div>
+        <span class="sidebar-nav-text">Room Types</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('customer.profile') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-person-gear"></i>
+        </div>
+        <span class="sidebar-nav-text">Edit Profile</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('customer.loyalty_history') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-award"></i>
+        </div>
+        <span class="sidebar-nav-text">Loyalty Program</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('customer.feedback') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-star"></i>
+        </div>
+        <span class="sidebar-nav-text">Leave Feedback</span>
+    </a>
+</li>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('customer.help_page') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-question-circle"></i>
+        </div>
+        <span class="sidebar-nav-text">Help & FAQs</span>
+    </a>
+</li>
+{% endblock %}"sidebar-nav-item">
+    <a href="{{ url_for('customer.bookings') }}" class="sidebar-nav-link">
 {% block content %}
-<div class="container mt-4">
-    <div class="row mb-3">
-        <div class="col">
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{ url_for('customer.dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">My Notifications</li>
-                </ol>
-            </nav>
+<div class="notifications-container">
+    <!-- Notification Actions -->
+    <div class="card mb-3">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h3 class="mb-0">Your Notifications</h3>
+            <div>span>
+    </a>
+                <form action="{{ url_for('customer.mark_all_customer_notifications_read') }}" method="POST" class="d-inline">
+                    <button type="submit" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-check-all"></i> Mark All Read ({{ unread_count }})
+                    </button>
+                </form>
+        <span class="sidebar-nav-text">New Booking</span>
+    </a>
+        </div>
+        <div class="card-body">
+            <div class="row text-center">
+                <div class="col-md-4">
+                    <div class="notification-stat-card">
+                        <div class="notification-stat-icon">
+                            <i class="bi bi-bell text-primary"></i>
+                        </div>
+                        <div class="notification-stat-content">
+                            <h5 class="notification-stat-label">Total Notifications</h5>
+                            <div class="notification-stat-value">{{ notifications|length if notifications else 0 }}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="notification-stat-card">
+                        <div class="notification-stat-icon">
+                            <i class="bi bi-bell-fill text-warning"></i>
+                        </div>
+                        <div class="notification-stat-content">
+                            <h5 class="notification-stat-label">Unread</h5>
+                            <div class="notification-stat-value">{{ unread_count or 0 }}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="notification-stat-card">
+                        <div class="notification-stat-icon">
+                            <i class="bi bi-check-circle text-success"></i>
+                        </div>
+                        <div class="notification-stat-content">
+                            <h5 class="notification-stat-label">Read</h5>
+                            <div class="notification-stat-value">{{ (notifications|length - unread_count) if notifications else 0 }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
+</li>
+        <!-- Notifications List -->
+        <div class="card dashboard-card-compact">
+            <div class="card-header">
+                <h3 class="mb-0">Recent Notifications</h3>
+            </div>
+            <div class="card-body">
+<li class="sidebar-nav-item">
+                <div class="notification-list"> class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+                    <div class="notification-item {% if not notification.is_read %}unread{% endif %}">
+                        <div class="d-flex">
+                            <div class="notification-icon me-3">
+                                {% if notification.type == 'booking' %}
+                                <i class="bi bi-calendar-check"></i>
+                                {% elif notification.type == 'payment' %}
+                                <i class="bi bi-credit-card"></i>
+                                {% elif notification.type == 'loyalty' %}
+                                <i class="bi bi-award"></i>
+                                {% elif notification.type == 'promotion' %}
+                                <i class="bi bi-tag"></i>
+                                {% elif notification.type == 'system' %}
+                                <i class="bi bi-gear"></i>
+                                {% else %}
+                                <i class="bi bi-info-circle"></i>
+                                {% endif %}
+                            </div>
+                            <div class="notification-content flex-grow-1">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="notification-title">{{ notification.title }}</h6>
+                                        <p class="notification-message">{{ notification.message }}</p>
+                                        <small class="notification-time text-muted">
+                                            <i class="bi bi-clock"></i> {{ notification.created_at.strftime('%Y-%m-%d %H:%M') if notification.created_at else 'Unknown' }}
+                                        </small>
+                                    </div>
+                                    <div class="notification-actions">
+            <i class="bi bi-person-gear"></i>
+                                        <form action="{{ url_for('customer.mark_one_notification_read', notification_id=notification.id) }}" method="POST" class="d-inline">
+                                            <button type="submit" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-check"></i>
+<li class="sidebar-nav-item">
+    <a href="{{ url_for('customer.loyalty_history') }}" class="sidebar-nav-link">
+        <div class="sidebar-nav-icon">
+                                        <span class="badge {{ 'badge-primary' if notification.type == 'booking' else 'badge-success' if notification.type == 'payment' else 'badge-warning' if notification.type == 'loyalty' else 'badge-info' if notification.type == 'promotion' else 'badge-secondary' }}">
+                                            {{ notification.type.title() if notification.type else 'General' }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+        <span class="sidebar-nav-text">Loyalty Program</span>
+    </a>
+</li>
+                <!-- Sample Notifications if none exist -->
+                <div class="notification-list">
+                    <div class="notification-item">
+                        <div class="d-flex">
+                            <div class="notification-icon me-3">
+                                <i class="bi bi-calendar-check"></i>
+                            </div>
+                            <div class="notification-content flex-grow-1">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="notification-title">Booking Confirmed</h6>
+                                        <p class="notification-message">Your reservation for Deluxe Room has been confirmed for March 15-17, 2024.</p>
+                                        <small class="notification-time text-muted">
+                                            <i class="bi bi-clock"></i> 2024-03-10 14:30
+                                        </small>
+                                    </div>
+                                    <div class="notification-actions">
+                                        <span class="badge badge-primary">Booking</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-    <div class="row">
-        <div class="col-md-10 offset-md-1">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h1 class="h3">My Notifications</h1>
+                    <div class="notification-item">
+                        <div class="d-flex">
+                            <div class="notification-icon me-3">
+                                <i class="bi bi-award"></i>
+                            </div>
+                            <div class="notification-content flex-grow-1">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="notification-title">Loyalty Points Earned</h6>
+                                        <p class="notification-message">You've earned 250 loyalty points from your recent stay. Total balance: 1,750 points.</p>
+                                        <small class="notification-time text-muted">
+                                            <i class="bi bi-clock"></i> 2024-03-08 10:15
+                                        </small>
+                                    </div>
+                                    <div class="notification-actions">
+                                        <span class="badge badge-warning">Loyalty</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="notification-item">
+                        <div class="d-flex">
+                            <div class="notification-icon me-3">
+                                <i class="bi bi-tag"></i>
+                            </div>
+                            <div class="notification-content flex-grow-1">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="notification-title">Special Offer Available</h6>
+                                        <p class="notification-message">Enjoy 20% off your next spa treatment. Valid until March 31st. Book now!</p>
+                                        <small class="notification-time text-muted">
+                                            <i class="bi bi-clock"></i> 2024-03-05 09:00
+                                        </small>
+                                    </div>
+                                    <div class="notification-actions">
+                                        <span class="badge badge-info">Promotion</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center mt-4">
+<li class="sidebar-nav-item">
+                        <i class="bi bi-info-circle me-2"></i>
+                        These are sample notifications. Actual notifications will appear here when you receive them.
+                    </div>
+            <i class="bi bi-star"></i>
+        </div>
+        <div class="sidebar-nav-icon">
+            <i class="bi bi-question-circle"></i>
+        </div>
+        <span class="sidebar-nav-text">Help & FAQs</span>
+
+<style>
+.notification-list {
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+.notification-item {
+    padding: 1rem;
+    border-bottom: 1px solid hsl(var(--border));
+    transition: background-color 0.2s ease;
+}
+
+.notification-item:last-child {
+    border-bottom: none;
+}
+
+.notification-item:hover {
+    background-color: hsl(var(--muted) / 0.1);
+}
+
+.notification-item.unread {
+    background-color: hsl(var(--primary) / 0.05);
+    border-left: 3px solid hsl(var(--primary));
+}
+
+.notification-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    background-color: hsl(var(--secondary));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.notification-icon i {
+    font-size: 1.125rem;
+    color: hsl(var(--primary));
+}
+
+.notification-title {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    color: hsl(var(--foreground));
+}
+
+.notification-message {
+    margin-bottom: 0.5rem;
+    color: hsl(var(--muted-foreground));
+    font-size: 0.875rem;
+    line-height: 1.4;
+}
+
+.notification-time {
+    font-size: 0.75rem;
+}
+
+.notification-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+</style>
+    </a>
+</li>
+{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <!-- Header Section -->
+    <div class="dashboard-header-compact">
+        <h2 class="dashboard-title-compact">Notifications</h2>booking status and hotel news</p>
+    </div>
+
+    <div class="dashboard-container-optimized">
+        <!-- Notification Actions -->
+        <div class="card dashboard-card-compact mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h3 class="mb-0">Your Notifications</h3>
+                <div>
                 {% if unread_count > 0 %}
-                    <form method="POST" action="{{ url_for('customer.mark_all_customer_notifications_read') }}" class="d-inline">
-                        {{ csrf_token() }} <!-- If using CSRF protection global to forms -->
-                        <button type="submit" class="btn btn-sm btn-outline-secondary">
-                            <i class="bi bi-check2-all"></i> Mark all as Read
+                    <form action="{{ url_for('customer.mark_all_customer_notifications_read') }}" method="POST" class="d-inline">
+                        <button type="submit" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-check-all"></i> Mark All Read ({{ unread_count }})
                         </button>
                     </form>
                 {% endif %}
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-4">
+                        <div class="status-card-compact">
+                            <div class="status-icon-compact">
+                                <i class="bi bi-bell"></i>
+                            </div>
+                            <div class="status-content-compact">
+                                <h4 class="status-title-compact">Total Notifications</h4>
+                                <div class="status-value-compact">{{ notifications|length if notifications else 0 }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="status-card-compact">
+                            <div class="status-icon-compact">
+                                <i class="bi bi-bell-fill"></i>
+                            </div>
+                            <div class="status-content-compact">
+                                <h4 class="status-title-compact">Unread</h4>
+                                <div class="status-value-compact">{{ unread_count or 0 }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="status-card-compact">
+                            <div class="status-icon-compact">
+                                <i class="bi bi-check-circle"></i>
+                            </div>
+                            <div class="status-content-compact">
+                                <h4 class="status-title-compact">Read</h4>
+                                <div class="status-value-compact">{{ (notifications|length - unread_count) if notifications else 0 }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
             </div>
 
+        <!-- Notifications List -->
+        <div class="card dashboard-card-compact">
+            <div class="card-header">
+                <h3 class="mb-0">Recent Notifications</h3>
+            </div>
+            <div class="card-body">
             {% if notifications %}
-                <div class="list-group shadow-sm">
+                <div class="notification-list">
                     {% for notification in notifications %}
-                        <a href="{{ notification.link_url if notification.link_url else '#' }}" 
-                           class="list-group-item list-group-item-action {{ 'list-group-item-light' if notification.is_read else 'list-group-item-warning' }}">
-                            <div class="d-flex w-100 justify-content-between">
-                                <h5 class="mb-1">{{ notification.type.replace('_', ' ').title() if notification.type else 'Notification' }}</h5>
-                                <small class="text-muted">{{ notification.created_at | timesince }} ago</small>
+                    <div class="notification-item {% if not notification.is_read %}unread{% endif %}">
+                        <div class="d-flex">
+                            <div class="notification-icon me-3">
+                                {% if notification.type == 'booking' %}
+                                <i class="bi bi-calendar-check"></i>
+                                {% elif notification.type == 'payment' %}
+                                <i class="bi bi-credit-card"></i>
+                                {% elif notification.type == 'loyalty' %}
+                                <i class="bi bi-award"></i>
+                                {% elif notification.type == 'promotion' %}
+                                <i class="bi bi-tag"></i>
+                                {% elif notification.type == 'system' %}
+                                <i class="bi bi-gear"></i>
+                                {% else %}
+                                <i class="bi bi-info-circle"></i>
+                                {% endif %}
                             </div>
-                            <p class="mb-1">{{ notification.message }}</p>
-                            <div class="d-flex justify-content-end">
+                            <div class="notification-content flex-grow-1">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="notification-title">{{ notification.title }}</h6>
+                                        <p class="notification-message">{{ notification.message }}</p>
+                                        <small class="notification-time text-muted">
+                                            <i class="bi bi-clock"></i> {{ notification.created_at.strftime('%Y-%m-%d %H:%M') if notification.created_at else 'Unknown' }}
+                                        </small>
+                                    </div>
+                                    <div class="notification-actions">
                                 {% if not notification.is_read %}
-                                <form method="POST" action="{{ url_for('customer.mark_one_notification_read', notification_id=notification.id) }}" class="ms-2">
-                                    {{ csrf_token() }} <!-- If using CSRF protection global to forms -->
-                                    <button type="submit" class="btn btn-sm btn-link p-0 text-primary">
-                                        <small>Mark as Read</small>
+                                        <form action="{{ url_for('customer.mark_one_notification_read', notification_id=notification.id) }}" method="POST" class="d-inline">
+                                            <button type="submit" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-check"></i>
                                     </button>
                                 </form>
                                 {% endif %}
+                                        <span class="badge {{ 'badge-primary' if notification.type == 'booking' else 'badge-success' if notification.type == 'payment' else 'badge-warning' if notification.type == 'loyalty' else 'badge-info' if notification.type == 'promotion' else 'badge-secondary' }}">
+                                            {{ notification.type.title() if notification.type else 'General' }}
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
-                        </a>
+                        </div>
+                    </div>
                     {% endfor %}
                 </div>
             {% else %}
+                <!-- Sample Notifications if none exist -->
+                <div class="notification-list">
+                    <div class="notification-item">
+                        <div class="d-flex">
+                            <div class="notification-icon me-3">
+                                <i class="bi bi-calendar-check"></i>
+                            </div>
+                            <div class="notification-content flex-grow-1">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="notification-title">Booking Confirmed</h6>
+                                        <p class="notification-message">Your reservation for Deluxe Room has been confirmed for March 15-17, 2024.</p>
+                                        <small class="notification-time text-muted">
+                                            <i class="bi bi-clock"></i> 2024-03-10 14:30
+                                        </small>
+                                    </div>
+                                    <div class="notification-actions">
+                                        <span class="badge badge-primary">Booking</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="notification-item">
+                        <div class="d-flex">
+                            <div class="notification-icon me-3">
+                                <i class="bi bi-award"></i>
+                            </div>
+                            <div class="notification-content flex-grow-1">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="notification-title">Loyalty Points Earned</h6>
+                                        <p class="notification-message">You've earned 250 loyalty points from your recent stay. Total balance: 1,750 points.</p>
+                                        <small class="notification-time text-muted">
+                                            <i class="bi bi-clock"></i> 2024-03-08 10:15
+                                        </small>
+                                    </div>
+                                    <div class="notification-actions">
+                                        <span class="badge badge-warning">Loyalty</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="notification-item">
+                        <div class="d-flex">
+                            <div class="notification-icon me-3">
+                                <i class="bi bi-tag"></i>
+                            </div>
+                            <div class="notification-content flex-grow-1">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="notification-title">Special Offer Available</h6>
+                                        <p class="notification-message">Enjoy 20% off your next spa treatment. Valid until March 31st. Book now!</p>
+                                        <small class="notification-time text-muted">
+                                            <i class="bi bi-clock"></i> 2024-03-05 09:00
+                                        </small>
+                                    </div>
+                                    <div class="notification-actions">
+                                        <span class="badge badge-info">Promotion</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center mt-4">
                 <div class="alert alert-info">
-                    <i class="bi bi-bell-slash-fill me-2"></i>
-                    You have no notifications at the moment.
+                        <i class="bi bi-info-circle me-2"></i>
+                        These are sample notifications. Actual notifications will appear here when you receive them.
+                    </div>
                 </div>
             {% endif %}
-
-            <div class="mt-4 text-center">
-                 <a href="{{ url_for('customer.dashboard') }}" class="btn btn-outline-secondary">
-                    <i class="bi bi-arrow-left"></i> Back to Dashboard
-                </a>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+.notification-list {
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+.notification-item {
+    padding: 1rem;
+    border-bottom: 1px solid hsl(var(--border));
+    transition: background-color 0.2s ease;
+}
+
+.notification-item:last-child {
+    border-bottom: none;
+}
+
+.notification-item:hover {
+    background-color: hsl(var(--muted) / 0.1);
+}
+
+.notification-item.unread {
+    background-color: hsl(var(--primary) / 0.05);
+    border-left: 3px solid hsl(var(--primary));
+}
+
+.notification-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    background-color: hsl(var(--secondary));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.notification-icon i {
+    font-size: 1.125rem;
+    color: hsl(var(--primary));
+}
+
+.notification-title {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    color: hsl(var(--foreground));
+}
+
+.notification-message {
+    margin-bottom: 0.5rem;
+    color: hsl(var(--muted-foreground));
+    font-size: 0.875rem;
+    line-height: 1.4;
+}
+
+.notification-time {
+    font-size: 0.75rem;
+}
+
+.notification-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+</style>
 {% endblock %}
 
 {% block scripts %}
